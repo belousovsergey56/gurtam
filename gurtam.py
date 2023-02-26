@@ -293,45 +293,4 @@ if __name__ == '__main__':
     sid = get_ssid()
 
     a = search_groups(ssid=sid, group_name='belousov_12')
-    # print(a)
-    l_id = id_group(a)
-    # print(l_id)
-    l_unit = group_unit_list(a)
-    print(l_unit)
-    r_g = remove_groups(sid, l_id, l_unit, [53143])
-    # l = [53143, 53209]
-    # add_groups(ssid=sid, leasing_id=l_id, leasing_unit_list=l_unit, added_unit=l)
-
-    # print(a)
-    # param = {
-    #     "svc": "core/search_items",
-    #     "params": json.dumps({
-    #         "spec": {
-    #             "itemsType": "avl_unit_group",
-    #             "propName": "sys_name",
-    #             "propValueMask": "*belousov*",
-    #             "sortType": "sys_name"
-    #         },
-    #         "force": 1,
-    #         "flags": 4611686018427387903,
-    #         "from": 0,
-    #         "to": 0
-    #     }),
-    #     "sid": sid
-    # }
-    # a = requests.get(URL, params=param)
-    # # print(a.text)
-    # # b = [852456]
-    # # print(len(a.json().get('items')[0].get('u')))
-    # # print(a.json().get('items')[1].get('nm'))
-    # for i in a.json().get('items'):
-    #     print(i.get('nm'), i.get('id'), i.get('u'))
-
-    # param1 = {
-    #     'svc': 'unit_group/update_units',
-    #     'params': json.dumps({"itemId":53208,"units":[53143, 53209]}),
-    #     'sid': sid
-    #     }
-    # print(requests.post(URL, params=param1))
-    # # with open('groups.json', 'w') as g:
-    # #     g.write(a.text)
+   
