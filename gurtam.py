@@ -7,60 +7,22 @@ import json
 
 URL = 'https://fms4.csat.ru/wialon/ajax.html'
 TOKEN = '3469b1a0dfc158c6d35ea9ca7475238b68DB86E7A5D10C1466D4827A7F483E85A750D6A5'
-CARKADE = {
-    '1Каркаде': 157,
-    '1Каркаде Абхазия': 42928,
-    '1Каркаде актив': 38071,
-    '1Каркаде Беларусь': 42932,
-    '1Каркаде Грузия': 42929,
-    '1Каркаде грузовые': 40188,
-    '1Каркаде Казахстан': 42930,
-    '1Каркаде легковые': 40187,
-    '1Каркаде разбивка 16': 47114,
-    '1Каркаде спецтехника': 53014,
-    '1Каркаде Украина': 42931,
+CARKADE = {  # 0 - легковые, 1 - грузовые, 2 - спец.техника, 9 - рисковые
+    '1': 40188,
+    '0': 40187,
+    '2': 53014,
 }
 GPBAL = {
-    '1ГПБАЛ': 28044,
-    '1ГПБАЛ Въезд в Азербайджан': 44412,
-    '1ГПБАЛ Въезд в Беларусь': 44405,
-    '1ГПБАЛ Въезд в Грузию': 44411,
-    '1ГПБАЛ Въезд в Казахстан': 44406,
-    '1ГПБАЛ Въезд в Китай': 44407,
-    '1ГПБАЛ Въезд в Монголию': 44408,
-    '1ГПБАЛ Въезд в Прибалтику': 44409,
-    '1ГПБАЛ Въезд в Украину': 44404,
-    '1ГПБАЛ Въезд в Финляндию': 44410,
-    '1ГПБАЛ Выезд за пределы РФ': 44413,
-    '1ГПБАЛ грузовые': 41343,
-    '1ГПБАЛ звонки': 35754,
-    '1ГПБАЛ легковые': 41342,
-    '1ГПБАЛ Риск': 40166,
-    '1ГПБАЛ спецтехника': 53012,
+    '1': 41343,
+    '0': 41342,
+    '9': 40166,
+    '2': 53012,
 }
 
 EVO = {
-    '1Эволюция': 28040,
-    '1Эволюция Армения': 49371,
-    '1Эволюция в движение зажигание': 28248,
-    '1Эволюция Грузия': 47767,
-    '1Эволюция грузовые': 40577,
-    '1Эволюция Казахстан': 47768,
-    '1Эволюция Киргизия': 47769,
-    '1Эволюция Латвия': 47770,
-    '1Эволюция легковая': 40576,
-    '1Эволюция Литва': 47771,
-    '1Эволюция Польша': 47772,
-    '1Эволюция Приближение к Казахстану': 48072,
-    '1Эволюция спецтехника': 53013,
-    '1Эволюция Таджикистан': 47773,
-    '1Эволюция Туркменистан': 47774,
-    '1Эволюция уведомления': 28771,
-    '1Эволюция Узбекистан': 47775,
-    '1Эволюция Украина': 47776,
-    '1Эволюция Финляндия': 47777,
-    '1Эволюция Эстония': 47779,
-    '1Эволюция Южная Осетия': 47780,
+    '1': 40577,
+    '0': 40576,
+    '2': 53013,
 }
 
 
@@ -106,7 +68,7 @@ def get_ssid() -> str:
 
 
 def search_object(ssid: str, imei: str) -> int:
-    """Finds object and returns id.
+    """Finds object by imei and returns object id.
 
     The function finds an object in the database by imei and returns id.
     If the object is not found, the function returns -1
@@ -202,7 +164,7 @@ def update_param(ssid):
     }
 
 
-def search_groups(ssid: str, group_name: str) -> dict:
+def search_groups_by_name(ssid: str, group_name: str) -> dict:
     param = {
         "svc": "core/search_items",
         "params": json.dumps({
@@ -219,6 +181,27 @@ def search_groups(ssid: str, group_name: str) -> dict:
         }),
         "sid": ssid
     }
+    response = requests.get(URL, params=param)
+    return response.json()
+
+
+def search_group_by_id(ssid: str, group_id: int) -> dict:
+    """_summary_
+
+    Args:
+        ssid (str): _description_
+        group_id (int): _description_
+
+    Returns:
+        dict: _description_
+    """
+    param = {
+        'svc': 'core/search_item',
+        'params': json.dumps({"id": group_id,
+                             "flags": 1}),
+        'sid': ssid
+    }
+
     response = requests.get(URL, params=param)
     return response.json()
 
@@ -248,7 +231,10 @@ def group_unit_list(group: dict) -> list | str:
         list|str: if group finded, return unit list as [123, 456, ...etc], if not finded return traceback 'this is list empty'
     """
     try:
-        return group['items'][0].get('u')
+        if 'items' in group:
+            return group['items'][0].get('u')
+        else:
+            return group['item'].get('u')
     except IndexError as e:
         return 'Список пуст'
 
@@ -261,13 +247,14 @@ def add_groups(ssid: str, leasing_id: int | str, leasing_unit_list: list[int], a
         leasing_id (int | str): _description_
         leasing_unit_list (list[int]): _description_
         added_unit (int): _description_
-    """    
+    """
     param = {
         'svc': 'unit_group/update_units',
         'params': json.dumps({"itemId": leasing_id, "units": leasing_unit_list + added_unit}),
         'sid': ssid
     }
     requests.post(URL, params=param)
+
 
 def remove_groups(ssid: str, leasing_id: int | str, leasing_unit_list: list[int], removed_unit: list[int]):
     """_summary_
@@ -277,7 +264,7 @@ def remove_groups(ssid: str, leasing_id: int | str, leasing_unit_list: list[int]
         leasing_id (int | str): _description_
         leasing_unit_list (list[int]): _description_
         removed_unit (list[int]): _description_
-    """    
+    """
     for unit in removed_unit:
         leasing_unit_list.remove(unit)
     param = {
@@ -285,12 +272,10 @@ def remove_groups(ssid: str, leasing_id: int | str, leasing_unit_list: list[int]
         'params': json.dumps({"itemId": leasing_id, "units": leasing_unit_list}),
         'sid': ssid
     }
-    
+
     requests.post(URL, params=param)
+
 
 if __name__ == '__main__':
 
     sid = get_ssid()
-
-    a = search_groups(ssid=sid, group_name='belousov_12')
-   
