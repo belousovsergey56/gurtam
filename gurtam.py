@@ -101,70 +101,92 @@ def search_object(ssid: str, imei: str) -> int:
     return response.json().get('items')[0].get('id') if response.json().get('items') != [] else -1
 
 
-def update_param(ssid):
+def update_param(sid: str, unit_id: int, new_value: dict):
+    """Fills object fields with new parameters
 
+    The function accepts a session ID, an object ID, and a dictionary with data to fill in the required fields of the object.
+    The data is passed using the requests object's post method, the function returns nothing.
+    
+    Args:
+        sid (str): session id
+        unit_id (int): gurtam object id
+        new_value (dict): dictionary with new params
+    """    
     CONTRACT_NAME = {
         'svc': 'item/update_name',
-        'params': json.dumps({"itemId": 53143, "name": 'belousov_t'}),
+        'params': json.dumps({"itemId": unit_id, "name": '{0}'.format(new_value.get('DL'))}),
         'sid': sid
     }
 
     IMEI = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({"itemId": 53143, "id": 1, "callMode": 'update', "n": 'geozone_imei', "v": '161100060801269'}),
+        'params': json.dumps({"itemId": unit_id, "id": 1, "callMode": 'update', "n": 'geozone_imei', "v": '{0}'.format(new_value.get('IMEI'))}),
         'sid': sid
     }
 
     SIM = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({"itemId": 53143, "id": 2, "callMode": 'update', "n": 'geozone_sim', "v": '+79111234567'}),
+        'params': json.dumps({"itemId": unit_id, "id": 2, "callMode": 'update', "n": 'geozone_sim', "v": '{0}'.format(new_value.get('SIM'))}),
         'sid': sid
     }
 
     VIN = {
         'svc': 'item/update_custom_field',
-        'params': json.dumps({'itemId': 53143, 'id': 1, 'callMode': 'update', 'n': 'Vin', 'v': 'XXXXXXXXXX01'}),
+        'params': json.dumps({'itemId': unit_id, 'id': 1, 'callMode': 'update', 'n': 'Vin', 'v': '{0}'.format(new_value.get('VIN'))}),
         'sid': sid
     }
 
     INFO4 = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({"itemId": 53143, "id": 6, "callMode": 'update', "n": 'Инфо4', "v": 'Да'}),
+        'params': json.dumps({"itemId": unit_id, "id": 6, "callMode": 'update', "n": 'Инфо4', "v": '{0}'.format(new_value.get('INFO4'))}),
         'sid': sid
     }
 
-    MARCK = {
+    BRAND = {
         'svc': 'item/update_custom_field',
-        'params': json.dumps({'itemId': 53143, 'id': 2, 'callMode': 'update', 'n': 'Марка', 'v': 'U'}),
+        'params': json.dumps({'itemId': unit_id, 'id': 2, 'callMode': 'update', 'n': 'Марка', 'v': '{0}'.format(new_value.get('BRAND'))}),
         'sid': sid
     }
 
     MODEL = {
         'svc': 'item/update_custom_field',
-        'params': json.dumps({'itemId': 53143, 'id': 3, 'callMode': 'update', 'n': 'Модель', 'v': 'Y'}),
+        'params': json.dumps({'itemId': unit_id, 'id': 3, 'callMode': 'update', 'n': 'Модель', 'v': '{0}'.format(new_value.get('MODEL'))}),
         'sid': sid
     }
 
     PIN = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({"itemId": 53143, "id": 7, "callMode": 'update', "n": 'Пин', "v": '2113564'}),
+        'params': json.dumps({"itemId": unit_id, "id": 7, "callMode": 'update', "n": 'Пин', "v": '{0}'.format(new_value.get('PIN'))}),
         'sid': sid
     }
 
     DISTANCE = {
         'svc': 'unit/update_mileage_counter',
-        'params': json.dumps({'itemId': 53143, 'newValue': 0}),
+        'params': json.dumps({'itemId': unit_id, 'newValue': 0}),
         'sid': sid
     }
 
     ENGIN_HOURS = {
         'svc': 'unit/update_eh_counter',
-        'params': json.dumps({'itemId': 53143, 'newValue': 0}),
+        'params': json.dumps({'itemId': unit_id, 'newValue': 0}),
         'sid': sid
     }
+    
+    param_list = [CONTRACT_NAME, IMEI, SIM, VIN, INFO4, BRAND, MODEL, PIN, DISTANCE, ENGIN_HOURS]
+    for param in param_list:
+        requests.post(URL, params=param)
 
 
 def search_groups_by_name(ssid: str, group_name: str) -> dict:
+    """_summary_
+
+    Args:
+        ssid (str): _description_
+        group_name (str): _description_
+
+    Returns:
+        dict: _description_
+    """    
     param = {
         "svc": "core/search_items",
         "params": json.dumps({
@@ -279,3 +301,23 @@ def remove_groups(ssid: str, leasing_id: int | str, leasing_unit_list: list[int]
 if __name__ == '__main__':
 
     sid = get_ssid()
+    a = search_object(imei='401010053722801721', ssid=sid)    
+    json_ = [{
+        'DL': 'belousov_belousov',
+        'IMEI': '401010053722801721',
+        'SIM': '+79117084809',
+        'VIN': '0DLGRT124566IO90',
+        'INFO4': '',
+        'BRAND': 'OMODA',
+        'MODEL': '7000',
+        'PIN': '213123',
+        'TYPE': '0',
+        'RISK': '',
+        'LEASING': 'belousov_13',
+        'CONFIG': 'FMB130',
+    }]
+    
+    # update_param(sid, a, json_[0])
+    
+    a = requests.post(URL)
+    print(a.status_code == 200)
