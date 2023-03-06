@@ -1,0 +1,585 @@
+{
+    "type": "avl_unit",
+    "version": "b4",
+    "mu": 0,
+    "general": {
+        "n": "Шаблон лизинг FMB140",
+        "uid": "",
+        "uid2": "",
+        "ph": "",
+        "ph2": "",
+        "psw": "",
+        "hw": "Teltonika FMB140"
+    },
+    "icon": {
+        "lib": "38807",
+        "url": "default.svg"
+    },
+    "imgRot": "0",
+    "hwConfig": {
+        "hw": "Teltonika FMB140",
+        "fullData": 1,
+        "params": [
+            {
+                "default": "",
+                "description": "Bytes order: 7,6,5,4,3,2,1,0. Byte numbers should be separated by comma. Usage Example: 6,5,4",
+                "label": "IButton card number parsing mask",
+                "maxval": 0,
+                "minval": 0,
+                "name": "ibutton_bytes_order",
+                "readonly": 0,
+                "type": "text",
+                "value": ""
+            },
+            {
+                "default": "",
+                "description": "Indicate Communication Password",
+                "label": "Communication Password",
+                "maxval": 0,
+                "minval": 0,
+                "name": "comm_pass",
+                "readonly": 0,
+                "type": "text",
+                "value": ""
+            },
+            {
+                "default": "0",
+                "description": "Use caiquen_212 by transparent channel",
+                "label": "Use caiquen 212",
+                "maxval": 0,
+                "minval": 0,
+                "name": "use_caiquen_212",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            },
+            {
+                "default": "0",
+                "description": "Use TPMS by transparent channel",
+                "label": "Use TPMS",
+                "maxval": 0,
+                "minval": 0,
+                "name": "use_tpms",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            },
+            {
+                "default": "0",
+                "description": "Power meter by transparent channel (Modbus protocol)",
+                "label": "Power meter by transp",
+                "maxval": 0,
+                "minval": 0,
+                "name": "power_meter",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            },
+            {
+                "default": "",
+                "description": "Format: latitude;longitude. Example: 22.67888;-33.87654",
+                "label": "Coordinates for stationary units",
+                "maxval": 0,
+                "minval": 0,
+                "name": "server_coord_and_time",
+                "readonly": 0,
+                "type": "text",
+                "value": ""
+            },
+            {
+                "default": "0",
+                "description": "Bus Control Unit by transp",
+                "label": "Bus Control Unit by transp",
+                "maxval": 0,
+                "minval": 0,
+                "name": "bus_control",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            },
+            {
+                "default": "0",
+                "description": "Specific fuel controller by transparent channel",
+                "label": "Fuel controller by transparent",
+                "maxval": 0,
+                "minval": 0,
+                "name": "parse_fuel_controller",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            },
+            {
+                "default": "0",
+                "description": "Use DZ300 speed sensor by transparent channel",
+                "label": "DZ300 Speed sensor by transp",
+                "maxval": 0,
+                "minval": 0,
+                "name": "dz300_speed_sensor",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            },
+            {
+                "default": "0",
+                "description": "Use Chafon rfid reader by transparent channel",
+                "label": "Chafon rfid by transp",
+                "maxval": 0,
+                "minval": 0,
+                "name": "parse_chafon_rfid",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            },
+            {
+                "default": "0",
+                "description": "Teltonika DualCam is connected to device using the RS232 interface.",
+                "label": "DualCam connected",
+                "maxval": 0,
+                "minval": 0,
+                "name": "dual_cam_connected",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            },
+            {
+                "default": "0",
+                "description": "Use ETS RFID Reader by transparent channel",
+                "label": "ETS RFID Reader by transp",
+                "maxval": 0,
+                "minval": 0,
+                "name": "ets_rfid",
+                "readonly": 0,
+                "type": "bool",
+                "value": "0"
+            }
+        ]
+    },
+    "counters": {
+        "cfl": 784,
+        "cnm": 0,
+        "cneh": 0,
+        "cnkb": 0
+    },
+    "advProps": {
+        "monitoring_sensor": "0 ff0000;6 ffff00;11 197b30",
+        "use_sensor_color": "1",
+        "monitoring_sensor_id": "8",
+        "motion_state_sensor_id": "0",
+        "monitoring_battery_id": "0",
+        "track_sensor": "",
+        "sensors_colors": "",
+        "sensors_colors_id": "",
+        "track_solid": "",
+        "solid_colors": "",
+        "track_speed": "",
+        "speed_colors": "",
+        "label_color": "16711680",
+        "trip_colors": "1",
+        "msgFilter": {
+            "enabled": 1,
+            "skipInvalid": 1,
+            "lbsCorrection": 1,
+            "wifiCorrection": 0,
+            "minSats": 5,
+            "maxHdop": 2,
+            "maxSpeed": 0,
+            "minWifiPoints": 0,
+            "maxWifiPoints": 0,
+            "wifiAccuracy": 0
+        }
+    },
+    "fields": [
+        {
+            "id": 1,
+            "n": "Vin",
+            "v": ""
+        },
+        {
+            "id": 2,
+            "n": "Марка",
+            "v": ""
+        },
+        {
+            "id": 3,
+            "n": "Модель",
+            "v": ""
+        }
+    ],
+    "afields": [
+        {
+            "id": 1,
+            "n": "geozone_imei",
+            "v": ""
+        },
+        {
+            "id": 2,
+            "n": "geozone_sim",
+            "v": ""
+        },
+        {
+            "id": 3,
+            "n": "Инфо1",
+            "v": " "
+        },
+        {
+            "id": 4,
+            "n": "Инфо2",
+            "v": " "
+        },
+        {
+            "id": 5,
+            "n": "Инфо3",
+            "v": " "
+        },
+        {
+            "id": 6,
+            "n": "Инфо4",
+            "v": " "
+        },
+        {
+            "id": 7,
+            "n": "Пин",
+            "v": ""
+        }
+    ],
+    "profile": [
+        {
+            "id": 1,
+            "n": "vehicle_class",
+            "v": "empty_vehicle"
+        }
+    ],
+    "intervals": [],
+    "sensors": [
+        {
+            "id": 1,
+            "n": "АКБ автомобиля",
+            "t": "voltage",
+            "d": "",
+            "m": "V",
+            "p": "pwr_ext",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":4,\"show_time\":false,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": []
+        },
+        {
+            "id": 2,
+            "n": "Датчик напряжения",
+            "t": "custom",
+            "d": "",
+            "m": "",
+            "p": "pwr_int",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":2,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": []
+        },
+        {
+            "id": 3,
+            "n": "Ось z",
+            "t": "custom",
+            "d": "",
+            "m": "",
+            "p": "io_19",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":11,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": [
+                {
+                    "x": 0,
+                    "a": 0.001,
+                    "b": 0
+                },
+                {
+                    "x": 32767,
+                    "a": 0.001,
+                    "b": -65.536
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "n": "Ось y",
+            "t": "custom",
+            "d": "",
+            "m": "",
+            "p": "io_18",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":10,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": [
+                {
+                    "x": 0,
+                    "a": 0.001,
+                    "b": 0
+                },
+                {
+                    "x": 32767,
+                    "a": 0.001,
+                    "b": -65.536
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "n": "Ось x",
+            "t": "custom",
+            "d": "",
+            "m": "",
+            "p": "io_17",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":9,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": [
+                {
+                    "x": 0,
+                    "a": 0.001,
+                    "b": 0
+                },
+                {
+                    "x": 32767,
+                    "a": 0.001,
+                    "b": -65.536
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "n": "Зажигание",
+            "t": "engine operation",
+            "d": "",
+            "m": "On/Off",
+            "p": "io_239",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":1,\"consumption\":0,\"mu\":\"0\",\"pos\":1,\"show_time\":false,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": []
+        },
+        {
+            "id": 7,
+            "n": "Блокировка",
+            "t": "digital",
+            "d": "",
+            "m": "On/Off",
+            "p": "io_179",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":12,\"show_time\":false,\"timeout\":0,\"uct\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": []
+        },
+        {
+            "id": 8,
+            "n": "Индикация АКБ",
+            "t": "custom",
+            "d": "",
+            "m": "в",
+            "p": "[АКБ автомобиля]",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{\"0\":{\"c\":16711680},\"11\":{\"c\":1669936},\"6\":{\"c\":16776960}},\"cm\":0,\"mu\":\"0\",\"pos\":14,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": []
+        },
+        {
+            "id": 9,
+            "n": "Валидатор осей",
+            "t": "digital",
+            "d": "|0:1:1:0",
+            "m": "On/Off",
+            "p": "[Зажигание]",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":5,\"show_time\":false,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": [
+                {
+                    "x": 0,
+                    "a": -1,
+                    "b": 1
+                }
+            ]
+        },
+        {
+            "id": 10,
+            "n": "Дем x",
+            "t": "custom",
+            "d": "",
+            "m": "",
+            "p": "[Ось x]",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":6,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "vt": 11,
+            "vs": 9,
+            "tbl": []
+        },
+        {
+            "id": 11,
+            "n": "Дем y",
+            "t": "custom",
+            "d": "",
+            "m": "",
+            "p": "[Ось y]",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":7,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "vt": 11,
+            "vs": 9,
+            "tbl": []
+        },
+        {
+            "id": 12,
+            "n": "Дем z",
+            "t": "custom",
+            "d": "",
+            "m": "",
+            "p": "[Ось z]",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":8,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "vt": 11,
+            "vs": 9,
+            "tbl": []
+        },
+        {
+            "id": 13,
+            "n": "1АКБ автомобиля",
+            "t": "custom",
+            "d": "",
+            "m": "в",
+            "p": "[АКБ автомобиля]",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"lower_bound\":0.01,\"mu\":\"0\",\"pos\":13,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "vt": 0,
+            "vs": 0,
+            "tbl": []
+        },
+        {
+            "id": 14,
+            "n": "Отрыв",
+            "t": "digital",
+            "d": "",
+            "m": "Вкл/Выкл",
+            "p": "io_381",
+            "f": 0,
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"pos\":3,\"show_time\":false,\"timeout\":0}",
+            "vt": 11,
+            "vs": 9,
+            "tbl": []
+        }
+    ],
+    "reportProps": {
+        "speedLimit": 0,
+        "maxMessagesInterval": 43200,
+        "dailyEngineHoursRate": 0,
+        "urbanMaxSpeed": 60,
+        "mileageCoefficient": 1,
+        "fuelRateCoefficient": 0,
+        "speedingTolerance": 10,
+        "speedingMinDuration": 1,
+        "speedingMode": 0,
+        "driver_activity": {
+            "type": 0
+        }
+    },
+    "aliases": [],
+    "driving": {
+        "acceleration": [
+            {
+                "flags": 2,
+                "min_value": 0.4,
+                "name": "Ускорение: опасное",
+                "penalties": 2000
+            },
+            {
+                "flags": 2,
+                "max_value": 0.4,
+                "min_value": 0.31,
+                "name": "Ускорение: резкое",
+                "penalties": 1000
+            }
+        ],
+        "brake": [
+            {
+                "flags": 2,
+                "min_value": 0.35,
+                "name": "Торможение: опасное",
+                "penalties": 2000
+            },
+            {
+                "flags": 2,
+                "max_value": 0.35,
+                "min_value": 0.31,
+                "name": "Торможение: резкое",
+                "penalties": 1000
+            }
+        ],
+        "global": {
+            "accel_mode": "0"
+        },
+        "harsh": [
+            {
+                "flags": 2,
+                "min_value": 0.3,
+                "name": "Резкое вождение",
+                "penalties": 300
+            }
+        ],
+        "speeding": [
+            {
+                "flags": 2,
+                "max_duration": 30,
+                "min_duration": 10,
+                "min_value": 41,
+                "name": "Превышение: опасное",
+                "penalties": 5000
+            },
+            {
+                "flags": 2,
+                "max_value": 41,
+                "min_duration": 10,
+                "min_value": 21,
+                "name": "Превышение: сильное",
+                "penalties": 2000
+            },
+            {
+                "flags": 2,
+                "max_value": 21,
+                "min_duration": 10,
+                "min_value": 10,
+                "name": "Превышение: среднее",
+                "penalties": 100
+            }
+        ],
+        "turn": [
+            {
+                "flags": 2,
+                "min_value": 0.4,
+                "name": "Поворот: опасный",
+                "penalties": 1000
+            },
+            {
+                "flags": 2,
+                "max_value": 0.4,
+                "min_value": 0.31,
+                "name": "Поворот: резкий",
+                "penalties": 500
+            }
+        ]
+    },
+    "trip": {
+        "type": 1,
+        "gpsCorrection": 1,
+        "minSat": 2,
+        "minMovingSpeed": 1,
+        "minStayTime": 300,
+        "maxMessagesDistance": 10000,
+        "minTripTime": 60,
+        "minTripDistance": 100
+    }
+}
