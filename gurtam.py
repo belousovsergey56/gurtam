@@ -223,13 +223,13 @@ def update_param(sid: str, unit_id: int, new_value: dict):
         get_log(a, param, new_value)
 
 
-def get_log(response, param, value):
-    """_summary_
+def get_log(response: str, param: dict, value: dict):
+    """Write error to a log file.
 
     Args:
-        response (_type_): _description_
-        param (_type_): _description_
-        value (_type_): _description_
+        response (str): response object in string
+        param (dict): parameter dictionary that is passed to the request
+        value (dict): dictionary with data to write the object
     """
     log_text = 'Запись параметра: {0} - объекта:\
         {1} - завершена с ошибкой. Код ошибки - {2} \n'
@@ -244,14 +244,16 @@ def get_log(response, param, value):
 
 
 def search_groups_by_name(ssid: str, group_name: str) -> dict:
-    """_summary_
+    """Find groups by name.
 
     Args:
-        ssid (str): _description_
-        group_name (str): _description_
+        ssid (str): session id
+        group_name (str): the name or part of the name of the group
+        we want to find
 
     Returns:
-        dict: _description_
+        dict: list of dictionaries with group names
+        and id's that matched by name
     """
     param = {
         "svc": "core/search_items",
@@ -274,14 +276,16 @@ def search_groups_by_name(ssid: str, group_name: str) -> dict:
 
 
 def search_group_by_id(ssid: str, group_id: int) -> dict:
-    """_summary_
+    """Find group by id.
 
     Args:
-        ssid (str): _description_
-        group_id (int): _description_
+        ssid (str): session id
+        group_id (int): group id
 
     Returns:
-        dict: _description_
+        dict: a dictionary with the name of the group,
+        the id of the group,
+        the list of id objects that belong to this group, etc.
     """
     param = {
         'svc': 'core/search_item',
@@ -335,13 +339,13 @@ def add_groups(
     leasing_unit_list: list[int],
     added_unit: list[int]
 ):
-    """_summary_
+    """Add objects to a group.
 
     Args:
-        ssid (str): _description_
-        leasing_id (int | str): _description_
-        leasing_unit_list (list[int]): _description_
-        added_unit (int): _description_
+        ssid (str): session id
+        leasing_id (int | str): id group
+        leasing_unit_list (list[int]): list of current id group objects
+        added_unit (int): list of id objects to add
     """
     param = {
         'svc': 'unit_group/update_units',
@@ -359,13 +363,13 @@ def remove_groups(
     leasing_unit_list: list[int],
     removed_unit: list[int]
 ):
-    """_summary_
+    """Remove unit from a group.
 
     Args:
-        ssid (str): _description_
-        leasing_id (int | str): _description_
-        leasing_unit_list (list[int]): _description_
-        removed_unit (list[int]): _description_
+        ssid (str): session id
+        leasing_id (int | str): id group
+        leasing_unit_list (list[int]): list of current id group objects
+        removed_unit (list[int]): list of id objects to remove
     """
     for unit in removed_unit:
         leasing_unit_list.remove(unit)
