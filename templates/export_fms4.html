@@ -3,6 +3,14 @@
 {% block title %}Export to Gurtam{% endblock %}
 
 {% block body %}
-    <h1 class="text-center">Экспорт данных на Виалон</h1>
-    
+<h1 class="text-center">Экспорт данных на Виалон</h1>
+<br>
+<form method="post" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+    <h3 class="text-center">Загрузить файл для экспорта данных</h3>
+    <p class="text-center">
+    {{ form.export_file }}
+        {{ form.submit }}
+    </p>
+</form>
 {% endblock %}
