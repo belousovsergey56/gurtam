@@ -1,7 +1,8 @@
 """Module with forms for the application."""
 
 from flask_wtf import FlaskForm
-from wtf_form import FileField, FileRequired
+from wtforms import FileField, SubmitField
+from wtforms.validators import DataRequired
 
 
 class UploadFile(FlaskForm):
@@ -11,7 +12,5 @@ class UploadFile(FlaskForm):
         FlaskForm (class): extends FlaskForm for create forms.
     """
 
-    export_file = FileField(
-        label='Загрузить файл',
-        validators=[FileRequired()]
-        )
+    export_file = FileField(validators=[DataRequired()])
+    submit = SubmitField('Экспорт')
