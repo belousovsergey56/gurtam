@@ -4,6 +4,7 @@ import random
 import json
 import os
 from dotenv import load_dotenv
+from requests import Response
 
 load_dotenv()
 
@@ -46,8 +47,8 @@ def get_header() -> dict:
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 '
         '(KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
     ]
-    UserAgent = random.choice(user_agent_list)
-    header = {'User-Agent': UserAgent}
+    user_agent = random.choice(user_agent_list)
+    header = {'User-Agent': user_agent}
     return header
 
 
@@ -100,12 +101,12 @@ def search_object(ssid: str, imei: str) -> int:
     }
 
     response = requests.post(URL, params=param)
-    if response.json().get('items') != []:
+    if response.json().get('items'):
         return response.json().get('items')[0].get('id')
     return -1
 
 
-def update_param(sid: str, unit_id: int, new_value: dict):
+def update_param(session_id: str, unit_id: int, new_value: dict):
     """Fill object fields with new parameters.
 
     The function accepts a session ID, an object ID,
@@ -114,19 +115,19 @@ def update_param(sid: str, unit_id: int, new_value: dict):
     the function returns nothing.
 
     Args:
-        sid (str): session id
+        session_id (str): session id
         unit_id (int): gurtam object id
         new_value (dict): dictionary with new params
     """
-    CONTRACT_NAME = {
+    contract_name = {
         'svc': 'item/update_name',
         'params': json.dumps({
             "itemId": unit_id,
             "name": '{0}'.format(new_value.get('DL'))}),
-        'sid': sid
+        'sid': session_id
     }
 
-    IMEI = {
+    imei = {
         'svc': 'item/update_admin_field',
         'params': json.dumps({
             "itemId": unit_id,
@@ -134,10 +135,10 @@ def update_param(sid: str, unit_id: int, new_value: dict):
             "callMode": 'update',
             "n": 'geozone_imei',
             "v": '{0}'.format(new_value.get('IMEI'))}),
-        'sid': sid
+        'sid': session_id
     }
 
-    SIM = {
+    sim = {
         'svc': 'item/update_admin_field',
         'params': json.dumps({
             "itemId": unit_id,
@@ -145,10 +146,10 @@ def update_param(sid: str, unit_id: int, new_value: dict):
             "callMode": 'update',
             "n": 'geozone_sim',
             "v": '{0}'.format(new_value.get('SIM'))}),
-        'sid': sid
+        'sid': session_id
     }
 
-    VIN = {
+    vin = {
         'svc': 'item/update_custom_field',
         'params': json.dumps({
             'itemId': unit_id,
@@ -156,10 +157,10 @@ def update_param(sid: str, unit_id: int, new_value: dict):
             'callMode': 'update',
             'n': 'Vin',
             'v': '{0}'.format(new_value.get('VIN'))}),
-        'sid': sid
+        'sid': session_id
     }
 
-    INFO4 = {
+    info4 = {
         'svc': 'item/update_admin_field',
         'params': json.dumps({
             "itemId": unit_id,
@@ -167,10 +168,10 @@ def update_param(sid: str, unit_id: int, new_value: dict):
             "callMode": 'update',
             "n": 'Инфо4',
             "v": '{0}'.format(new_value.get('INFO4'))}),
-        'sid': sid
+        'sid': session_id
     }
 
-    BRAND = {
+    brand = {
         'svc': 'item/update_custom_field',
         'params': json.dumps({
             'itemId': unit_id,
@@ -178,10 +179,10 @@ def update_param(sid: str, unit_id: int, new_value: dict):
             'callMode': 'update',
             'n': 'Марка',
             'v': '{0}'.format(new_value.get('BRAND'))}),
-        'sid': sid
+        'sid': session_id
     }
 
-    MODEL = {
+    model = {
         'svc': 'item/update_custom_field',
         'params': json.dumps({
             'itemId': unit_id,
@@ -189,10 +190,10 @@ def update_param(sid: str, unit_id: int, new_value: dict):
             'callMode': 'update',
             'n': 'Модель',
             'v': '{0}'.format(new_value.get('MODEL'))}),
-        'sid': sid
+        'sid': session_id
     }
 
-    PIN = {
+    pin = {
         'svc': 'item/update_admin_field',
         'params': json.dumps({
             "itemId": unit_id,
@@ -200,30 +201,30 @@ def update_param(sid: str, unit_id: int, new_value: dict):
             "callMode": 'update',
             "n": 'Пин',
             "v": '{0}'.format(new_value.get('PIN'))}),
-        'sid': sid
+        'sid': session_id
     }
 
-    DISTANCE = {
+    distance = {
         'svc': 'unit/update_mileage_counter',
         'params': json.dumps({'itemId': unit_id, 'newValue': 0}),
-        'sid': sid
+        'sid': session_id
     }
 
-    ENGIN_HOURS = {
+    engin_hours = {
         'svc': 'unit/update_eh_counter',
         'params': json.dumps({'itemId': unit_id, 'newValue': 0}),
-        'sid': sid
+        'sid': session_id
     }
 
-    param_list = [CONTRACT_NAME, IMEI, SIM, VIN, INFO4,
-                  BRAND, MODEL, PIN, DISTANCE, ENGIN_HOURS]
+    param_list = [contract_name, imei, sim, vin, info4,
+                  brand, model, pin, distance, engin_hours]
 
     for param in param_list:
-        a = requests.post(URL, params=param)
-        get_log(a, param, new_value)
+        response = requests.post(URL, params=param)
+        get_log(response, param, new_value)
 
 
-def get_log(response: str, param: dict, value: dict):
+def get_log(response: Response, param: dict, value: dict):
     """Write error to a log file.
 
     Args:
@@ -302,7 +303,7 @@ def id_group(group: dict) -> int | str:
     """Get ID group.
 
     Args:
-        group (dict): json object with meta data about group
+        group (dict): json object with metadata about group
 
     Returns:
         int|str: if group finded, return group id as integer,
@@ -318,7 +319,7 @@ def group_unit_list(group: dict) -> list | str:
     """Get group unit list.
 
     Args:
-        group (dict): json object with meta data about group
+        group (dict): json object with metadata about group
 
     Returns:
         list|str: if group finded, return unit list as [123, 456, ...etc],
@@ -405,4 +406,5 @@ if __name__ == '__main__':
         'CONFIG': 'FMB130',
     }]
 
-    b = update_param(sid, 50597, json_[0])
+    # b = update_param(sid, 50597, json_[0])
+    print(search_object(sid, '401010053722801721'))
