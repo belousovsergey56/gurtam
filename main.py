@@ -3,12 +3,18 @@
 This module, have main method.
 Run browser and run all project for export data object to Gurtam.
 """
-from flask import Flask, render_template, url_for, redirect
-from gurtam import add_groups, update_param, get_ssid
-from read_file import xls_to_json, read_json
-from forms import UploadFile
-from werkzeug.utils import secure_filename
 import os
+
+from flask import Flask, redirect, render_template, url_for
+
+from forms import UploadFile
+
+from gurtam import data_export, group_export
+
+from read_file import read_json, xls_to_json
+
+from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
@@ -26,12 +32,17 @@ def home() -> str:
 
 @app.route('/export', methods=['GET', 'POST'])
 def export_fms4():
+
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
         form.export_file.data.save('upload/{0}'.format(filename))
-        # form.export_file.data.save('upload/raw.xlsx')
-        # xls_to_json('upload/raw.xlsx')
+        xls_to_json('upload/{0}'.format(filename))
+        a = read_json()
+        data_export(a)
+        group_export(a)
+        os.remove('upload/{0}'.format(filename))
+        os.remove('upload/work_file.json')
         return redirect(url_for('export_fms4'))
     return render_template('export_fms4.html', form=form)
 
@@ -42,5 +53,4 @@ def remove_groups():
 
 
 if __name__ == '__main__':
-    os.system('xdg-open http://127.0.0.1:5000')
     app.run(debug=True, host='0.0.0.0', port=5000)
