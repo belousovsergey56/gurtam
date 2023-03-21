@@ -9,7 +9,7 @@ from flask import Flask, redirect, render_template, url_for
 
 from forms import UploadFile
 
-from gurtam import data_export, group_export
+from gurtam import data_export, get_ssid, group_export, remove_groups
 
 from read_file import read_json, xls_to_json
 
@@ -32,7 +32,11 @@ def home() -> str:
 
 @app.route('/export', methods=['GET', 'POST'])
 def export_fms4():
+    """_summary_
 
+    Returns:
+        _type_: _description_
+    """    
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -48,8 +52,24 @@ def export_fms4():
 
 
 @app.route('/remove_groups', methods=['GET', 'POST'])
-def remove_groups():
-    return render_template('remove_groups.html')
+def remove_group():
+    """_summary_
+
+    Returns:
+        _type_: _description_
+    """    
+    form = UploadFile()
+    if form.validate_on_submit():
+        filename = secure_filename(form.export_file.data.filename)
+        form.export_file.data.save('upload/{0}'.format(filename))
+        xls_to_json('upload/{0}'.format(filename))
+        a = read_json()
+        sid = get_ssid()
+        remove_groups(sid, a)
+        os.remove('upload/{0}'.format(filename))
+        os.remove('upload/work_file.json')
+        return redirect(url_for('remove_group'))
+    return render_template('remove_groups.html', form=form)
 
 
 if __name__ == '__main__':
