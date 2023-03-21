@@ -1,34 +1,24 @@
 """Base func for work with Gurtam API."""
-import requests
-import random
 import json
 import os
+import random
+
 from dotenv import load_dotenv
+
+import requests
 from requests import Response
+
 
 load_dotenv()
 
-# https://fms4.csat.ru/?login&token=3469b1a0dfc158c6d35ea9ca7475238b68DB86E7A5D10C1466D4827A7F483E85A750D6A5
 
 URL = os.getenv('URL')
 TOKEN = os.getenv('TOKEN')
-CARKADE = {  # 0 - легковые, 1 - грузовые, 2 - спец.техника, 9 - рисковые
-    '1': 40188,
-    '0': 40187,
-    '2': 53014,
-}
-GPBAL = {
-    '1': 41343,
-    '0': 41342,
-    '9': 40166,
-    '2': 53012,
-}
-
-EVO = {
-    '1': 40577,
-    '0': 40576,
-    '2': 53013,
-}
+# 0 - легковые, 1 - грузовые, 2 - спец.техника, 9 - рисковые
+AUTO = [40187, 41342, 40576]
+TRUCK = [40188, 41343, 40577]
+SPEC = [53014, 53012, 53013]
+RISK = [40166]
 
 
 def get_header() -> dict:
@@ -66,7 +56,7 @@ def get_ssid() -> str:
         "svc": "token/login",
         "params": json.dumps({"token": TOKEN})
     }
-    response = requests.get(URL, params=param, headers=get_header())
+    response = requests.post(URL, data=param, headers=get_header())
     return response.json().get('eid')
 
 
@@ -100,7 +90,7 @@ def search_object(ssid: str, imei: str) -> int:
         "sid": ssid
     }
 
-    response = requests.post(URL, params=param)
+    response = requests.post(URL, data=param)
     if response.json().get('items'):
         return response.json().get('items')[0].get('id')
     return -1
@@ -119,11 +109,14 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
         unit_id (int): gurtam object id
         new_value (dict): dictionary with new params
     """
+    update = '"callMode": "update"'
+    create = '"callMode": "create"'
+
     contract_name = {
         'svc': 'item/update_name',
         'params': json.dumps({
             "itemId": unit_id,
-            "name": '{0}'.format(new_value.get('DL'))}),
+            "name": '{0}'.format(new_value.get('ДЛ'))}),
         'sid': session_id
     }
 
@@ -134,7 +127,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
             "id": 1,
             "callMode": 'update',
             "n": 'geozone_imei',
-            "v": '{0}'.format(new_value.get('IMEI'))}),
+            "v": '{0}'.format(new_value.get('ИМЕЙ'))}),
         'sid': session_id
     }
 
@@ -145,7 +138,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
             "id": 2,
             "callMode": 'update',
             "n": 'geozone_sim',
-            "v": '{0}'.format(new_value.get('SIM'))}),
+            "v": '{0}'.format(new_value.get('ТЕЛЕФОН'))}),
         'sid': session_id
     }
 
@@ -156,7 +149,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
             'id': 1,
             'callMode': 'update',
             'n': 'Vin',
-            'v': '{0}'.format(new_value.get('VIN'))}),
+            'v': '{0}'.format(new_value.get('ВИН'))}),
         'sid': session_id
     }
 
@@ -167,7 +160,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
             "id": 6,
             "callMode": 'update',
             "n": 'Инфо4',
-            "v": '{0}'.format(new_value.get('INFO4'))}),
+            "v": '{0}'.format(new_value.get('ИНФО4'))}),
         'sid': session_id
     }
 
@@ -178,7 +171,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
             'id': 2,
             'callMode': 'update',
             'n': 'Марка',
-            'v': '{0}'.format(new_value.get('BRAND'))}),
+            'v': '{0}'.format(new_value.get('МАРКА'))}),
         'sid': session_id
     }
 
@@ -189,7 +182,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
             'id': 3,
             'callMode': 'update',
             'n': 'Модель',
-            'v': '{0}'.format(new_value.get('MODEL'))}),
+            'v': '{0}'.format(new_value.get('МОДЕЛЬ'))}),
         'sid': session_id
     }
 
@@ -200,7 +193,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
             "id": 7,
             "callMode": 'update',
             "n": 'Пин',
-            "v": '{0}'.format(new_value.get('PIN'))}),
+            "v": '{0}'.format(new_value.get('ПИН'))}),
         'sid': session_id
     }
 
@@ -220,7 +213,12 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
                   brand, model, pin, distance, engin_hours]
 
     for param in param_list:
-        response = requests.post(URL, params=param)
+        response = requests.post(URL, data=param)
+        if "error" in response.text:
+            old_param = param.get('params')
+            old_param = {'params': old_param.replace(update, create)}
+            new_param = param | old_param
+            response = requests.post(URL, data=new_param)
         get_log(response, param, new_value)
 
 
@@ -235,11 +233,11 @@ def get_log(response: Response, param: dict, value: dict):
     log_text = 'Запись параметра: {0} - объекта:\
         {1} - завершена с ошибкой. Код ошибки - {2} \n'
     if response.status_code != 200:
-        with open('log.txt', 'a') as log:
+        with open('logging/update_error.txt', 'a') as log:
             log.write(
                 log_text.format(
                     param.get('svc'),
-                    value.get('DL'),
+                    value.get('ДЛ'),
                     response.text)
             )
 
@@ -253,7 +251,7 @@ def search_groups_by_name(ssid: str, group_name: str) -> dict:
         we want to find
 
     Returns:
-        dict: list of dictionaries with group names
+        dict: dictionari with group names
         and id's that matched by name
     """
     param = {
@@ -272,7 +270,7 @@ def search_groups_by_name(ssid: str, group_name: str) -> dict:
         }),
         "sid": ssid
     }
-    response = requests.get(URL, params=param)
+    response = requests.post(URL, data=param)
     return response.json()
 
 
@@ -295,7 +293,7 @@ def search_group_by_id(ssid: str, group_id: int) -> dict:
         'sid': ssid
     }
 
-    response = requests.get(URL, params=param)
+    response = requests.post(URL, data=param)
     return response.json()
 
 
@@ -355,56 +353,113 @@ def add_groups(
             "units": leasing_unit_list + added_unit}),
         'sid': ssid
     }
-    requests.post(URL, params=param)
+    a = requests.post(URL, data=param)
+    print(a.text)
 
 
-def remove_groups(
-    ssid: str,
-    leasing_id: int | str,
-    leasing_unit_list: list[int],
-    removed_unit: list[int]
-):
+def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
     """Remove unit from a group.
 
     Args:
         ssid (str): session id
-        leasing_id (int | str): id group
-        leasing_unit_list (list[int]): list of current id group objects
-        removed_unit (list[int]): list of id objects to remove
+        removed_unit_list (list[int]): list of id objects to remove
     """
-    for unit in removed_unit:
-        leasing_unit_list.remove(unit)
-    param = {
-        'svc': 'unit_group/update_units',
-        'params': json.dumps({
-            "itemId": leasing_id,
-            "units": leasing_unit_list}),
-        'sid': ssid
-    }
+    group_name = search_groups_by_name(
+        ssid,
+        removed_unit_list[0].get('ГРУППА')
+        )
+    group_id = [group.get('id') for group in group_name.get('items')]
+    remove_unit_id = [
+        search_object(ssid, unit.get('ИМЕЙ')) for unit in removed_unit_list
+    ]
+    for index_group, group in enumerate(group_id):
+        group_data = search_group_by_id(ssid, group)
+        group_list = group_unit_list(group_data)
+        for index_unit, unit in enumerate(remove_unit_id):
+            if unit in group_list:
+                group_list.remove(unit)
+            else:
+                with open('logging/unremoved.txt', 'a') as log:
+                    text = 'not found {0} in {1}\n'
+                    imei = removed_unit_list[index_unit].get('ИМЕЙ')
+                    glog_name = group_name.get('items')[index_group].get('nm')
+                    log.write(text.format(imei, glog_name))
+                continue
 
-    requests.post(URL, params=param)
+        param = {
+            'svc': 'unit_group/update_units',
+            'params': json.dumps({
+                "itemId": group,
+                "units": group_list}),
+            'sid': ssid
+        }
+
+        requests.post(URL, data=param)
 
 
-if __name__ == '__main__':
-    # test id object [50597, 53143, 53209]
+def data_export(data: dict) -> None:
+    """_summary_
+
+    Args:
+        data (dict): _description_
+    """    
     sid = get_ssid()
-    # a = search_object(imei='401010053722801721', ssid=sid)
-    # b = search_groups_by_name(sid, 'belousov')
-    print()
-    json_ = [{
-        'DL': 'belousov_belousov',
-        'IMEI': '401010053722801721',
-        'SIM': '+79117084888',
-        'VIN': '0DLGRT124566IO90',
-        'INFO4': '',
-        'BRAND': 'OMODA',
-        'MODEL': '7000',
-        'PIN': '213123',
-        'TYPE': '0',
-        'RISK': '',
-        'LEASING': 'belousov_13',
-        'CONFIG': 'FMB130',
-    }]
+    for unit in data:
+        uid = search_object(sid, unit.get('ИМЕЙ'))
+        if uid == -1:
+            with open('logging/unit_not_found.txt', 'a') as log:
+                log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+        else:
+            update_param(sid, uid, unit)
 
-    # b = update_param(sid, 50597, json_[0])
-    print(search_object(sid, '401010053722801721'))
+
+def group_export(data: dict) -> None:
+    """_summary_
+
+    Args:
+        data (dict): _description_
+    """    
+    sid = get_ssid()
+    truck = []
+    auto = []
+    special = []
+    all_unit = []
+    risk_auto = []
+    # 0 - легковые, 1 - грузовые, 2 - спец.техника, 9 - рисковые
+    for unit in data:
+        uid = search_object(sid, unit.get('ИМЕЙ'))
+        if uid == -1:
+            with open('logging/unit_not_found.txt', 'a') as log:
+                log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+        else:
+            all_unit.append(uid)
+            if unit.get('ТИП') == 0:
+                auto.append(uid)
+            elif unit.get('ТИП') == 1:
+                truck.append(uid)
+            elif unit.get('ТИП') == 2:
+                special.append(uid)
+            if unit.get('РИСК') == 9:
+                risk_auto.append(uid)
+
+    finded_group = search_groups_by_name(
+        sid, data[0].get('ЛИЗИНГ')).get('items')
+
+    for group in finded_group:
+        id_group = group.get('id')
+        leasing_unit_list = group.get('u')
+        if id_group in AUTO:
+            add_groups(sid, id_group, leasing_unit_list, auto)
+            print('added arr in auto', auto)
+        elif group.get('id') in TRUCK:
+            add_groups(sid, id_group, leasing_unit_list, truck)
+            print('add arr in truck', truck)
+        elif group.get('id') in SPEC:
+            add_groups(sid, id_group, leasing_unit_list, special)
+            print('add arr in spec', special)
+        elif group.get('id') in RISK:
+            add_groups(sid, id_group, leasing_unit_list, risk_auto)
+            print('add arr in risk', risk_auto)
+        else:
+            add_groups(sid, id_group, leasing_unit_list, all_unit)
+            print('add arr in all auto', all_unit)
