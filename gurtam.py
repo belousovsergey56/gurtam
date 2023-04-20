@@ -5,16 +5,17 @@ import random
 
 from dotenv import load_dotenv
 
+from hardware import create_object_with_all_params
+
 import requests
 from requests import Response
 
 
 load_dotenv()
 
-
 URL = os.getenv('URL')
 TOKEN = os.getenv('TOKEN')
-# 0 - легковые, 1 - грузовые, 2 - спец.техника, 9 - рисковые
+
 AUTO = [40187, 41342, 40576]
 TRUCK = [40188, 41343, 40577]
 SPEC = [53014, 53012, 53013]
@@ -50,7 +51,7 @@ def get_ssid() -> str:
     from where it takes eid and returns it as a string,
 
     Returns:
-        str: eid
+        str: eid - session id on vialon
     """
     param = {
         "svc": "token/login",
@@ -60,18 +61,15 @@ def get_ssid() -> str:
     return response.json().get('eid')
 
 
-def search_object(ssid: str, imei: str) -> int:
-    """Find object by imei and returns object id.
-
-    The function finds an object in the database by imei and returns id.
-    If the object is not found, the function returns -1
+def get_object_info_by_imei(ssid: str, imei: str) -> dict:
+    """Search object by imei.
 
     Args:
-        ssid (str): current connection id, session number
-        imei (str): unique id your equipment
+        ssid (str): session id
+        imei (str): unique id object
 
     Returns:
-        int: unique id avl_unit or -1
+        dict: meta data about object
     """
     param = {
         "svc": "core/search_items",
@@ -91,9 +89,142 @@ def search_object(ssid: str, imei: str) -> int:
     }
 
     response = requests.post(URL, data=param)
-    if response.json().get('items'):
-        return response.json().get('items')[0].get('id')
+    return response.json()
+
+
+def get_object_info_by_name(ssid: str, object_name: str) -> dict:
+    """Search object by imei.
+
+    Args:
+        ssid (str): session id
+        object_name (str): partial or full object name.
+
+    Returns:
+        dict: meta data about object
+    """
+    param = {
+        "svc": "core/search_items",
+        "params": json.dumps({
+            "spec": {
+                "itemsType": "avl_unit",
+                "propName": "sys_name",
+                "propValueMask": "*{0}*".format(object_name),
+                "sortType": "sys_name"
+            },
+            "force": 1,
+            "flags": 4611686018427387903,
+            "from": 0,
+            "to": 0
+        }),
+        "sid": ssid
+    }
+
+    response = requests.post(URL, data=param)
+    return response.json()
+
+
+def get_object_id(ssid: str, imei: str) -> int:
+    """Find object by imei and returns object id.
+
+    The function finds an object in the database by imei and returns id.
+    If the object is not found, the function returns -1
+
+    Args:
+        ssid (str): current connection id, session number
+        imei (str): unique id your equipment
+
+    Returns:
+        int: unique id avl_unit or -1
+    """
+    response = get_object_info_by_imei(ssid, imei)
+    if response.get('items'):
+        return response.get('items')[0].get('id')
     return -1
+
+
+def create_custom_fields(ssid: str, unit_id: int) -> None:
+    """Create of arbitrary fields in the object card on the vialon.
+
+    The function finds the object by IMEI,
+    checks the presence of the necessary fields in the "Custom fields" tab
+    if the field is missing, the function creates it.
+
+    Args:
+        ssid (str): session id
+        unit_id (int): object id on vialon
+    """
+    admin_fields = (
+        'geozone_imei',
+        'geozone_sim',
+        'Инфо1',
+        'Инфо2',
+        'Инфо3',
+        'Инфо4',
+        'Пин'
+    )
+    item_fields = ('Vin', 'Марка', 'Модель')
+    id_field = {
+        'geozone_imei': 1,
+        'geozone_sim': 2,
+        'Инфо1': 3,
+        'Инфо2': 4,
+        'Инфо3': 5,
+        'Инфо4': 6,
+        'Пин': 7,
+        'Vin': 1,
+        'Марка': 2,
+        'Модель': 3
+    }
+
+    for field in admin_fields:
+        param = {
+            "svc": "core/search_item",
+            "params": json.dumps({
+                "id": unit_id,
+                "flags": 128
+            }),
+            "sid": ssid
+        }
+        response = requests.post(URL, data=param)
+        if field not in response.text:
+            create_field = {
+                'svc': 'item/update_admin_field',
+                'params': json.dumps({
+                    "itemId": unit_id,
+                    "id": id_field.get(field),
+                    "callMode": 'create',
+                    "n": '{0}'.format(field),
+                    "v": ''}),
+                'sid': ssid
+            }
+            requests.post(URL, data=create_field)
+        else:
+            continue
+
+    for field in item_fields:
+        param = {
+            "svc": "core/search_item",
+            "params": json.dumps({
+                "id": unit_id,
+                "flags": 8
+            }),
+            "sid": ssid
+        }
+        response = requests.post(URL, data=param)
+        if field not in response.text:
+            create_field = {
+                'svc': 'item/update_custom_field',
+                'params': json.dumps({
+                    'itemId': unit_id,
+                    'id': id_field.get(field),
+                    'callMode': 'create',
+                    'n': '{0}'.format(field),
+                    'v': ''}),
+                'sid': ssid
+            }
+            requests.post(URL, data=create_field)
+        else:
+            continue
 
 
 def update_param(session_id: str, unit_id: int, new_value: dict):
@@ -109,117 +240,123 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
         unit_id (int): gurtam object id
         new_value (dict): dictionary with new params
     """
-    update = '"callMode": "update"'
-    create = '"callMode": "create"'
-
     contract_name = {
         'svc': 'item/update_name',
-        'params': json.dumps({
+        'params': {
             "itemId": unit_id,
-            "name": '{0}'.format(new_value.get('ДЛ'))}),
+            "name": '{0}'.format(new_value.get('ДЛ'))},
         'sid': session_id
     }
 
     imei = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({
+        'params': {
             "itemId": unit_id,
             "id": 1,
             "callMode": 'update',
             "n": 'geozone_imei',
-            "v": '{0}'.format(new_value.get('ИМЕЙ'))}),
+            "v": '{0}'.format(new_value.get('ИМЕЙ'))},
         'sid': session_id
     }
 
     sim = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({
+        'params': {
             "itemId": unit_id,
             "id": 2,
             "callMode": 'update',
             "n": 'geozone_sim',
-            "v": '{0}'.format(new_value.get('ТЕЛЕФОН'))}),
+            "v": '+{0}'.format(new_value.get('ТЕЛЕФОН'))},
         'sid': session_id
     }
 
     vin = {
         'svc': 'item/update_custom_field',
-        'params': json.dumps({
+        'params': {
             'itemId': unit_id,
             'id': 1,
             'callMode': 'update',
             'n': 'Vin',
-            'v': '{0}'.format(new_value.get('ВИН'))}),
+            'v': '{0}'.format(new_value.get('ВИН'))},
         'sid': session_id
     }
 
     info4 = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({
+        'params': {
             "itemId": unit_id,
             "id": 6,
             "callMode": 'update',
             "n": 'Инфо4',
-            "v": '{0}'.format(new_value.get('ИНФО4'))}),
+            "v": '{0}'.format(new_value.get('ИНФО4'))},
         'sid': session_id
     }
 
     brand = {
         'svc': 'item/update_custom_field',
-        'params': json.dumps({
+        'params': {
             'itemId': unit_id,
             'id': 2,
             'callMode': 'update',
             'n': 'Марка',
-            'v': '{0}'.format(new_value.get('МАРКА'))}),
+            'v': '{0}'.format(new_value.get('МАРКА'))},
         'sid': session_id
     }
 
     model = {
         'svc': 'item/update_custom_field',
-        'params': json.dumps({
+        'params': {
             'itemId': unit_id,
             'id': 3,
             'callMode': 'update',
             'n': 'Модель',
-            'v': '{0}'.format(new_value.get('МОДЕЛЬ'))}),
+            'v': '{0}'.format(new_value.get('МОДЕЛЬ'))},
         'sid': session_id
     }
 
     pin = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({
+        'params': {
             "itemId": unit_id,
             "id": 7,
             "callMode": 'update',
             "n": 'Пин',
-            "v": '{0}'.format(new_value.get('ПИН'))}),
+            "v": '{0}'.format(new_value.get('ПИН'))},
         'sid': session_id
     }
 
     distance = {
         'svc': 'unit/update_mileage_counter',
-        'params': json.dumps({'itemId': unit_id, 'newValue': 0}),
+        'params': {'itemId': unit_id, 'newValue': 0},
         'sid': session_id
     }
 
     engin_hours = {
         'svc': 'unit/update_eh_counter',
-        'params': json.dumps({'itemId': unit_id, 'newValue': 0}),
+        'params': {'itemId': unit_id, 'newValue': 0},
         'sid': session_id
     }
 
-    param_list = [contract_name, imei, sim, vin, info4,
-                  brand, model, pin, distance, engin_hours]
-
-    for param in param_list:
-        response = requests.post(URL, data=param)
-        if "error" in response.text:
-            old_param = param.get('params')
-            old_param = {'params': old_param.replace(update, create)}
-            new_param = param | old_param
-            response = requests.post(URL, data=new_param)
-        get_log(response, param, new_value)
+    param = {'svc': 'core/batch',
+             'params': json.dumps({
+                 "params": [contract_name,
+                            imei,
+                            sim,
+                            vin,
+                            info4,
+                            brand,
+                            model,
+                            pin,
+                            distance,
+                            engin_hours
+                            ],
+                 "flags": 0}),
+             'sid': session_id
+             }
+    print('start check fields')
+    create_custom_fields(session_id, unit_id)
+    print(f'start update object fields {new_value.get("ПИН")}')
+    requests.post(URL, data=param)
 
 
 def get_log(response: Response, param: dict, value: dict):
@@ -297,7 +434,7 @@ def search_group_by_id(ssid: str, group_id: int) -> dict:
     return response.json()
 
 
-def id_group(group: dict) -> int | str:
+def get_id_group(group: dict) -> int | str:
     """Get ID group.
 
     Args:
@@ -313,14 +450,14 @@ def id_group(group: dict) -> int | str:
         return 'Группа не найдена'
 
 
-def group_unit_list(group: dict) -> list | str:
+def get_group_unit_list(group: dict) -> list | str:
     """Get group unit list.
 
     Args:
         group (dict): json object with metadata about group
 
     Returns:
-        list|str: if group finded, return unit list as [123, 456, ...etc],
+        list|str: if group finded, return unit list id as [123, 456, ...etc],
         if not finded return traceback 'this is list empty'
     """
     try:
@@ -353,8 +490,7 @@ def add_groups(
             "units": leasing_unit_list + added_unit}),
         'sid': ssid
     }
-    a = requests.post(URL, data=param)
-    print(a.text)
+    requests.post(URL, data=param)
 
 
 def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
@@ -367,14 +503,14 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
     group_name = search_groups_by_name(
         ssid,
         removed_unit_list[0].get('ГРУППА')
-        )
+    )
     group_id = [group.get('id') for group in group_name.get('items')]
     remove_unit_id = [
-        search_object(ssid, unit.get('ИМЕЙ')) for unit in removed_unit_list
+        get_object_id(ssid, unit.get('ИМЕЙ')) for unit in removed_unit_list
     ]
     for index_group, group in enumerate(group_id):
         group_data = search_group_by_id(ssid, group)
-        group_list = group_unit_list(group_data)
+        group_list = get_group_unit_list(group_data)
         for index_unit, unit in enumerate(remove_unit_id):
             if unit in group_list:
                 group_list.remove(unit)
@@ -397,37 +533,55 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
         requests.post(URL, data=param)
 
 
-def data_export(data: dict) -> None:
-    """_summary_
+def checking_object_on_vialon(data: dict) -> None:
+    """Check the presence of an object on the vialon.
+
+    Checking dictionary objects by IMEI for presence on the Vialon portal
+    If the object is missing, the object is written to the log file and the
+    object is created on the portal.
+    An object is created based on the type of its equipment.
+    To create a separate function is used.
 
     Args:
-        data (dict): _description_
-    """    
+        data (dict): dictionary of objects
+    """
     sid = get_ssid()
     for unit in data:
-        uid = search_object(sid, unit.get('ИМЕЙ'))
+        uid = get_object_id(sid, unit.get('ИМЕЙ'))
         if uid == -1:
+            create_object_with_all_params(sid, unit)
             with open('logging/unit_not_found.txt', 'a') as log:
                 log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+                uid = get_object_id(sid, unit.get('ИМЕЙ'))
+                update_param(sid, uid, unit)
         else:
             update_param(sid, uid, unit)
 
 
-def group_export(data: dict) -> None:
-    """_summary_
+def group_update(data: dict) -> None:
+    """Update list of objects in groups.
+
+    The function loops through the list of objects and sorts them into lists
+    to add to a specific group.
+    There are several specific groups: cars, trucks, special equipment, risky.
+    Here is also a group where all objects are added.
+    Then the function loops through all the groups that are found by the
+    keyword and adds objects from the list with all objects.
+    If there is a group, which is a special group, then objects from a special
+    list are added to it.
 
     Args:
-        data (dict): _description_
-    """    
+        data (dict): dictionary with data on objects
+    """
     sid = get_ssid()
     truck = []
     auto = []
     special = []
     all_unit = []
     risk_auto = []
-    # 0 - легковые, 1 - грузовые, 2 - спец.техника, 9 - рисковые
+
     for unit in data:
-        uid = search_object(sid, unit.get('ИМЕЙ'))
+        uid = get_object_id(sid, unit.get('ИМЕЙ'))
         if uid == -1:
             with open('logging/unit_not_found.txt', 'a') as log:
                 log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
@@ -444,22 +598,17 @@ def group_export(data: dict) -> None:
 
     finded_group = search_groups_by_name(
         sid, data[0].get('ЛИЗИНГ')).get('items')
-
+    print('start update groups')
     for group in finded_group:
         id_group = group.get('id')
         leasing_unit_list = group.get('u')
         if id_group in AUTO:
             add_groups(sid, id_group, leasing_unit_list, auto)
-            print('added arr in auto', auto)
         elif group.get('id') in TRUCK:
             add_groups(sid, id_group, leasing_unit_list, truck)
-            print('add arr in truck', truck)
         elif group.get('id') in SPEC:
             add_groups(sid, id_group, leasing_unit_list, special)
-            print('add arr in spec', special)
         elif group.get('id') in RISK:
             add_groups(sid, id_group, leasing_unit_list, risk_auto)
-            print('add arr in risk', risk_auto)
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit)
-            print('add arr in all auto', all_unit)
