@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Авторизация{% endblock %}
+
+{% block body %}
+
+    <div class="container header-sigin">
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages: %}
+            {% for message in messages: %}
+            <p class="flash-message warning">{{ message }}</p>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            <h1 class="h3 mb-3 font-weight-normal ">Авторизация</h1>
+        
+        <div class="form-signin">
+            {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
+        </div>
+            <p class="mt-5 mb-3 text-muted">Цезарь Сателлит © 2023</p>
+    </div>
+    {% endblock %}
