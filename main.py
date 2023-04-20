@@ -7,17 +7,29 @@ import os
 
 from flask import Flask, redirect, render_template, url_for
 
+# from flask_bootstrap import Bootstrap
+
+# from flask_login import current_user, login_required, login_user, logout_user
+
 from forms import UploadFile
 
-from gurtam import data_export, get_ssid, group_export, remove_groups
+from gurtam import checking_object_on_vialon, get_ssid, group_update
+from gurtam import remove_groups
+
+# from models import User
 
 from read_file import read_json, xls_to_json
 
+# from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+# Bootstrap(app)
+
+# @login_manager.user_loader
+# def load_user(user_id):
+#     return User.query.get(int(user_id))
 
 
 @app.route('/')
@@ -43,8 +55,8 @@ def export_fms4():
         form.export_file.data.save('upload/{0}'.format(filename))
         xls_to_json('upload/{0}'.format(filename))
         a = read_json()
-        data_export(a)
-        group_export(a)
+        checking_object_on_vialon(a)
+        group_update(a)
         os.remove('upload/{0}'.format(filename))
         os.remove('upload/work_file.json')
         return redirect(url_for('export_fms4'))
