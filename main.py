@@ -5,31 +5,28 @@ Run browser and run all project for export data object to Gurtam.
 """
 import os
 
+from config import app, db, login_manager
+
 from flask import Flask, redirect, render_template, url_for
 
-# from flask_bootstrap import Bootstrap
-
-# from flask_login import current_user, login_required, login_user, logout_user
+from flask_login import current_user, login_required, login_user, logout_user
 
 from forms import UploadFile
 
 from gurtam import checking_object_on_vialon, get_ssid, group_update
 from gurtam import remove_groups
 
-# from models import User
+from models import User
 
 from read_file import read_json, xls_to_json
 
-# from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
-# Bootstrap(app)
 
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.query.get(int(user_id))
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 @app.route('/')
@@ -44,11 +41,11 @@ def home() -> str:
 
 @app.route('/export', methods=['GET', 'POST'])
 def export_fms4():
-    """_summary_
+    """Import object data to Wialon.
 
     Returns:
-        _type_: _description_
-    """    
+        Html template export_fms4.html
+    """
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -65,11 +62,16 @@ def export_fms4():
 
 @app.route('/remove_groups', methods=['GET', 'POST'])
 def remove_group():
-    """_summary_
+    """Remove object from group.
+
+    Access to the page to remove objects from groups.
+    The user uploads an excel file with two columns IMEI and GROUP,
+    the function reads it, finds objects by IMEI id and removes these
+    objects from groups.
 
     Returns:
-        _type_: _description_
-    """    
+        Html template remove_groups.html
+    """
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -83,6 +85,31 @@ def remove_group():
         return redirect(url_for('remove_group'))
     return render_template('remove_groups.html', form=form)
 
+
+def add_admin():
+    password = os.getenv('admin_password')
+    admin = User(login='admin', password=generate_password_hash(password))
+    db.session.add(admin)
+    db.session.commit()
+
+
+def add_tech_crew():
+    password = os.getenv('crew_password')
+    crew = User(login='okpp', password=generate_password_hash(password))
+    db.session.add(crew)
+    db.session.commit()
+
+
+def add_carcade():
+    password = os.getenv('carcade_password')
+    carcade = User(login='carcade', password=generate_password_hash(password))
+    db.session.add(carcade)
+    db.session.commit()
+
+
+add_admin()
+add_tech_crew()
+add_carcade()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
