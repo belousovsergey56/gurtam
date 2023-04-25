@@ -3,15 +3,18 @@
 This module, have main method.
 Run browser and run all project for export data object to Gurtam.
 """
+
+
 import os
+from functools import wraps
 
 from config import app, db, login_manager
 
-from flask import Flask, redirect, render_template, url_for
+from flask import Flask, flash, redirect, render_template, url_for
 
 from flask_login import current_user, login_required, login_user, logout_user
 
-from forms import UploadFile
+from forms import SigninForm, UploadFile
 
 from gurtam import checking_object_on_vialon, get_ssid, group_update
 from gurtam import remove_groups
@@ -29,7 +32,38 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-@app.route('/')
+def admin_only(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.get_id() != str(1):
+            return render_template('403.html')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.route('/', methods=['GET', 'POST'])
+def sign_in():
+    form = SigninForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(login=form.login.data).first()
+        if not user:
+            flash(message="Не верный логин,\
+                попробуйте снова или обратитесть к своему администратору")
+            return render_template('signin.html', form=form)
+        if check_password_hash(user.password, form.password.data):
+            login_user(user)
+            return redirect(url_for('menu'))
+        else:
+            flash(message="Не верный пароль, попробуйте снова")
+            return render_template(
+                "signin.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+                )
+    return render_template('signin.html', form=form)
+
+
+@app.route('/home')
 def home() -> str:
     """Render home page.
 
@@ -111,5 +145,6 @@ add_admin()
 add_tech_crew()
 add_carcade()
 
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)

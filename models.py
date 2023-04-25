@@ -1,5 +1,5 @@
 """Models data base leasing users."""
-from config import db
+from config import app, db
 
 from flask_login import UserMixin
 
@@ -19,5 +19,10 @@ class User(UserMixin, db.Model):
     login = db.Column(db.String(1000), unique=True)
     password = db.Column(db.String(1000))
 
+    def __ini__(self, login, password):
+        self.login = login
+        self.password = password
 
-db.create_all()
+
+with app.app_context():
+    db.create_all()
