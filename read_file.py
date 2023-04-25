@@ -5,8 +5,9 @@ Module have a func for convert xls to json,
 and read json for returns dictionary.
 """
 
-import pandas as pd
 import json
+
+import pandas as pd
 
 
 def xls_to_json(xls_file):
