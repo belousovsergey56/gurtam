@@ -141,9 +141,9 @@ def add_carcade():
     db.session.commit()
 
 
-add_admin()
-add_tech_crew()
-add_carcade()
+# add_admin()
+# add_tech_crew()
+# add_carcade()
 
 
 if __name__ == '__main__':

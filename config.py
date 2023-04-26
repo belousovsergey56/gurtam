@@ -25,7 +25,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 Bootstrap(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///leasing_users.sqlite3"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///leasing_users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 login_manager = LoginManager()
