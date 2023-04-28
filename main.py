@@ -10,7 +10,7 @@ from functools import wraps
 
 from config import app, db, login_manager
 
-from flask import Flask, flash, redirect, render_template, url_for
+from flask import flash, redirect, render_template, url_for
 
 from flask_login import current_user, login_required, login_user, logout_user
 
@@ -29,7 +29,7 @@ from werkzeug.utils import secure_filename
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.query.filter_by(id=user_id).first()
 
 
 def admin_only(f):
@@ -52,7 +52,7 @@ def sign_in():
             return render_template('signin.html', form=form)
         if check_password_hash(user.password, form.password.data):
             login_user(user)
-            return redirect(url_for('menu'))
+            return redirect(url_for('home'))
         else:
             flash(message="Не верный пароль, попробуйте снова")
             return render_template(
@@ -64,6 +64,7 @@ def sign_in():
 
 
 @app.route('/home')
+@login_required
 def home() -> str:
     """Render home page.
 
@@ -74,6 +75,7 @@ def home() -> str:
 
 
 @app.route('/export', methods=['GET', 'POST'])
+@login_required
 def export_fms4():
     """Import object data to Wialon.
 
@@ -95,6 +97,7 @@ def export_fms4():
 
 
 @app.route('/remove_groups', methods=['GET', 'POST'])
+@login_required
 def remove_group():
     """Remove object from group.
 
@@ -129,7 +132,7 @@ def add_admin():
 
 def add_tech_crew():
     password = os.getenv('crew_password')
-    crew = User(login='okpp', password=generate_password_hash(password))
+    crew = User(login='cesar', password=generate_password_hash(password))
     db.session.add(crew)
     db.session.commit()
 
@@ -141,9 +144,13 @@ def add_carcade():
     db.session.commit()
 
 
-# add_admin()
-# add_tech_crew()
-# add_carcade()
+with app.app_context():
+    if User.query.all():
+        None
+    else:
+        add_admin()
+        add_tech_crew()
+        add_carcade()
 
 
 if __name__ == '__main__':
