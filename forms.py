@@ -23,7 +23,7 @@ class SigninForm(FlaskForm):
         FlaskForm (class): extends FlaskForm for create forms.
     """
 
-    email = TextAreaField(
+    login = TextAreaField(
         label='',
         render_kw={'placeholder': 'Логин'},
         validators=[DataRequired()]
