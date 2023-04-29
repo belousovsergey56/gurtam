@@ -16,6 +16,7 @@ from flask_login import LoginManager
 
 from flask_sqlalchemy import SQLAlchemy
 
+from flask_admin import Admin
 
 load_dotenv()
 db_password = os.getenv('mysql_password_root')
@@ -33,3 +34,4 @@ login_manager.init_app(app)
 ckeditor = CKEditor(app)
 db = SQLAlchemy()
 db.init_app(app)
+admin = Admin(app, name='Админ панель', template_mode='bootstrap4')
