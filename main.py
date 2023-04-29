@@ -123,6 +123,12 @@ def remove_group():
     return render_template('remove_groups.html', form=form)
 
 
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('sign_in'))
+
+
 def add_admin():
     password = os.getenv('admin_password')
     admin = User(login='admin', password=generate_password_hash(password))
