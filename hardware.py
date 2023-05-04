@@ -243,7 +243,7 @@ def create_object_with_all_params(sid: str, object_param: dict) -> None:
     add_obj_uid(sid, obj_id, hard_id, object_param.get('ИМЕЙ'))
     add_phone(sid, obj_id, object_param.get('ТЕЛЕФОН'))
     add_param_engin_axel(sid, obj_id)
-    # обновить добполнительно
+    # обновить дополнительно
     update_advance_setting(sid, obj_id, hware)
     update_advance_validity_filter(sid, obj_id, hware)
     create_driving_param(sid, obj_id)
