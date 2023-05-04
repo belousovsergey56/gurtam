@@ -240,6 +240,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
         unit_id (int): gurtam object id
         new_value (dict): dictionary with new params
     """
+    # info4_id = check_create_info(session_id, unit_id, 'Инфо4')
     contract_name = {
         'svc': 'item/update_name',
         'params': {
@@ -612,3 +613,210 @@ def group_update(data: dict) -> None:
             add_groups(sid, id_group, leasing_unit_list, risk_auto)
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit)
+
+
+def fill_info5(ssid: str, unit_id: int, field_id: int, info_for_fill: str):
+    info5 = {
+        'svc': 'item/update_admin_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": field_id,
+            "callMode": 'update',
+            "n": 'Инфо5',
+            "v": info_for_fill}),
+        'sid': ssid
+    }
+    requests.post(URL, data=info5)
+
+
+def check_create_info5(ssid: str, unit_id: int) -> int:
+    param = {
+        "svc": "core/search_item",
+        "params": json.dumps({
+            "id": unit_id,
+            "flags": 128
+        }),
+        "sid": ssid
+    }
+    response = requests.post(URL, data=param).json().get('item').get('aflds')
+
+    for info in response.items():
+        if 'Инфо5' not in info[1].get('n'):
+            continue
+        else:
+            return info[1].get('id')
+
+    info5 = {
+        'svc': 'item/update_admin_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": 0,
+            "callMode": 'create',
+            "n": 'Инфо5',
+            "v": ''}),
+        'sid': ssid
+    }
+    response = requests.post(URL, data=info5).json()[1].get('id')
+    return response
+
+
+def check_create_info(ssid: str, unit_id: int, info_name: str) -> int:
+    param = {
+        "svc": "core/search_item",
+        "params": json.dumps({
+            "id": unit_id,
+            "flags": 128
+        }),
+        "sid": ssid
+    }
+    response = requests.post(URL, data=param).json().get('item').get('aflds')
+
+    for info in response.items():
+        if info_name not in info[1].get('n'):
+            continue
+        else:
+            return info[1].get('id')
+
+    info = {
+        'svc': 'item/update_admin_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": 0,
+            "callMode": 'create',
+            "n": info_name,
+            "v": ''}),
+        'sid': ssid
+    }
+    response = requests.post(URL, data=info).json()[1].get('id')
+    return response
+
+
+if __name__ == '__main__':
+    ssid = get_ssid()
+    unit_id = get_object_id(ssid, '150317173740584')
+    # field_id = check_create_info5(ssid, unit_id)
+    # print(field_id)
+    # fill_info5(ssid, unit_id, field_id, 'Belousov Sergey')
+    admin = {
+        "svc": "core/search_item",
+        "params": json.dumps({
+            "id": unit_id,
+            "flags": 128
+        }),
+        "sid": ssid
+    }
+    custom = {
+        "svc": "core/search_item",
+        "params": json.dumps({
+            "id": unit_id,
+            "flags": 8
+        }),
+        "sid": ssid
+    }
+    response1 = requests.post(URL, data=admin).json().get('item')
+    # response2 = requests.post(URL, data=custom).json().get('item')
+    # print()
+    print(response1)
+    # print()
+    # print(response2)
+    info4 = {
+        'svc': 'item/update_admin_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": 555,
+            "callMode": 'update',
+            "n": 'Инфо1',
+            "v": 'Барков'}),
+        'sid': ssid
+    }
+    resp = requests.post(URL, data=info4)
+    # print(resp.json())
+    print(resp.json())
+    if 'error' in resp.text:
+        id_info4 = check_create_info(ssid, unit_id, 'Инфо1')
+        info4 = {
+            'svc': 'item/update_admin_field',
+            'params': json.dumps({
+                "itemId": unit_id,
+                "id": id_info4,
+                "callMode": 'update',
+                "n": 'Инфо1',
+                "v": 'Барков'}),
+            'sid': ssid
+        }
+        resp = requests.post(URL, data=info4)
+        print(resp.text)
+        # check_create_info5(ssid, unit_id)
+    # f_id = {
+    #     'vin_id': None,
+    #     'mark_id': None,
+    #     'model_id': None,
+    #     'imei_id': None,
+    #     'sim_id': None,
+    #     'info1': None,
+    #     'info4': None,
+    #     'info5': None,
+    #     'info6': None,
+    #     'pin': None,
+    # }
+    # for i in response1.get('aflds').items():
+    #     match i[1].get('n'):
+    #         case 'Vin':
+    #             f_id.update({'vin_id':  i[1].get('id')})
+    #         case 'Марка':
+    #             f_id.update({'mark_id': i[1].get('id')})
+    #         case 'Модель':
+    #             f_id.update({'model_id': i[1].get('id')})
+    #         case 'geozone_imei':
+    #             f_id.update({'imei_id': i[1].get('id')})
+    #         case 'geozone_sim':
+    #             f_id.update({'sim_id': i[1].get('id')})
+    #         case 'Инфо1':
+    #             f_id.update({'info1': i[1].get('id')})
+    #         case 'Инфо4':
+    #             f_id.update({'info4': i[1].get('id')})
+    #         case 'Инфо5':
+    #             f_id.update({'info5': i[1].get('id')})
+    #         case 'Инфо6':
+    #             f_id.update({'info6': i[1].get('id')})
+    #         case 'Пин':
+    #             f_id.update({'pin': i[1].get('id')})
+    #         case _:
+    #             continue
+
+    # for i in response2.get('flds').items():
+    #     match i[1].get('n'):
+    #         case 'Vin':
+    #             f_id.update({'vin_id':  i[1].get('id')})
+    #         case 'Марка':
+    #             f_id.update({'mark_id': i[1].get('id')})
+    #         case 'Модель':
+    #             f_id.update({'model_id': i[1].get('id')})
+    #         case 'geozone_imei':
+    #             f_id.update({'imei_id': i[1].get('id')})
+    #         case 'geozone_sim':
+    #             f_id.update({'sim_id': i[1].get('id')})
+    #         case 'Инфо1':
+    #             f_id.update({'info1': i[1].get('id')})
+    #         case 'Инфо4':
+    #             f_id.update({'info4': i[1].get('id')})
+    #         case 'Инфо5':
+    #             f_id.update({'info5': i[1].get('id')})
+    #         case 'Инфо6':
+    #             f_id.update({'info6': i[1].get('id')})
+    #         case 'Пин':
+    #             f_id.update({'pin': i[1].get('id')})
+    #         case _:
+    #             continue
+    # print(f_id)
+    # print(len(response))
+    # print(len(response))
+    # a = response.json()
+    # print(a)
+    # for k in a['item']['aflds'].items():
+    # for k in response.items():
+    #     if 'Инфо5' not in k[1].get('n'):
+    #         continue
+    #     else:
+    #         print(k[1].get('n'))
+    # print('create info5')
