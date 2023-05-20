@@ -227,7 +227,7 @@ def create_custom_fields(ssid: str, unit_id: int) -> None:
             continue
 
 
-def update_param(session_id: str, unit_id: int, new_value: dict):
+def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
     """Fill object fields with new parameters.
 
     The function accepts a session ID, an object ID,
@@ -240,7 +240,6 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
         unit_id (int): gurtam object id
         new_value (dict): dictionary with new params
     """
-    # info4_id = check_create_info(session_id, unit_id, 'Инфо4')
     contract_name = {
         'svc': 'item/update_name',
         'params': {
@@ -286,10 +285,10 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
         'svc': 'item/update_admin_field',
         'params': {
             "itemId": unit_id,
-            "id": 6,
+            "id": info4id,
             "callMode": 'update',
             "n": 'Инфо4',
-            "v": '{0}'.format(new_value.get('ИНФО4'))},
+            "v": '{0}'.format(new_value.get('ИНФО4') if new_value.get('ИНФО4') is not None else '')},
         'sid': session_id
     }
 
@@ -355,7 +354,6 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
              'sid': session_id
              }
     print('start check fields')
-    create_custom_fields(session_id, unit_id)
     print(f'start update object fields {new_value.get("ПИН")}')
     requests.post(URL, data=param)
 
@@ -534,7 +532,7 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
         requests.post(URL, data=param)
 
 
-def checking_object_on_vialon(data: dict) -> None:
+def create_object(sid: str, unit_id: int, unit) -> None:
     """Check the presence of an object on the vialon.
 
     Checking dictionary objects by IMEI for presence on the Vialon portal
@@ -546,17 +544,11 @@ def checking_object_on_vialon(data: dict) -> None:
     Args:
         data (dict): dictionary of objects
     """
-    sid = get_ssid()
-    for unit in data:
-        uid = get_object_id(sid, unit.get('ИМЕЙ'))
-        if uid == -1:
-            create_object_with_all_params(sid, unit)
-            with open('logging/unit_not_found.txt', 'a') as log:
-                log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
-                uid = get_object_id(sid, unit.get('ИМЕЙ'))
-                update_param(sid, uid, unit)
-        else:
-            update_param(sid, uid, unit)
+    obj_id = create_object_with_all_params(sid, unit)
+    create_custom_fields(sid, obj_id)
+    with open('logging/unit_not_found.txt', 'a') as log:
+        log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+    return obj_id
 
 
 def group_update(data: dict) -> None:
@@ -582,20 +574,15 @@ def group_update(data: dict) -> None:
     risk_auto = []
 
     for unit in data:
-        uid = get_object_id(sid, unit.get('ИМЕЙ'))
-        if uid == -1:
-            with open('logging/unit_not_found.txt', 'a') as log:
-                log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
-        else:
-            all_unit.append(uid)
-            if unit.get('ТИП') == 0:
-                auto.append(uid)
-            elif unit.get('ТИП') == 1:
-                truck.append(uid)
-            elif unit.get('ТИП') == 2:
-                special.append(uid)
-            if unit.get('РИСК') == 9:
-                risk_auto.append(uid)
+        all_unit.append(unit.get('uid'))
+        if unit.get('ТИП') == 0:
+            auto.append(unit.get('uid'))
+        elif unit.get('ТИП') == 1:
+            truck.append(unit.get('uid'))
+        elif unit.get('ТИП') == 2:
+            special.append(unit.get('uid'))
+        if unit.get('РИСК') == 9:
+            risk_auto.append(unit.get('uid'))
 
     finded_group = search_groups_by_name(
         sid, data[0].get('ЛИЗИНГ')).get('items')
@@ -660,7 +647,7 @@ def check_create_info5(ssid: str, unit_id: int) -> int:
     return response
 
 
-def check_create_info(ssid: str, unit_id: int, info_name: str) -> int:
+def check_info(ssid: str, unit_id: int, info_name: str) -> int:
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
@@ -675,7 +662,7 @@ def check_create_info(ssid: str, unit_id: int, info_name: str) -> int:
         if info_name not in info[1].get('n'):
             continue
         else:
-            return info[1].get('id')
+            return info[1].get('id'), info[1].get('v')
 
     info = {
         'svc': 'item/update_admin_field',
@@ -687,136 +674,70 @@ def check_create_info(ssid: str, unit_id: int, info_name: str) -> int:
             "v": ''}),
         'sid': ssid
     }
-    response = requests.post(URL, data=info).json()[1].get('id')
-    return response
+    response = requests.post(URL, data=info)
+    return response.json()[1].get('id'), response.json()[1].get('v')
 
 
-if __name__ == '__main__':
-    ssid = get_ssid()
-    unit_id = get_object_id(ssid, '150317173740584')
-    # field_id = check_create_info5(ssid, unit_id)
-    # print(field_id)
-    # fill_info5(ssid, unit_id, field_id, 'Belousov Sergey')
-    admin = {
-        "svc": "core/search_item",
-        "params": json.dumps({
-            "id": unit_id,
-            "flags": 128
-        }),
-        "sid": ssid
-    }
-    custom = {
-        "svc": "core/search_item",
-        "params": json.dumps({
-            "id": unit_id,
-            "flags": 8
-        }),
-        "sid": ssid
-    }
-    response1 = requests.post(URL, data=admin).json().get('item')
-    # response2 = requests.post(URL, data=custom).json().get('item')
-    # print()
-    print(response1)
-    # print()
-    # print(response2)
-    info4 = {
+def fill_info(
+    ssid: str,
+    unit_id: int,
+    field_id_value: int,
+    data: dict
+):
+    info1 = {
         'svc': 'item/update_admin_field',
-        'params': json.dumps({
+        'params': {
             "itemId": unit_id,
-            "id": 555,
+            "id": field_id_value[0][0],
             "callMode": 'update',
             "n": 'Инфо1',
-            "v": 'Барков'}),
+            "v": data.get('РДДБ') if data.get('РДДБ') is not None else field_id_value[0][1]
+        },
         'sid': ssid
     }
-    resp = requests.post(URL, data=info4)
-    # print(resp.json())
-    print(resp.json())
-    if 'error' in resp.text:
-        id_info4 = check_create_info(ssid, unit_id, 'Инфо1')
-        info4 = {
-            'svc': 'item/update_admin_field',
-            'params': json.dumps({
-                "itemId": unit_id,
-                "id": id_info4,
-                "callMode": 'update',
-                "n": 'Инфо1',
-                "v": 'Барков'}),
-            'sid': ssid
-        }
-        resp = requests.post(URL, data=info4)
-        print(resp.text)
-        # check_create_info5(ssid, unit_id)
-    # f_id = {
-    #     'vin_id': None,
-    #     'mark_id': None,
-    #     'model_id': None,
-    #     'imei_id': None,
-    #     'sim_id': None,
-    #     'info1': None,
-    #     'info4': None,
-    #     'info5': None,
-    #     'info6': None,
-    #     'pin': None,
-    # }
-    # for i in response1.get('aflds').items():
-    #     match i[1].get('n'):
-    #         case 'Vin':
-    #             f_id.update({'vin_id':  i[1].get('id')})
-    #         case 'Марка':
-    #             f_id.update({'mark_id': i[1].get('id')})
-    #         case 'Модель':
-    #             f_id.update({'model_id': i[1].get('id')})
-    #         case 'geozone_imei':
-    #             f_id.update({'imei_id': i[1].get('id')})
-    #         case 'geozone_sim':
-    #             f_id.update({'sim_id': i[1].get('id')})
-    #         case 'Инфо1':
-    #             f_id.update({'info1': i[1].get('id')})
-    #         case 'Инфо4':
-    #             f_id.update({'info4': i[1].get('id')})
-    #         case 'Инфо5':
-    #             f_id.update({'info5': i[1].get('id')})
-    #         case 'Инфо6':
-    #             f_id.update({'info6': i[1].get('id')})
-    #         case 'Пин':
-    #             f_id.update({'pin': i[1].get('id')})
-    #         case _:
-    #             continue
 
-    # for i in response2.get('flds').items():
-    #     match i[1].get('n'):
-    #         case 'Vin':
-    #             f_id.update({'vin_id':  i[1].get('id')})
-    #         case 'Марка':
-    #             f_id.update({'mark_id': i[1].get('id')})
-    #         case 'Модель':
-    #             f_id.update({'model_id': i[1].get('id')})
-    #         case 'geozone_imei':
-    #             f_id.update({'imei_id': i[1].get('id')})
-    #         case 'geozone_sim':
-    #             f_id.update({'sim_id': i[1].get('id')})
-    #         case 'Инфо1':
-    #             f_id.update({'info1': i[1].get('id')})
-    #         case 'Инфо4':
-    #             f_id.update({'info4': i[1].get('id')})
-    #         case 'Инфо5':
-    #             f_id.update({'info5': i[1].get('id')})
-    #         case 'Инфо6':
-    #             f_id.update({'info6': i[1].get('id')})
-    #         case 'Пин':
-    #             f_id.update({'pin': i[1].get('id')})
-    #         case _:
-    #             continue
-    # print(f_id)
-    # print(len(response))
-    # print(len(response))
-    # a = response.json()
-    # print(a)
-    # for k in a['item']['aflds'].items():
-    # for k in response.items():
-    #     if 'Инфо5' not in k[1].get('n'):
-    #         continue
-    #     else:
-    #         print(k[1].get('n'))
-    # print('create info5')
+    info5 = {
+        'svc': 'item/update_admin_field',
+        'params': {
+            "itemId": unit_id,
+            "id": field_id_value[1][0],
+            "callMode": 'update',
+            "n": 'Инфо5',
+            "v": data.get('Специалист') if data.get('Специалист') is not None else field_id_value[1][1]},
+        'sid': ssid
+    }
+
+    info6 = {
+        'svc': 'item/update_admin_field',
+        'params': {
+            "itemId": unit_id,
+            "id": field_id_value[2][0],
+            "callMode": 'update',
+            "n": 'Инфо6',
+            "v": data.get('ИНН') if data.get('ИНН') is not None else strfield_id_value[2][1]},
+        'sid': ssid
+    }
+
+    info7 = {
+        'svc': 'item/update_admin_field',
+        'params': {
+            "itemId": unit_id,
+            "id": field_id_value[3][0],
+            "callMode": 'update',
+            "n": 'Инфо7',
+            "v": data.get('КПП') if data.get('КПП') is not None else field_id_value[3][1]},
+        'sid': ssid
+    }
+
+    param = {'svc': 'core/batch',
+             'params': json.dumps({
+                 "params": [
+                    info1,
+                    info5,
+                    info6,
+                    info7
+                 ],
+                 "flags": 0}),
+             'sid': ssid
+             }
+    requests.post(URL, data=param)
