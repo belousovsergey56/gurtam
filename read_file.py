@@ -16,11 +16,13 @@ def xls_to_json(xls_file):
     Args:
         xls_file (file.xlsx): Excel file to be converted to json
     """
+    new_file_name = f'{xls_file}'.replace('.xlsx', '')
     xls = pd.read_excel(xls_file)
-    xls.to_json('upload/work_file.json', orient='records')
+    xls.to_json(f'{new_file_name}.json', orient='records')
+    return new_file_name
 
 
-def read_json() -> dict:
+def read_json(file_path) -> dict:
     """Read a file.
 
     The function reads a json file saved in upload/ directory
@@ -29,6 +31,6 @@ def read_json() -> dict:
     Returns:
         dict: dictionary ready to use
     """
-    with open('upload/work_file.json', 'r', encoding='UTF-8') as f:
+    with open(f'{file_path}.json', 'r', encoding='UTF-8') as f:
         a = json.loads(f.read())
         return a
