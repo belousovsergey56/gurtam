@@ -247,3 +247,4 @@ def create_object_with_all_params(sid: str, object_param: dict) -> None:
     update_advance_setting(sid, obj_id, hware)
     update_advance_validity_filter(sid, obj_id, hware)
     create_driving_param(sid, obj_id)
+    return obj_id
