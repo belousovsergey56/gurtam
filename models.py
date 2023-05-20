@@ -19,11 +19,13 @@ class User(UserMixin, db.Model):
 
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    login = db.Column(db.String(1000), unique=True)
+    login = db.Column(db.String(1000))
+    email = db.Column(db.String(1000), unique=True)
     password = db.Column(db.String(1000))
 
-    def __init__(self, login, password):
+    def __init__(self, login, email, password):
         self.login = login
+        self.email = email
         self.password = password
 
 
