@@ -7,6 +7,13 @@
 <h1 class="text-center">Импорт данных на Виалон</h1>
 <br>
 <form method="post" enctype="multipart/form-data">
+    {% with messages = get_flashed_messages() %}
+    {% if messages: %}
+    {% for message in messages: %}
+    <p class="flash-message bg-danger-subtle">{{ message }}</p>
+    {% endfor %}
+    {% endif %} 
+    {% endwith %}
     {{ form.csrf_token }}
     <h3 class="text-center">Загрузить файл для импорта данных</h3>
     <p class="text-center">

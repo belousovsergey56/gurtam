@@ -5,7 +5,15 @@
 {% block body %}
     <h1 class="text-center">Обновить РДДБ</h1>
 <br>
+<div class="container">
 <form method="post" enctype="multipart/form-data">
+    {% with messages = get_flashed_messages() %}
+    {% if messages: %}
+    {% for message in messages: %}
+    <p class="flash-message bg-danger-subtle">{{ message }}</p>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
     {{ form.csrf_token }}
     <h3 class="text-center">Загрузить файл для обноления данных</h3>
     <p class="text-center">
@@ -13,4 +21,5 @@
         {{ form.submit }}
     </p>
 </form>
+</div>
 {% endblock %}
