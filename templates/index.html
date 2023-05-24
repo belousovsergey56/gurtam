@@ -1,13 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}CS - Home page {% endblock %}
+{% block title %}Цезарь Сателлит - Главная {% endblock %}
 
 {% block body %}
-    <h1 class="text-center">Main page</h1>
     <div class="container">
-        <h2 class="text-center"><a href="{{ url_for('export_fms4')}}" class="link-dark">Export to FMS4</a></h2>
-        <h2 class="text-center"><a href="{{ url_for('remove_group')}}" class="link-dark">Remove groups</a></h2>
-        <h2 class="text-center"><a href="{{ url_for('update_info5')}}" class="link-dark">Заполнить ИНФО5</a></h2>
-        <h2 class="text-center"><a href="{{ url_for('update_info')}}" class="link-dark">Заполнить ИНФО</a></h2>
+        <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+
+        <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('export_fms4')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" style="text-decoration: none;">Импорт на FMS4</a></button>
+
+        <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('remove_group')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" style="text-decoration: none;">Удаление объектов из групп</a></button>
+
+        <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('update_info')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" style="text-decoration: none;">Каркаде. Заполнение полей ИНФО</a></button>
+
+        </div>
     </div>
 {% endblock %}
