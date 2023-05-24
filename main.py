@@ -56,7 +56,7 @@ def sign_in():
             return render_template('signin.html', form=form)
         if check_password_hash(user.password, form.password.data):
             login_user(user)
-            with open('logging/log_report.txt', 'a') as report:
+            with open('logging/log_report.log', 'a') as report:
                 text = f'{datetime.now().ctime()} - {user.login} - sign in\n'
                 report.write(text)
             return redirect(url_for('home'))
@@ -78,7 +78,7 @@ def home() -> str:
     Returns:
         str: displays the home page of the application
     """
-    with open('logging/log_report.txt', 'a') as report:
+    with open('logging/log_report.log', 'a') as report:
             user = User.query.filter_by(id=current_user.get_id()).first()
             text = f'{datetime.now().ctime()} - {user.login} - open home page\n'
             report.write(text)
@@ -93,7 +93,7 @@ def export_fms4():
     Returns:
         Html template export_fms4.html
     """
-    with open('logging/log_report.txt', 'a') as report:
+    with open('logging/log_report.log', 'a') as report:
             user = User.query.filter_by(id=current_user.get_id()).first()
             text = f'{datetime.now().ctime()} - {user.login} - open page import on fms4\n'
             report.write(text)
@@ -103,10 +103,19 @@ def export_fms4():
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         import_list = read_json(file_path)
+        if 'ИНФО4' not in import_list[0] and 'ДЛ' not in import_list[0] and 'ПИН' not in import_list[0]:
+            flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
+            os.remove(f'upload/{filename}')
+            os.remove(f'{file_path}.json')
+            return render_template(
+                "export_fms4.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+                )
         sid = get_ssid()
         start = datetime.now()
         counter = 0
-        with open('logging/import_report.txt', 'w') as log:
+        with open('logging/import_report.log', 'w') as log:
             log.write(f'Время начала: {start.ctime()}\n')
             log.write(f'{import_list[0].get("ЛИЗИНГ")}\n')
         for unit in import_list:
@@ -125,19 +134,16 @@ def export_fms4():
         group_update(import_list)
         endtime = datetime.now()
         delta_time = endtime - start
-        delta_time = strftime("%H:%M:S", gmtime(delta_time.total_seconds()))
-        with open('logging/import_report.txt', 'a') as log:
-            log.write(
-                f'''Время окончания: {endtime.ctime()}
-Ушло времени на залив данных: {delta_time}
-Обработано строк: {counter}'''
-                )
+        delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
+        with open('logging/import_report.log', 'a') as log:
+            log.write(f'Время окончания: {endtime.ctime()}\n')
+            log.write(f'Ушло времени на залив данных: {delta_time}\n')
+            log.write(f'Обработано строк: {counter}')
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
-        with open('logging/import_report.txt', 'r') as report:
-            id_ = current_user.get_id()
-            email = User.query.filter_by(id=id_).first()
-            send_mail(email, 'Импорт на виалон', report.read())
+        with open('logging/import_report.log', 'r') as report:
+            user = User.query.filter_by(id=current_user.get_id()).first()
+            send_mail(user.email, 'Импорт на виалон', report.read())
         return redirect(url_for('export_fms4'))
     return render_template('export_fms4.html', form=form)
 
@@ -210,21 +216,30 @@ def update_info():
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         file_with_data = read_json(file_path)
+        if 'РДДБ' not in file_with_data[0] and 'ИНН' not in file_with_data[0] and 'Специалист' not in file_with_data[0]:
+            flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
+            os.remove(f'upload/{filename}')
+            os.remove(f'{file_path}.json')
+            return render_template(
+                "update_info.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+                )
         sid = get_ssid()
         counter = 0
         length = len(file_with_data)
         start = datetime.now()
-        with open('logging/update_info.txt', 'w') as log:
+        with open('logging/update_info.log', 'w') as log:
             log.write(f'Начало загрузки: {start.ctime()}\n')
         for unit in file_with_data:
             try:
                 unit_id = get_object_id(sid, int(unit.get('IMEI')))
             except TypeError:
-                with open('logging/update_info.txt', 'a') as log:
+                with open('logging/update_info.log', 'a') as log:
                     log.write(f'{unit.get("IMEI")} не верный формат или не найден')
                 continue
             if unit_id == -1:
-                with open('logging/update_info.txt', 'a') as log:
+                with open('logging/update_info.log', 'a') as log:
                     log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
                     counter += 1
             else:
@@ -243,24 +258,23 @@ def update_info():
                 counter += 1
         endtime = datetime.now()
         delta_time = endtime - start
-        delta_time = strftime("%H:%M:S", gmtime(delta_time.total_seconds()))
-        with open('logging/update_info.txt', 'a') as log:
+        delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
+        with open('logging/update_info.log', 'a') as log:
             log.write(f'Окончание импорта данных: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Всего строк обработано: {counter} из {length}\n')
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
-        with open('logging/update_info.txt', 'r') as report:
-            id_ = current_user.get_id()
-            email = User.query.filter_by(id=id_).first()
-            send_mail(email, 'РДДБ обновление полей ИНФО', report.read())
+        with open('logging/update_info.log', 'r') as report:
+            user = User.query.filter_by(id=current_user.get_id()).first()
+            send_mail(user.email, 'РДДБ обновление полей ИНФО', report.read())
         return redirect(url_for('update_info'))
     return render_template('update_info.html', form=form)
 
 
 @app.route('/logout')
 def logout():
-    with open('logging/log_report.txt', 'a') as report:
+    with open('logging/log_report.log', 'a') as report:
             user = User.query.filter_by(id=current_user.get_id()).first()
             text = f'{datetime.now().ctime()} - {user.login} - logout\n'
             report.write(text)
