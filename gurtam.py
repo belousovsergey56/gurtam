@@ -546,7 +546,7 @@ def create_object(sid: str, unit_id: int, unit) -> None:
     """
     obj_id = create_object_with_all_params(sid, unit)
     create_custom_fields(sid, obj_id)
-    with open('logging/unit_not_found.txt', 'a') as log:
+    with open('logging/import_report.log', 'a') as log:
         log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
     return obj_id
 
