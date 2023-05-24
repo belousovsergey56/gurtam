@@ -18,8 +18,6 @@ load_dotenv()
 HOSTING_EMAIL = os.environ.get('hosting_email')
 HOSTING_LOIGN = os.environ.get('hosting_login')
 HOSTING_EMAIL_PASSWORD = os.environ.get('hosting_email_password')
-THIEF_MAIL = os.environ.get('thief_email')
-THIEF_PASSWORD = os.environ.get('thief_password')
 
 
 def send_mail(
@@ -42,7 +40,7 @@ def send_mail(
                 msg=tmp_message
             )
     except smtplib.SMTPException as e:
-        with open('logging/email_log.txt', 'a') as log:
+        with open('logging/email_log.log', 'a') as log:
             log.write(f'{time.ctime()}\nmsg don`t send to {mail_address}\n{e}\n\n')
 
 
@@ -68,5 +66,5 @@ def read_json(file_path) -> dict:
         dict: dictionary ready to use
     """
     with open(f'{file_path}.json', 'r', encoding='UTF-8') as f:
-        a = json.loads(f.read())
-        return a
+        json_file = json.loads(f.read())
+        return json_file
