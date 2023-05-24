@@ -10,11 +10,26 @@ import requests
 load_dotenv()
 URL = os.getenv('URL')
 
-HW_ID = {'MT-5': 20, 'FMB130': 19510,
-         'FMB125': 96, 'FMB920': 69, 'FMB140': 19511, 'Cesar 25': 20}
+HW_ID = {
+    'MT-5': 20,
+    'MT-X': 20,
+    'Cesar 25': 20,
+    'FMB130': 19510,
+    'FMB125': 96,
+    'FMB920': 69,
+    'FMB140': 19511,
+    }
+
+HW_TMP = {
+    20: 'MT-5',
+    19510: 'FMB130',
+    96: 'FMB125',
+    69: 'FMB920',
+    19511: 'FMB140',
+}
 
 
-def create_object(sid: str, hardware_name: str, object_name: str):
+def create_object(sid: str, hardware_id: int, object_name: str):
     """Create new object.
 
     Args:
@@ -27,7 +42,7 @@ def create_object(sid: str, hardware_name: str, object_name: str):
         'params': json.dumps({
             "creatorId": 117,
             "name": object_name,
-            "hwTypeId": HW_ID.get(hardware_name),
+            "hwTypeId": HW_ID.get(hardware_id),
             "dataFlags": 1}),
         'sid': sid
     }
@@ -35,8 +50,8 @@ def create_object(sid: str, hardware_name: str, object_name: str):
     return response.json()
 
 
-def create_sensors(sid: str, hardware_name: str, object_id: int):
-    with open(f'data_tmp/{hardware_name}.json', 'r') as f:
+def create_sensors(sid: str, hardware_id: int, object_id: int):
+    with open(f'data_tmp/{HW_TMP.get(hardware_id)}.json', 'r') as f:
         tmp = json.loads(f.read())
         for sensor in tmp.get('sensors'):
             param = {
@@ -93,8 +108,8 @@ def add_param_engin_axel(sid: str, obj_id: int):
     return 0
 
 
-def update_advance_setting(sid: str, obj_id: int, hardware_name: str):
-    with open(f'data_tmp/{hardware_name}.json', 'r') as f:
+def update_advance_setting(sid: str, obj_id: int, hardware_id: int):
+    with open(f'data_tmp/{HW_TMP.get(hardware_id)}.json', 'r') as f:
         tmp = json.loads(f.read()).get('reportProps')
         param = {
             'svc': 'unit/update_report_settings',
@@ -118,8 +133,8 @@ def update_advance_setting(sid: str, obj_id: int, hardware_name: str):
     return 0
 
 
-def update_advance_validity_filter(sid: str, obj_id: int, hardware_name: str):
-    with open(f'data_tmp/{hardware_name}.json', 'r') as f:
+def update_advance_validity_filter(sid: str, obj_id: int, hardware_id: int):
+    with open(f'data_tmp/{HW_TMP.get(hardware_id)}.json', 'r') as f:
         tmp = json.loads(f.read()).get('advProps').get('msgFilter')
         param = {
             'svc': 'unit/update_messages_filter',
@@ -235,16 +250,16 @@ def create_object_with_all_params(sid: str, object_param: dict) -> None:
     hware = object_param.get('Оборудование').replace('Teltonika ', '')
     hard_id = HW_ID.get(hware)
     # создать объект
-    new_object = create_object(sid, hware, object_param.get('ДЛ'))
+    new_object = create_object(sid, hard_id, object_param.get('ДЛ'))
     obj_id = new_object.get('item').get('id')
     # добавить сенсоры
-    s = create_sensors(sid, hware, obj_id)
-    print('sensors response', s)
+    sensors = create_sensors(sid, hard_id, obj_id)
+    print('sensors response', sensors)
     add_obj_uid(sid, obj_id, hard_id, object_param.get('ИМЕЙ'))
     add_phone(sid, obj_id, object_param.get('ТЕЛЕФОН'))
     add_param_engin_axel(sid, obj_id)
     # обновить дополнительно
-    update_advance_setting(sid, obj_id, hware)
-    update_advance_validity_filter(sid, obj_id, hware)
+    update_advance_setting(sid, obj_id, hard_id)
+    update_advance_validity_filter(sid, obj_id, hard_id)
     create_driving_param(sid, obj_id)
     return obj_id
