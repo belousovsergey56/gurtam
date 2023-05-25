@@ -514,7 +514,7 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
             if unit in group_list:
                 group_list.remove(unit)
             else:
-                with open('logging/unremoved.txt', 'a') as log:
+                with open('logging/unremoved.log', 'a') as log:
                     text = 'not found {0} in {1}\n'
                     imei = removed_unit_list[index_unit].get('ИМЕЙ')
                     glog_name = group_name.get('items')[index_group].get('nm')
