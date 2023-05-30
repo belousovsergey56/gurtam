@@ -42,7 +42,7 @@ def create_object(sid: str, hardware_id: int, object_name: str):
         'params': json.dumps({
             "creatorId": 117,
             "name": object_name,
-            "hwTypeId": HW_ID.get(hardware_id),
+            "hwTypeId": hardware_id,
             "dataFlags": 1}),
         'sid': sid
     }
@@ -248,7 +248,12 @@ def create_driving_param(ssid: str, obj_id: int):
 
 def create_object_with_all_params(sid: str, object_param: dict) -> None:
     hware = object_param.get('Оборудование').replace('Teltonika ', '')
-    hard_id = HW_ID.get(hware)
+    try:
+        hard_id = HW_ID[hware]
+    except KeyError:
+        with open('logging/import_report.log', 'a') as log:
+            log.write(f'Шаблон оборудования {hware} для автоматического  создания объекта на виалон не найден.\nОбъект не создан.\n')
+        return -1
     # создать объект
     new_object = create_object(sid, hard_id, object_param.get('ДЛ'))
     obj_id = new_object.get('item').get('id')
