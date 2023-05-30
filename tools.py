@@ -26,7 +26,8 @@ def send_mail(
         body: str
 ):
     time = datetime.now()
-    tmp_message = f'Subject: {subject}\n\n{time.ctime()}\nОперация завершена:\n{body}'.encode('UTF-8')
+    tmp_message = f'Subject: {subject}\n\n{time.ctime()}\nОперация завершена:\n{body}'.encode(
+        'UTF-8')
     context = ssl.create_default_context()
     try:
         with smtplib.SMTP_SSL(host='smtp.spb.csat.ru', context=context, port=465) as connection:
@@ -41,7 +42,8 @@ def send_mail(
             )
     except smtplib.SMTPException as e:
         with open('logging/email_log.log', 'a') as log:
-            log.write(f'{time.ctime()}\nmsg don`t send to {mail_address}\n{e}\n\n')
+            log.write(
+                f'{time.ctime()}\nmsg don`t send to {mail_address}\n{e}\n\n')
 
 
 def xls_to_json(xls_file):
@@ -68,3 +70,58 @@ def read_json(file_path) -> dict:
     with open(f'{file_path}.json', 'r', encoding='UTF-8') as f:
         json_file = json.loads(f.read())
         return json_file
+
+
+def inn_to_int(incoming_file: dict, field_name: str) -> None:
+    for inn_value in incoming_file:
+        if type(inn_value.get(field_name)) is float:
+            inn_value.update({field_name: int(inn_value.get(field_name))})
+
+
+def update_bd(data: list[dict]) -> None:
+    bd = {}
+    for value in data:
+        imei = None
+        inn = None
+        if type(value.get("IMEI")) == float:
+            imei = int(value.get("IMEI"))
+        else:
+            imei = value.get("IMEI")
+        if type(value.get("ИНН")) == float:
+            inn = int(value.get("ИНН"))
+        else:
+            inn = value.get("ИНН")
+        bd.update(
+            {
+                imei: {
+                    "РДДБ": value.get('РДДБ'),
+                    "Специалист": value.get('Специалист'),
+                    "IMEI": imei,
+                    "ИНН": inn,
+                    "КПП": value.get('КПП')
+                }
+            })
+    with open('data_carcade/last_db.json', 'w') as f:
+        json.dump(bd, f, ensure_ascii=False)
+
+
+def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
+    to_update = []
+    last_db = read_json('data_carcade/last_db')
+    for value in new_file:
+        imei = str(value.get("IMEI"))
+        inn = None
+        if type(value.get("ИНН")) == float:
+            inn = int(value.get("ИНН"))
+        else:
+            inn = value.get("ИНН")
+        if imei in last_db:
+            if value.get("РДДБ") != last_db[imei].get("РДДБ") or\
+                    value.get("Специалист") != last_db[imei].get("Специалист") or\
+                    inn != last_db[imei].get("ИНН") or\
+                    value.get("КПП") != last_db[imei].get("КПП"):
+                last_db[imei].update(value)
+                to_update.append(value)
+        else:
+            to_update.append(value)
+    return to_update
