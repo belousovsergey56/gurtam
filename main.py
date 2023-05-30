@@ -22,7 +22,7 @@ from gurtam import fill_info
 
 from models import User
 
-from tools import read_json, xls_to_json, send_mail
+from tools import read_json, xls_to_json, send_mail, update_bd, get_diff_in_upload_file
 
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -47,13 +47,14 @@ def admin_only(f):
 
 @app.route('/', methods=['GET', 'POST'])
 def sign_in():
+    year = datetime.now().year
     form = SigninForm()
     if form.validate_on_submit():
         user = User.query.filter_by(login=form.login.data).first()
         if not user:
             flash(message="Не верный логин,\
                 попробуйте снова или обратитесть к своему администратору")
-            return render_template('signin.html', form=form)
+            return render_template('signin.html', form=form, year=year)
         if check_password_hash(user.password, form.password.data):
             login_user(user)
             with open('logging/log_report.log', 'a') as report:
@@ -65,9 +66,9 @@ def sign_in():
             return render_template(
                 "signin.html",
                 form=form,
-                logged_in=current_user.is_authenticated
+                year=year
                 )
-    return render_template('signin.html', form=form)
+    return render_template('signin.html', form=form, year=year)
 
 
 @app.route('/home')
@@ -122,11 +123,13 @@ def export_fms4():
             unit_id = get_object_id(sid, unit.get('ИМЕЙ'))
             unit.update({'uid': unit_id})
             if unit_id == -1:
-                new_id = create_object(sid, unit_id, unit)
-                unit.update({'uid': new_id})
-                id_info4 = check_info(sid, new_id, 'Инфо4')
-                update_param(sid, new_id, unit, id_info4[0])
-                counter += 1
+                try:
+                    new_id = create_object(sid, unit_id, unit)
+                    unit.update({'uid': new_id})
+                    id_info4 = check_info(sid, new_id, 'Инфо4')
+                    update_param(sid, new_id, unit, id_info4[0])
+                except AttributeError:
+                    counter += 1
             else:
                 id_info4 = check_info(sid, unit_id, 'Инфо4')
                 update_param(sid, unit_id, unit, id_info4[0])
@@ -138,7 +141,7 @@ def export_fms4():
         with open('logging/import_report.log', 'a') as log:
             log.write(f'Время окончания: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
-            log.write(f'Обработано строк: {counter}')
+            log.write(f'Обработано строк: {counter}\n')
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
         with open('logging/import_report.log', 'r') as report:
@@ -215,7 +218,8 @@ def update_info():
         filename = secure_filename(form.export_file.data.filename)
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
-        file_with_data = read_json(file_path)
+        new_file = read_json(file_path)
+        file_with_data = get_diff_in_upload_file(new_file)
         if 'РДДБ' not in file_with_data[0] and 'ИНН' not in file_with_data[0] and 'Специалист' not in file_with_data[0]:
             flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
             os.remove(f'upload/{filename}')
@@ -263,6 +267,7 @@ def update_info():
             log.write(f'Окончание импорта данных: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Всего строк обработано: {counter} из {length}\n')
+        update_bd(new_file)
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
         with open('logging/update_info.log', 'r') as report:
