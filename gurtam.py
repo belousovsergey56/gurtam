@@ -244,7 +244,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_name',
         'params': {
             "itemId": unit_id,
-            "name": '{0}'.format(new_value.get('ДЛ'))},
+            "name": '{0}'.format(new_value.get('ДЛ')).strip()},
         'sid': session_id
     }
 
@@ -714,7 +714,7 @@ def fill_info(
             "id": field_id_value[2][0],
             "callMode": 'update',
             "n": 'Инфо6',
-            "v": data.get('ИНН') if data.get('ИНН') is not None else strfield_id_value[2][1]},
+            "v": data.get('ИНН') if data.get('ИНН') is not None else field_id_value[2][1]},
         'sid': ssid
     }
 
