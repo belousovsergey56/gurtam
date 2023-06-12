@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Цезарь Сателлит - Добавить пользователя{% endblock %}
+
+{% block body %}
+
+<h1>Добавить пользователя</h1>
+<div class="container">
+
+    <form action="{{ url_for('create_user') }}" method="post" enctype="multipart/form-data">
+        {% with messages = get_flashed_messages() %}
+        {% if messages: %}
+        {% for message in messages: %}
+        <p class="flash-message">{{ message }}</p>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        {{ form.csrf_token }}
+        <div class="row mb-3 mt-3">
+            {{ form.login }}
+        </div>
+        <div class="row mb-3">
+            {{ form.email }}
+        </div>
+        <div class="row mb-3">
+            {{ form.password }}
+        </div>
+
+        <div class="row mb-3">
+            {{ form.group }}
+        </div>
+
+
+        <h4 class="text-start">Предоставить права:</h3>
+        <div class="form-check text-sm-start">
+            {{ form.access_create }}
+            <label class="form-check-label" for="flexCheckDefault">
+                Создание
+            </label>
+        </div>
+
+        <div class="form-check text-sm-start">
+            {{ form.access_remove }}
+            <label class="form-check-label" for="flexCheckDefault">
+                Удаление
+            </label>
+        </div>
+
+        <div class="form-check text-sm-start">
+            {{ form.access_edit }}
+            <label class="form-check-label" for="flexCheckDefault">
+                Изменение
+            </label>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Создать</button>
+
+        <a class="btn" href="{{ url_for('admin') }}" role="button">Назад</a>
+    </form>
+
+</div>
+
+{% endblock %}
