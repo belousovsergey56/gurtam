@@ -60,4 +60,3 @@ class UserForm(FlaskForm):
     access_create = BooleanField(label='Создание')
     access_remove = BooleanField(label='Удаление')
     access_edit = BooleanField(label='Изменение')
-
