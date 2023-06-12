@@ -1,7 +1,8 @@
 """Module with forms for the application."""
 
 from flask_wtf import FlaskForm
-from wtforms import FileField, SubmitField, PasswordField, TextAreaField
+from wtforms import FileField, SubmitField, PasswordField
+from wtforms import EmailField, StringField, BooleanField, SelectField
 from wtforms.validators import DataRequired
 
 
@@ -23,7 +24,7 @@ class SigninForm(FlaskForm):
         FlaskForm (class): extends FlaskForm for create forms.
     """
 
-    login = TextAreaField(
+    login = StringField(
         label='',
         render_kw={'placeholder': 'Логин'},
         validators=[DataRequired()]
@@ -34,3 +35,29 @@ class SigninForm(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField('Войти')
+
+
+class UserForm(FlaskForm):
+    login = StringField(
+        label='',
+        render_kw={'placeholder': 'Логин'},
+        validators=[DataRequired()]
+    )
+    email = EmailField(
+        label='',
+        render_kw={'placeholder': 'Адрес электронной почты'},
+        validators=[DataRequired()]
+    )
+    password = PasswordField(
+        label='',
+        render_kw={'placeholder': 'Пароль'},
+        validators=[DataRequired()]
+    )
+    group = SelectField(
+        label='',
+        render_kw={'placeholder': 'Выбрать лизинг'}
+        )
+    access_create = BooleanField(label='Создание')
+    access_remove = BooleanField(label='Удаление')
+    access_edit = BooleanField(label='Изменение')
+
