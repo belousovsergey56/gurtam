@@ -17,8 +17,8 @@
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
 </head>
 
-<body class="text-center">
-    <div class="container">
+<body class="text-center container">
+    <div>
         <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
             <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
                 <img src="{{ url_for('static', filename='logovert.png') }}" class="img-thumbnail bi me-2" width="150"
@@ -27,7 +27,7 @@
             </a>
         </header>
     </div>
-    <div class="container header-sigin">
+    <div class="header-sigin">
 
         {% with messages = get_flashed_messages() %}
         {% if messages: %}
