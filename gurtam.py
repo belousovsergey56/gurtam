@@ -227,7 +227,7 @@ def create_custom_fields(ssid: str, unit_id: int) -> None:
             continue
 
 
-def update_param(session_id: str, unit_id: int, new_value: dict):
+def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
     """Fill object fields with new parameters.
 
     The function accepts a session ID, an object ID,
@@ -244,7 +244,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
         'svc': 'item/update_name',
         'params': {
             "itemId": unit_id,
-            "name": '{0}'.format(new_value.get('ДЛ'))},
+            "name": '{0}'.format(new_value.get('ДЛ')).strip()},
         'sid': session_id
     }
 
@@ -285,10 +285,10 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
         'svc': 'item/update_admin_field',
         'params': {
             "itemId": unit_id,
-            "id": 6,
+            "id": info4id,
             "callMode": 'update',
             "n": 'Инфо4',
-            "v": '{0}'.format(new_value.get('ИНФО4'))},
+            "v": '{0}'.format(new_value.get('ИНФО4') if new_value.get('ИНФО4') is not None else '')},
         'sid': session_id
     }
 
@@ -354,7 +354,6 @@ def update_param(session_id: str, unit_id: int, new_value: dict):
              'sid': session_id
              }
     print('start check fields')
-    create_custom_fields(session_id, unit_id)
     print(f'start update object fields {new_value.get("ПИН")}')
     requests.post(URL, data=param)
 
@@ -515,7 +514,7 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
             if unit in group_list:
                 group_list.remove(unit)
             else:
-                with open('logging/unremoved.txt', 'a') as log:
+                with open('logging/unremoved.log', 'a') as log:
                     text = 'not found {0} in {1}\n'
                     imei = removed_unit_list[index_unit].get('ИМЕЙ')
                     glog_name = group_name.get('items')[index_group].get('nm')
@@ -533,7 +532,7 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
         requests.post(URL, data=param)
 
 
-def checking_object_on_vialon(data: dict) -> None:
+def create_object(sid: str, unit_id: int, unit) -> None:
     """Check the presence of an object on the vialon.
 
     Checking dictionary objects by IMEI for presence on the Vialon portal
@@ -545,17 +544,11 @@ def checking_object_on_vialon(data: dict) -> None:
     Args:
         data (dict): dictionary of objects
     """
-    sid = get_ssid()
-    for unit in data:
-        uid = get_object_id(sid, unit.get('ИМЕЙ'))
-        if uid == -1:
-            create_object_with_all_params(sid, unit)
-            with open('logging/unit_not_found.txt', 'a') as log:
-                log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
-                uid = get_object_id(sid, unit.get('ИМЕЙ'))
-                update_param(sid, uid, unit)
-        else:
-            update_param(sid, uid, unit)
+    obj_id = create_object_with_all_params(sid, unit)
+    create_custom_fields(sid, obj_id)
+    with open('logging/import_report.log', 'a') as log:
+        log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+    return obj_id
 
 
 def group_update(data: dict) -> None:
@@ -581,20 +574,15 @@ def group_update(data: dict) -> None:
     risk_auto = []
 
     for unit in data:
-        uid = get_object_id(sid, unit.get('ИМЕЙ'))
-        if uid == -1:
-            with open('logging/unit_not_found.txt', 'a') as log:
-                log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
-        else:
-            all_unit.append(uid)
-            if unit.get('ТИП') == 0:
-                auto.append(uid)
-            elif unit.get('ТИП') == 1:
-                truck.append(uid)
-            elif unit.get('ТИП') == 2:
-                special.append(uid)
-            if unit.get('РИСК') == 9:
-                risk_auto.append(uid)
+        all_unit.append(unit.get('uid'))
+        if unit.get('ТИП') == 0:
+            auto.append(unit.get('uid'))
+        elif unit.get('ТИП') == 1:
+            truck.append(unit.get('uid'))
+        elif unit.get('ТИП') == 2:
+            special.append(unit.get('uid'))
+        if unit.get('РИСК') == 9:
+            risk_auto.append(unit.get('uid'))
 
     finded_group = search_groups_by_name(
         sid, data[0].get('ЛИЗИНГ')).get('items')
@@ -612,3 +600,144 @@ def group_update(data: dict) -> None:
             add_groups(sid, id_group, leasing_unit_list, risk_auto)
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit)
+
+
+def fill_info5(ssid: str, unit_id: int, field_id: int, info_for_fill: str):
+    info5 = {
+        'svc': 'item/update_admin_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": field_id,
+            "callMode": 'update',
+            "n": 'Инфо5',
+            "v": info_for_fill}),
+        'sid': ssid
+    }
+    requests.post(URL, data=info5)
+
+
+def check_create_info5(ssid: str, unit_id: int) -> int:
+    param = {
+        "svc": "core/search_item",
+        "params": json.dumps({
+            "id": unit_id,
+            "flags": 128
+        }),
+        "sid": ssid
+    }
+    response = requests.post(URL, data=param).json().get('item').get('aflds')
+
+    for info in response.items():
+        if 'Инфо5' not in info[1].get('n'):
+            continue
+        else:
+            return info[1].get('id')
+
+    info5 = {
+        'svc': 'item/update_admin_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": 0,
+            "callMode": 'create',
+            "n": 'Инфо5',
+            "v": ''}),
+        'sid': ssid
+    }
+    response = requests.post(URL, data=info5).json()[1].get('id')
+    return response
+
+
+def check_info(ssid: str, unit_id: int, info_name: str) -> int:
+    param = {
+        "svc": "core/search_item",
+        "params": json.dumps({
+            "id": unit_id,
+            "flags": 128
+        }),
+        "sid": ssid
+    }
+    response = requests.post(URL, data=param).json().get('item').get('aflds')
+
+    for info in response.items():
+        if info_name not in info[1].get('n'):
+            continue
+        else:
+            return info[1].get('id'), info[1].get('v')
+
+    info = {
+        'svc': 'item/update_admin_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": 0,
+            "callMode": 'create',
+            "n": info_name,
+            "v": ''}),
+        'sid': ssid
+    }
+    response = requests.post(URL, data=info)
+    return response.json()[1].get('id'), response.json()[1].get('v')
+
+
+def fill_info(
+    ssid: str,
+    unit_id: int,
+    field_id_value: int,
+    data: dict
+):
+    info1 = {
+        'svc': 'item/update_admin_field',
+        'params': {
+            "itemId": unit_id,
+            "id": field_id_value[0][0],
+            "callMode": 'update',
+            "n": 'Инфо1',
+            "v": data.get('РДДБ') if data.get('РДДБ') is not None else field_id_value[0][1]
+        },
+        'sid': ssid
+    }
+
+    info5 = {
+        'svc': 'item/update_admin_field',
+        'params': {
+            "itemId": unit_id,
+            "id": field_id_value[1][0],
+            "callMode": 'update',
+            "n": 'Инфо5',
+            "v": data.get('Специалист') if data.get('Специалист') is not None else field_id_value[1][1]},
+        'sid': ssid
+    }
+
+    info6 = {
+        'svc': 'item/update_admin_field',
+        'params': {
+            "itemId": unit_id,
+            "id": field_id_value[2][0],
+            "callMode": 'update',
+            "n": 'Инфо6',
+            "v": data.get('ИНН') if data.get('ИНН') is not None else field_id_value[2][1]},
+        'sid': ssid
+    }
+
+    info7 = {
+        'svc': 'item/update_admin_field',
+        'params': {
+            "itemId": unit_id,
+            "id": field_id_value[3][0],
+            "callMode": 'update',
+            "n": 'Инфо7',
+            "v": data.get('КПП') if data.get('КПП') is not None else field_id_value[3][1]},
+        'sid': ssid
+    }
+
+    param = {'svc': 'core/batch',
+             'params': json.dumps({
+                 "params": [
+                    info1,
+                    info5,
+                    info6,
+                    info7
+                 ],
+                 "flags": 0}),
+             'sid': ssid
+             }
+    requests.post(URL, data=param)

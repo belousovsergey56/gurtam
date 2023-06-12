@@ -1,18 +1,31 @@
-# """Models data base leasing users."""
-# from config import db
+"""Models data base leasing users."""
+from config import app, db
 
-# from flask_login import UserMixin
+from flask_login import UserMixin
 
 
-# class User(UserMixin, db.Model):
-#     """Data base model, User.
+class User(UserMixin, db.Model):
+    """Data base model, User.
 
-#     Args:
-#         UserMixin (class): subclass flask login
-#         db (class instance): data base instance
-#     """
+    Two fields: login, password
 
-#     __tablename__ = "users"
-#     id = db.Column(db.Integer, primary_key=True)
-#     login = db.Column(db.String(1000), unique=True)
-#     password = db.Column(db.String(1000))
+    Args:
+        UserMixin (class): subclass flask login
+        db (class instance): data base instance
+    """
+
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.String(1000))
+    email = db.Column(db.String(1000), unique=True)
+    password = db.Column(db.String(1000))
+    group = db.Column(db.String(100))
+    access_create = db.Column(db.Boolean)
+    access_remove = db.Column(db.Boolean)
+    access_edit = db.Column(db.Boolean)
+
+
+
+
+with app.app_context():
+    db.create_all()
