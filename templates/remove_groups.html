@@ -3,14 +3,36 @@
 {% block title %}Цезарь Сателлит - Удаление объектов из групп{% endblock %}
 
 {% block body %}
-    <h1 class="text-center">Удаление объектов из групп</h1>
+<h1 class="text-center">Удаление объектов из групп</h1>
 <br>
-<form method="post" enctype="multipart/form-data">
-    {{ form.csrf_token }}
-    <h3 class="text-center">Загрузить файл для обноления данных</h3>
-    <p class="text-center">
-    {{ form.export_file }}
-        {{ form.submit }}
-    </p>
-</form>
+<div class="container">
+    <form method="post" enctype="multipart/form-data">
+        {% with messages = get_flashed_messages() %}
+        {% if messages: %}
+        {% for message in messages: %}
+        <p class="flash-message bg-danger-subtle">{{ message }}</p>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {{ form.csrf_token }}
+        <h3 class="text-center pb-3">Загрузить файл для обноления данных</h3>
+        <div class="row">
+            <div class="col-sm-9" style="padding: 0% 0% 0% 15.5%;">
+                <input class="form-control mb-3" type="file" name="export_file">
+            </div>
+            <div class="col-sm-3" style="padding: 0% 13% 0% 0%;">
+                <button class="btn btn-primary" type="submit">Экспорт</button>
+            </div>
+          </div>
+    </form>
+    <br>
+    <ul class="list-group" style="padding: 0 15% 1% 15%;">
+        <li class="list-group-item active">Данный функционал убирает объекты из групп</li>
+        <li class="list-group-item list-group-item-info">Файл должен содержать два столбца: ГРУППА, ИМЕЙ в любом порядке
+        </li>
+        <li class="list-group-item list-group-item-info">Столбец ГРУППА должен содержать маску одного типа или 1ГПБАЛ
+            или 1Каркаде и т.д.</li>
+    </ul>
+</div>
 {% endblock %}
