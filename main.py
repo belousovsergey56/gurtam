@@ -12,7 +12,7 @@ from flask import flash, redirect, render_template, url_for
 
 from flask_login import current_user, login_required, login_user, logout_user
 
-from forms import SigninForm, UploadFile
+from forms import SigninForm, UploadFile, UserForm
 
 from gurtam import create_object, get_ssid, group_update
 from gurtam import remove_groups, get_object_id
@@ -22,13 +22,21 @@ from gurtam import fill_info
 
 from models import User
 
-from tools import read_json, xls_to_json, send_mail, update_bd, get_diff_in_upload_file
+from tools import read_json, xls_to_json, send_mail, update_bd
+from tools import get_diff_in_upload_file
 
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from datetime import datetime
 from time import strftime, gmtime
+
+lgroup = {
+        'admin': ['gpbal', 'carcade', 'evolution', 'admin', 'cesar'],
+        'cesar': ['cesar'],
+        'gpbal': ['gpbal'],
+        'carcade': ['carcade'],
+        'evolution': ['evolution']}
 
 
 @login_manager.user_loader
@@ -67,7 +75,7 @@ def sign_in():
                 "signin.html",
                 form=form,
                 year=year
-                )
+            )
     return render_template('signin.html', form=form, year=year)
 
 
@@ -79,11 +87,118 @@ def home() -> str:
     Returns:
         str: displays the home page of the application
     """
+    user = User.query.filter_by(id=current_user.get_id()).first()
     with open('logging/log_report.log', 'a') as report:
-            user = User.query.filter_by(id=current_user.get_id()).first()
-            text = f'{datetime.now().ctime()} - {user.login} - open home page\n'
-            report.write(text)
-    return render_template('index.html')
+        user = User.query.filter_by(id=current_user.get_id()).first()
+        text = f'{datetime.now().ctime()} - {user.login} - open home page\n'
+        report.write(text)
+    return render_template('index.html', user=user)
+
+
+@app.route('/owners', methods=['GET', 'POST'])
+@login_required
+def admin():
+    user = User.query.filter_by(id=current_user.get_id()).first()
+    database = User.query.all()
+    form = UserForm()
+    return render_template('admin.html', form=form, user=user, db=database)
+
+
+@app.route('/create_user', methods=['POST', 'GET'])
+@login_required
+def create_user():
+    form = UserForm()
+    leasing = User.query.filter_by(id=current_user.get_id()).first()
+    
+    form.group.choices = lgroup.get(leasing.group)
+    if form.validate_on_submit():
+        if User.query.filter_by(email=form.email.data).first():
+            flash(
+                message='Пользователь с такой почтой уже существует, попробуйте ввести новую почту')
+            return redirect(url_for('create_user'))
+        new_user = User(
+            login=form.login.data,
+            email=form.email.data,
+            password=generate_password_hash(
+                form.password.data, salt_length=13),
+            group=form.group.data,
+            access_create=form.access_create.data,
+            access_remove=form.access_remove.data,
+            access_edit=form.access_edit.data
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('admin'))
+    return render_template('create_user.html', form=form, user=leasing)
+
+
+@app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id: int):
+    user = User.query.filter_by(id=current_user.get_id()).first()
+    edit_user = User.query.filter_by(id=user_id).first()
+    form = UserForm(
+        login=edit_user.login,
+        email=edit_user.email,
+        group=edit_user.group,
+        password=edit_user.password,
+        access_create=edit_user.access_create,
+        access_remove=edit_user.access_remove,
+        access_edit=edit_user.access_edit
+    )
+    form.group.choices = lgroup.get(user.group)
+    if form.validate_on_submit():
+        edit_user.login = form.login.data
+        edit_user.email = form.email.data
+        edit_user.group = form.group.data
+        edit_user.access_create = edit_user.access_create if user_id == user.id else form.access_create.data
+        edit_user.access_remove = edit_user.access_remove if user_id == user.id else form.access_remove.data
+        edit_user.access_edit = edit_user.access_edit if user_id == user.id else form.access_edit.data
+        db.session.commit()
+        return redirect(url_for('admin'))
+    return render_template(
+        'edit_user.html',
+        form=form,
+        user_id=edit_user.id,
+        user=user
+        )
+
+
+@app.route('/edit_password/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_password(user_id: int):
+    user = User.query.filter_by(id=current_user.get_id()).first()
+    edit_password = User.query.filter_by(id=user_id).first()
+    form = UserForm(
+        login=edit_password.login,
+        email=edit_password.email,
+        group=edit_password.group,
+        password=edit_password.password,
+        access_create=edit_password.access_create,
+        access_remove=edit_password.access_remove,
+        access_edit=edit_password.access_edit
+    )
+    form.group.choices = lgroup.get(user.group)
+    if form.validate_on_submit():
+        edit_password.password = generate_password_hash(form.password.data, salt_length=13)
+        db.session.commit()
+        return redirect(url_for('admin'))
+    return render_template(
+        'edit_password.html',
+        form=form,
+        user_id=edit_password.id,
+        user=user
+        )
+
+
+@app.route('/remove_user/<int:user_id>')
+@login_required
+def remove_user(user_id: int):
+    teacher_to_delete = User.query.get(user_id)
+    db.session.delete(teacher_to_delete)
+    db.session.commit()
+    return redirect(url_for('admin'))
+
 
 
 @app.route('/export', methods=['GET', 'POST'])
@@ -95,9 +210,9 @@ def export_fms4():
         Html template export_fms4.html
     """
     with open('logging/log_report.log', 'a') as report:
-            user = User.query.filter_by(id=current_user.get_id()).first()
-            text = f'{datetime.now().ctime()} - {user.login} - open page import on fms4\n'
-            report.write(text)
+        user = User.query.filter_by(id=current_user.get_id()).first()
+        text = f'{datetime.now().ctime()} - {user.login} - open page import on fms4\n'
+        report.write(text)
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -112,7 +227,7 @@ def export_fms4():
                 "export_fms4.html",
                 form=form,
                 logged_in=current_user.is_authenticated
-                )
+            )
         sid = get_ssid()
         start = datetime.now()
         counter = 0
@@ -128,6 +243,7 @@ def export_fms4():
                     unit.update({'uid': new_id})
                     id_info4 = check_info(sid, new_id, 'Инфо4')
                     update_param(sid, new_id, unit, id_info4[0])
+                    counter += 1
                 except AttributeError:
                     counter += 1
             else:
@@ -165,15 +281,47 @@ def remove_group():
         Html template remove_groups.html
     """
     form = UploadFile()
+
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         imei_list = read_json(file_path)
+
+        if 'ГРУППА' not in imei_list[0] and 'ИМЕЙ' not in imei_list[0]:
+            flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
+            os.remove(f'upload/{filename}')
+            os.remove(f'{file_path}.json')
+            return render_template(
+                "remove_groups.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
+
         sid = get_ssid()
+        start = datetime.now()
+        count_lines = len(imei_list)
+        with open('logging/remove_group_report.log', 'w') as log:
+            log.write(f'Время начала: {start.ctime()}\n')
+            log.write(
+                f'\nУдаление объектов из группы по маске - {imei_list[0].get("ГРУППА")}\n')
         remove_groups(sid, imei_list)
+
+        endtime = datetime.now()
+        delta_time = endtime - start
+        delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
+
+        with open('logging/remove_group_report.log', 'a') as log:
+            log.write(f'\nВремя окончания: {endtime.ctime()}\n')
+            log.write(
+                f'Ушло времени на удаление объектов из групп: {delta_time}\n')
+            log.write(f'Колличество загруженных строк : {count_lines}\n')
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
+
+        with open('logging/remove_group_report.log', 'r') as report:
+            user = User.query.filter_by(id=current_user.get_id()).first()
+            send_mail(user.email, 'Удаление объектов из групп', report.read())
         return redirect(url_for('remove_group'))
     return render_template('remove_groups.html', form=form)
 
@@ -228,7 +376,7 @@ def update_info():
                 "update_info.html",
                 form=form,
                 logged_in=current_user.is_authenticated
-                )
+            )
         sid = get_ssid()
         counter = 0
         length = len(file_with_data)
@@ -240,7 +388,8 @@ def update_info():
                 unit_id = get_object_id(sid, int(unit.get('IMEI')))
             except TypeError:
                 with open('logging/update_info.log', 'a') as log:
-                    log.write(f'{unit.get("IMEI")} не верный формат или не найден')
+                    log.write(
+                        f'{unit.get("IMEI")} не верный формат или не найден')
                 continue
             if unit_id == -1:
                 with open('logging/update_info.log', 'a') as log:
@@ -280,9 +429,9 @@ def update_info():
 @app.route('/logout')
 def logout():
     with open('logging/log_report.log', 'a') as report:
-            user = User.query.filter_by(id=current_user.get_id()).first()
-            text = f'{datetime.now().ctime()} - {user.login} - logout\n'
-            report.write(text)
+        user = User.query.filter_by(id=current_user.get_id()).first()
+        text = f'{datetime.now().ctime()} - {user.login} - logout\n'
+        report.write(text)
     logout_user()
     return redirect(url_for('sign_in'))
 
@@ -292,8 +441,12 @@ def add_admin():
     admin = User(
         login='admin',
         password=generate_password_hash(password),
-        email=os.getenv('admin_email')
-        )
+        email=os.getenv('admin_email'),
+        group='admin',
+        access_create=True,
+        access_remove=True,
+        access_edit=True
+    )
     db.session.add(admin)
     db.session.commit()
 
@@ -303,8 +456,12 @@ def add_tech_crew():
     crew = User(
         login='cesar',
         password=generate_password_hash(password),
-        email=os.getenv('crew_email')
-        )
+        email=os.getenv('crew_email'),
+        group='cesar',
+        access_create=False,
+        access_remove=False,
+        access_edit=False
+    )
     db.session.add(crew)
     db.session.commit()
 
@@ -314,8 +471,12 @@ def add_carcade():
     carcade = User(
         login='carcade',
         password=generate_password_hash(password),
-        email=os.getenv('carcade_email')
-        )
+        email=os.getenv('carcade_email'),
+        group='carcade',
+        access_create=True,
+        access_remove=True,
+        access_edit=True
+    )
     db.session.add(carcade)
     db.session.commit()
 
