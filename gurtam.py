@@ -19,7 +19,7 @@ TOKEN = os.getenv('TOKEN')
 AUTO = [40187, 41342, 40576]
 TRUCK = [40188, 41343, 40577]
 SPEC = [53014, 53012, 53013]
-RISK = [40166]
+RISK = [40166, 59726]
 
 
 def get_header() -> dict:
@@ -600,6 +600,49 @@ def group_update(data: dict) -> None:
             add_groups(sid, id_group, leasing_unit_list, risk_auto)
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit)
+
+
+def update_group_by_mask(ssid: str, list_imei: list[dict]) -> int:
+    """Update list objects in groups by mask.
+
+    The function takes a list of dictionaries, in the format
+    {'IMEI': 1234567890, 'Группа': 'Cardade'},
+    where key IMEI - contains the value of unique block code,
+    the Группа key - contains the name of the group in which you want
+    to update the list of objects.
+    To effectively update objects in a group, the list must contain the value
+    of the Group key with the same mask to update objects in only one group at
+    a time.
+    For acceleration, the script will take the group of the first dictionary
+    as the basis.
+
+    Args:
+        ssid (str): session id
+        list_imei (list[dict]): list of objects imei
+
+    Returns:
+        If the operation of updating the list of objects in the group
+        is completed successfully, the script returns 0,
+        if it fails, it returns -1
+    """
+    upload_obj_id_list = []
+    group_by_mask = search_groups_by_name(ssid, list_imei[0].get('Группа'))
+
+    id_group = group_by_mask.get('items')[0].get('id')
+    actual_object_id_list = group_by_mask.get('items')[0].get('u')
+    print('group_id -', id_group)
+    for object_id in list_imei:
+        object_id = get_object_id(ssid, object_id.get('IMEI'))
+        if object_id > 0:
+            upload_obj_id_list.append(object_id)
+        else:
+            continue
+    try:
+        add_groups(ssid, id_group, actual_object_id_list, upload_obj_id_list)
+    except Exception as e:
+        print(e)
+        return -1
+    return 0
 
 
 def fill_info5(ssid: str, unit_id: int, field_id: int, info_for_fill: str):
