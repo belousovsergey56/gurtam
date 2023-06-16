@@ -18,7 +18,7 @@ from gurtam import create_object, get_ssid, group_update
 from gurtam import remove_groups, get_object_id
 from gurtam import fill_info5, check_create_info5, check_info
 from gurtam import update_param
-from gurtam import fill_info
+from gurtam import fill_info, upd_inn_field
 
 from models import User
 
@@ -32,11 +32,11 @@ from datetime import datetime
 from time import strftime, gmtime
 
 lgroup = {
-        'admin': ['gpbal', 'carcade', 'evolution', 'admin', 'cesar'],
-        'cesar': ['cesar'],
-        'gpbal': ['gpbal'],
-        'carcade': ['carcade'],
-        'evolution': ['evolution']}
+    'admin': ['gpbal', 'carcade', 'evolution', 'admin', 'cesar'],
+    'cesar': ['cesar'],
+    'gpbal': ['gpbal'],
+    'carcade': ['carcade'],
+    'evolution': ['evolution']}
 
 
 @login_manager.user_loader
@@ -109,7 +109,7 @@ def admin():
 def create_user():
     form = UserForm()
     leasing = User.query.filter_by(id=current_user.get_id()).first()
-    
+
     form.group.choices = lgroup.get(leasing.group)
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data).first():
@@ -161,7 +161,7 @@ def edit_user(user_id: int):
         form=form,
         user_id=edit_user.id,
         user=user
-        )
+    )
 
 
 @app.route('/edit_password/<int:user_id>', methods=['GET', 'POST'])
@@ -180,7 +180,8 @@ def edit_password(user_id: int):
     )
     form.group.choices = lgroup.get(user.group)
     if form.validate_on_submit():
-        edit_password.password = generate_password_hash(form.password.data, salt_length=13)
+        edit_password.password = generate_password_hash(
+            form.password.data, salt_length=13)
         db.session.commit()
         return redirect(url_for('admin'))
     return render_template(
@@ -188,7 +189,7 @@ def edit_password(user_id: int):
         form=form,
         user_id=edit_password.id,
         user=user
-        )
+    )
 
 
 @app.route('/remove_user/<int:user_id>')
@@ -198,7 +199,6 @@ def remove_user(user_id: int):
     db.session.delete(teacher_to_delete)
     db.session.commit()
     return redirect(url_for('admin'))
-
 
 
 @app.route('/export', methods=['GET', 'POST'])
@@ -424,6 +424,71 @@ def update_info():
             send_mail(user.email, 'РДДБ обновление полей ИНФО', report.read())
         return redirect(url_for('update_info'))
     return render_template('update_info.html', form=form)
+
+
+@app.route('/fill_inn', methods=['GET', 'POST'])
+def fill_inn():
+    form = UploadFile()
+    if form.validate_on_submit():
+        filename = secure_filename(form.export_file.data.filename)
+        form.export_file.data.save('upload/{0}'.format(filename))
+        file_path = xls_to_json('upload/{0}'.format(filename))
+        new_file = read_json(file_path)
+        # file_with_data = get_diff_in_upload_file(new_file)
+        if 'ИНН' not in new_file[0] and 'IMEI' not in new_file[0]:
+            flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
+            os.remove(f'upload/{filename}')
+            os.remove(f'{file_path}.json')
+            return render_template(
+                "fill_inn.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
+        sid = get_ssid()
+        counter = 0
+        length = len(new_file)
+        start = datetime.now()
+        with open('logging/update_inn.log', 'w') as log:
+            log.write(f'Начало загрузки: {start.ctime()}\n')
+        for unit in new_file:
+            print(unit)
+            try:
+                unit_id = get_object_id(sid, int(unit.get('IMEI')))
+            except TypeError:
+                with open('logging/update_inn.log', 'a') as log:
+                    print('except but have ifelse bloco..')
+                    log.write(
+                        f'{unit.get("IMEI")} не верный формат или не найден')
+                continue
+            if unit_id == -1:
+                with open('logging/update_inn.log', 'a') as log:
+                    print('iffff???')
+                    log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+                    counter += 1
+            else:
+                id_inn_field = check_info(sid, unit_id, 'ИНН')
+                upd_inn_field(
+                    sid,
+                    unit_id,
+                    id_inn_field[0],
+                    str(unit.get('ИНН'))
+                )
+                counter += 1
+        endtime = datetime.now()
+        delta_time = endtime - start
+        delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
+        with open('logging/update_inn.log', 'a') as log:
+            log.write(f'Окончание импорта данных: {endtime.ctime()}\n')
+            log.write(f'Ушло времени на залив данных: {delta_time}\n')
+            log.write(f'Всего строк обработано: {counter} из {length}\n')
+        # update_bd(new_file)
+        os.remove(f'upload/{filename}')
+        os.remove(f'{file_path}.json')
+        with open('logging/update_inn.log', 'r') as report:
+            user = User.query.filter_by(id=current_user.get_id()).first()
+            send_mail(user.email, 'ГПБАЛ обновление полей ИНН', report.read())
+        return redirect(url_for('fill_inn'))
+    return render_template('fill_inn.html', form=form)
 
 
 @app.route('/logout')
