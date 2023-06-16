@@ -53,7 +53,7 @@ def xls_to_json(xls_file):
         xls_file (file.xlsx): Excel file to be converted to json
     """
     new_file_name = f'{xls_file}'.replace('.xlsx', '')
-    xls = pd.read_excel(xls_file)
+    xls = pd.read_excel(xls_file, dtype=str)
     xls.to_json(f'{new_file_name}.json', orient='records')
     return new_file_name
 
@@ -70,12 +70,6 @@ def read_json(file_path) -> dict:
     with open(f'{file_path}.json', 'r', encoding='UTF-8') as f:
         json_file = json.loads(f.read())
         return json_file
-
-
-def inn_to_int(incoming_file: dict, field_name: str) -> None:
-    for inn_value in incoming_file:
-        if type(inn_value.get(field_name)) is float:
-            inn_value.update({field_name: int(inn_value.get(field_name))})
 
 
 def update_bd(data: list[dict]) -> None:
