@@ -244,7 +244,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_name',
         'params': {
             "itemId": unit_id,
-            "name": '{0}'.format(new_value.get('ДЛ')).strip()},
+            "name": new_value.get('ДЛ').strip()},
         'sid': session_id
     }
 
@@ -255,7 +255,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "id": 1,
             "callMode": 'update',
             "n": 'geozone_imei',
-            "v": '{0}'.format(new_value.get('ИМЕЙ'))},
+            "v": new_value.get('ИМЕЙ')},
         'sid': session_id
     }
 
@@ -266,7 +266,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "id": 2,
             "callMode": 'update',
             "n": 'geozone_sim',
-            "v": '+{0}'.format(new_value.get('ТЕЛЕФОН'))},
+            "v": new_value.get('ТЕЛЕФОН')},
         'sid': session_id
     }
 
@@ -277,7 +277,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             'id': 1,
             'callMode': 'update',
             'n': 'Vin',
-            'v': '{0}'.format(new_value.get('ВИН'))},
+            'v': new_value.get('ВИН')},
         'sid': session_id
     }
 
@@ -288,7 +288,9 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "id": info4id,
             "callMode": 'update',
             "n": 'Инфо4',
-            "v": '{0}'.format(new_value.get('ИНФО4') if new_value.get('ИНФО4') is not None else '')},
+            "v": new_value.get(
+                'ИНФО4'
+                ) if new_value.get('ИНФО4') is not None else ''},
         'sid': session_id
     }
 
@@ -299,7 +301,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             'id': 2,
             'callMode': 'update',
             'n': 'Марка',
-            'v': '{0}'.format(new_value.get('МАРКА'))},
+            'v': new_value.get('МАРКА')},
         'sid': session_id
     }
 
@@ -310,7 +312,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             'id': 3,
             'callMode': 'update',
             'n': 'Модель',
-            'v': '{0}'.format(new_value.get('МОДЕЛЬ'))},
+            'v': new_value.get('МОДЕЛЬ')},
         'sid': session_id
     }
 
@@ -321,7 +323,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "id": 7,
             "callMode": 'update',
             "n": 'Пин',
-            "v": '{0}'.format(new_value.get('ПИН'))},
+            "v": new_value.get('ПИН')},
         'sid': session_id
     }
 
@@ -575,13 +577,13 @@ def group_update(data: dict) -> None:
 
     for unit in data:
         all_unit.append(unit.get('uid'))
-        if unit.get('ТИП') == 0:
+        if unit.get('ТИП') == str(0):
             auto.append(unit.get('uid'))
-        elif unit.get('ТИП') == 1:
+        elif unit.get('ТИП') == str(1):
             truck.append(unit.get('uid'))
-        elif unit.get('ТИП') == 2:
+        elif unit.get('ТИП') == str(2):
             special.append(unit.get('uid'))
-        if unit.get('РИСК') == 9:
+        if unit.get('РИСК') == (9):
             risk_auto.append(unit.get('uid'))
 
     finded_group = search_groups_by_name(
@@ -784,3 +786,17 @@ def fill_info(
              'sid': ssid
              }
     requests.post(URL, data=param)
+
+
+def upd_inn_field(ssid: str, unit_id: int, field_id: int, inn_value: str):
+    inn = {
+        'svc': 'item/update_admin_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": field_id,
+            "callMode": 'update',
+            "n": 'ИНН',
+            "v": inn_value}),
+        'sid': ssid
+    }
+    requests.post(URL, data=inn)
