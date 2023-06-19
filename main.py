@@ -385,7 +385,7 @@ def update_info():
             log.write(f'Начало загрузки: {start.ctime()}\n')
         for unit in file_with_data:
             try:
-                unit_id = get_object_id(sid, int(unit.get('IMEI')))
+                unit_id = get_object_id(sid, unit.get('IMEI'))
             except TypeError:
                 with open('logging/update_info.log', 'a') as log:
                     log.write(
@@ -393,7 +393,7 @@ def update_info():
                 continue
             if unit_id == -1:
                 with open('logging/update_info.log', 'a') as log:
-                    log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+                    log.write('{0} - не найден\n'.format(unit.get('IMEI')))
                     counter += 1
             else:
                 id_info1 = check_info(sid, unit_id, 'Инфо1')
@@ -434,7 +434,6 @@ def fill_inn():
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         new_file = read_json(file_path)
-        # file_with_data = get_diff_in_upload_file(new_file)
         if 'ИНН' not in new_file[0] and 'IMEI' not in new_file[0]:
             flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
             os.remove(f'upload/{filename}')
@@ -481,7 +480,6 @@ def fill_inn():
             log.write(f'Окончание импорта данных: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Всего строк обработано: {counter} из {length}\n')
-        # update_bd(new_file)
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
         with open('logging/update_inn.log', 'r') as report:
