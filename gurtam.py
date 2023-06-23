@@ -583,7 +583,7 @@ def group_update(data: dict) -> None:
             truck.append(unit.get('uid'))
         elif unit.get('ТИП') == str(2):
             special.append(unit.get('uid'))
-        if unit.get('РИСК') == (9):
+        if unit.get('РИСК') == str(9):
             risk_auto.append(unit.get('uid'))
 
     finded_group = search_groups_by_name(
