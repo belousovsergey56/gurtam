@@ -79,7 +79,7 @@ def add_phone(sid: str, obj_id: int, phone: str):
     param = {
         'svc': 'unit/update_phone',
         'params': json.dumps({"itemId": obj_id,
-                              "phoneNumber": '+{0}'.format(phone)}),
+                              "phoneNumber": phone}),
         'sid': sid}
     response = requests.post(URL, data=param)
     return response.text
