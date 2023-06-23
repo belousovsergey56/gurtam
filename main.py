@@ -9,6 +9,7 @@ from functools import wraps
 from config import app, db, login_manager
 
 from flask import flash, redirect, render_template, url_for
+from flask import jsonify
 
 from flask_login import current_user, login_required, login_user, logout_user
 
@@ -497,6 +498,11 @@ def logout():
         report.write(text)
     logout_user()
     return redirect(url_for('sign_in'))
+
+
+@app.route('/spinner', methods=['POST'])
+def spinner():
+    return jsonify({'data': render_template('spinner.html')})
 
 
 def add_admin():
