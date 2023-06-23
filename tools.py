@@ -72,6 +72,12 @@ def read_json(file_path) -> dict:
         return json_file
 
 
+def get_headers(json_file: dict) -> list[str]:
+    data_frame = pd.DataFrame(json_file)
+    headers = data_frame.columns.values.tolist()
+    return headers
+
+
 def update_bd(data: list[dict]) -> None:
     bd = {}
     for value in data:
