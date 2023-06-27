@@ -260,8 +260,8 @@ def create_object_with_all_params(sid: str, object_param: dict) -> None:
     # добавить сенсоры
     sensors = create_sensors(sid, hard_id, obj_id)
     print('sensors response', sensors)
-    add_obj_uid(sid, obj_id, hard_id, object_param.get('ИМЕЙ'))
-    add_phone(sid, obj_id, object_param.get('ТЕЛЕФОН'))
+    add_obj_uid(sid, obj_id, hard_id, object_param.get('geozone_imei'))
+    add_phone(sid, obj_id, object_param.get('geozone_sim'))
     add_param_engin_axel(sid, obj_id)
     # обновить дополнительно
     update_advance_setting(sid, obj_id, hard_id)

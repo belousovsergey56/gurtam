@@ -220,7 +220,7 @@ def export_fms4():
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         import_list = read_json(file_path)
-        if 'ИНФО4' not in import_list[0] and 'ДЛ' not in import_list[0] and 'ПИН' not in import_list[0]:
+        if 'Инфо4' not in import_list[0] and 'ДЛ' not in import_list[0] and 'Пин' not in import_list[0]:
             flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
@@ -236,7 +236,7 @@ def export_fms4():
             log.write(f'Время начала: {start.ctime()}\n')
             log.write(f'{import_list[0].get("ЛИЗИНГ")}\n')
         for unit in import_list:
-            unit_id = get_object_id(sid, unit.get('ИМЕЙ'))
+            unit_id = get_object_id(sid, unit.get('geozone_imei'))
             unit.update({'uid': unit_id})
             if unit_id == -1:
                 try:
@@ -351,7 +351,7 @@ def update_info5():
                 else:
                     print('start ' + unit.get('Группировка'))
                     id_field = check_create_info5(sid, unit_id)
-                    fill_info5(sid, unit_id, id_field, unit.get('Специалис'))
+                    fill_info5(sid, unit_id, id_field, unit.get('Специалист'))
                     counter += 1
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
