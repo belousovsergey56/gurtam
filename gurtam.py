@@ -255,7 +255,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "id": 1,
             "callMode": 'update',
             "n": 'geozone_imei',
-            "v": new_value.get('ИМЕЙ')},
+            "v": new_value.get('geozone_imei')},
         'sid': session_id
     }
 
@@ -266,7 +266,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "id": 2,
             "callMode": 'update',
             "n": 'geozone_sim',
-            "v": new_value.get('ТЕЛЕФОН')},
+            "v": new_value.get('geozone_sim')},
         'sid': session_id
     }
 
@@ -277,7 +277,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             'id': 1,
             'callMode': 'update',
             'n': 'Vin',
-            'v': new_value.get('ВИН')},
+            'v': new_value.get('Vin')},
         'sid': session_id
     }
 
@@ -289,8 +289,8 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "callMode": 'update',
             "n": 'Инфо4',
             "v": new_value.get(
-                'ИНФО4'
-            ) if new_value.get('ИНФО4') is not None else ''},
+                'Инфо4'
+            ) if new_value.get('Инфо4') is not None else ''},
         'sid': session_id
     }
 
@@ -301,7 +301,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             'id': 2,
             'callMode': 'update',
             'n': 'Марка',
-            'v': new_value.get('МАРКА')},
+            'v': new_value.get('Марка')},
         'sid': session_id
     }
 
@@ -312,7 +312,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             'id': 3,
             'callMode': 'update',
             'n': 'Модель',
-            'v': new_value.get('МОДЕЛЬ')},
+            'v': new_value.get('Модель')},
         'sid': session_id
     }
 
@@ -323,7 +323,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "id": 7,
             "callMode": 'update',
             "n": 'Пин',
-            "v": new_value.get('ПИН')},
+            "v": new_value.get('Пин')},
         'sid': session_id
     }
 
@@ -356,7 +356,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
              'sid': session_id
              }
     print('start check fields')
-    print(f'start update object fields {new_value.get("ПИН")}')
+    print(f'start update object fields {new_value.get("Пин")}')
     requests.post(URL, data=param)
 
 
@@ -549,7 +549,8 @@ def create_object(sid: str, unit_id: int, unit) -> None:
     obj_id = create_object_with_all_params(sid, unit)
     create_custom_fields(sid, obj_id)
     with open('logging/import_report.log', 'a') as log:
-        log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+        data_log = "Пин {0} - Имей {1} - не найден\n"
+        log.write(data_log.format(unit.get('Пин'), unit.get('geozone_imei')))
     return obj_id
 
 
