@@ -290,7 +290,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
             "n": 'Инфо4',
             "v": new_value.get(
                 'ИНФО4'
-                ) if new_value.get('ИНФО4') is not None else ''},
+            ) if new_value.get('ИНФО4') is not None else ''},
         'sid': session_id
     }
 
