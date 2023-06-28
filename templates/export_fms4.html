@@ -4,36 +4,36 @@
 
 {% block body %}
 <div>
-<h1 class="text-center">Импорт данных на Виалон</h1>
-<br>
-<form method="post" enctype="multipart/form-data">
-    {% with messages = get_flashed_messages() %}
-    {% if messages: %}
-    {% for message in messages: %}
-    <p class="flash-message bg-danger-subtle">{{ message }}</p>
-    {% endfor %}
-    {% endif %} 
-    {% endwith %}
-    {{ form.csrf_token }}
-    <h3 class="text-center pb-3">Загрузить файл для импорта данных</h3>
-    <div class="row">
-        <div class="col-sm-9 " style="padding: 0% 0% 0% 15.5%;">
-            <input class="form-control mb-3" type="file" name="export_file">
+    <h1 class="text-center">Импорт данных на Виалон</h1>
+    <br>
+    <form method="post" enctype="multipart/form-data">
+        {% with messages = get_flashed_messages() %}
+        {% if messages: %}
+        {% for message in messages: %}
+        <p class="flash-message bg-danger-subtle">{{ message }}</p>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        {{ form.csrf_token }}
+        <h3 class="text-center pb-3">Загрузить файл для импорта данных</h3>
+        <div class="row">
+            <div class="col-sm-9 " style="padding: 0% 0% 0% 15.5%;">
+                <input class="form-control mb-3" type="file" name="export_file">
+            </div>
+            <div class="col-sm-3" style="padding: 0% 13% 0% 0%;">
+                <button class="btn btn-primary" type="submit">Экспорт</button>
+            </div>
         </div>
-        <div class="col-sm-3" style="padding: 0% 13% 0% 0%;">
-            <button class="btn btn-primary" type="submit">Экспорт</button>
-        </div>
-      </div>
-</form>
-<br>
-<ul class="list-group" style="padding: 0 15% 1% 15%;">
-    <li class="list-group-item active">Обозначения при заполнении полей ТИП, РИСК, Инфо4</li>
-    <li class="list-group-item list-group-item-info">ТИП легковые - 0</li>
-    <li class="list-group-item list-group-item-info">ТИП грузовые - 1</li>
-    <li class="list-group-item list-group-item-info">ТИП спец.техника - 2</li>
-    <li class="list-group-item list-group-item-info">РИСК - 9, если не РИСК оставляем пустым</li>
-    <li class="list-group-item list-group-item-info">Если Инфо4 заполнять не нужно, не заполняем. Оставляем пустым.</li>
-  </ul>
-  <a href="/static/excel_template.xlsx" download="">Скачать шаблон</a>
+    </form>
+    <br>
+    <ul class="list-group" style="padding: 0 15% 1% 15%;">
+        <li class="list-group-item active">Обозначения при заполнении полей ТИП, РИСК, Инфо4</li>
+        <li class="list-group-item list-group-item-info">ТИП легковые - 0</li>
+        <li class="list-group-item list-group-item-info">ТИП грузовые - 1</li>
+        <li class="list-group-item list-group-item-info">ТИП спец.техника - 2</li>
+        <li class="list-group-item list-group-item-info">РИСК - 9, если не РИСК оставляем пустым</li>
+        <li class="list-group-item list-group-item-info">Если Инфо4 заполнять не нужно, не заполняем. Оставляем пустым.</li>
+    </ul>
+    <a href="/static/excel_template.xlsx" download="">Скачать шаблон</a>
 </div>
 {% endblock %}
