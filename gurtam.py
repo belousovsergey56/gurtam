@@ -16,10 +16,11 @@ load_dotenv()
 URL = os.getenv('URL')
 TOKEN = os.getenv('TOKEN')
 
-AUTO = [40187, 41342, 40576]
-TRUCK = [40188, 41343, 40577]
-SPEC = [53014, 53012, 53013]
-RISK = [40166, 59726]
+AUTO = (40187, 41342, 40576)
+TRUCK = (40188, 41343, 40577)
+SPEC = (53014, 53012, 53013)
+RISK = (40166, 59726)
+CUSTOM_FIELDS = ('Vin', 'Марка', 'Модель')
 
 
 def get_header() -> dict:
@@ -227,7 +228,12 @@ def create_custom_fields(ssid: str, unit_id: int) -> None:
             continue
 
 
-def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
+def update_param(
+    session_id: str,
+    unit_id: int,
+    new_value: dict,
+    id_field: dict
+):
     """Fill object fields with new parameters.
 
     The function accepts a session ID, an object ID,
@@ -252,7 +258,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_admin_field',
         'params': {
             "itemId": unit_id,
-            "id": 1,
+            "id": id_field.get('geozone_imei'),
             "callMode": 'update',
             "n": 'geozone_imei',
             "v": new_value.get('geozone_imei')},
@@ -263,7 +269,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_admin_field',
         'params': {
             "itemId": unit_id,
-            "id": 2,
+            "id": id_field.get('geozone_sim'),
             "callMode": 'update',
             "n": 'geozone_sim',
             "v": new_value.get('geozone_sim')},
@@ -274,7 +280,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_custom_field',
         'params': {
             'itemId': unit_id,
-            'id': 1,
+            'id': id_field.get('Vin'),
             'callMode': 'update',
             'n': 'Vin',
             'v': new_value.get('Vin')},
@@ -285,7 +291,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_admin_field',
         'params': {
             "itemId": unit_id,
-            "id": info4id,
+            "id": id_field.get('Инфо4'),
             "callMode": 'update',
             "n": 'Инфо4',
             "v": new_value.get(
@@ -298,7 +304,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_custom_field',
         'params': {
             'itemId': unit_id,
-            'id': 2,
+            'id': id_field.get('Марка'),
             'callMode': 'update',
             'n': 'Марка',
             'v': new_value.get('Марка')},
@@ -309,7 +315,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_custom_field',
         'params': {
             'itemId': unit_id,
-            'id': 3,
+            'id': id_field.get('Модель'),
             'callMode': 'update',
             'n': 'Модель',
             'v': new_value.get('Модель')},
@@ -320,7 +326,7 @@ def update_param(session_id: str, unit_id: int, new_value: dict, info4id: int):
         'svc': 'item/update_admin_field',
         'params': {
             "itemId": unit_id,
-            "id": 7,
+            "id": id_field.get('Пин'),
             "callMode": 'update',
             "n": 'Пин',
             "v": new_value.get('Пин')},
@@ -693,7 +699,58 @@ def check_create_info5(ssid: str, unit_id: int) -> int:
     return response
 
 
-def check_info(ssid: str, unit_id: int, info_name: str) -> int:
+def check_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+    param = {
+        "svc": "core/search_item",
+        "params": json.dumps({
+            "id": unit_id,
+            "flags": 136
+        }),
+        "sid": ssid
+    }
+    response = requests.post(URL, data=param)
+    admin_fields = response.json().get('item').get('aflds')
+    custom_fields = response.json().get('item').get('flds')
+    if info_name in CUSTOM_FIELDS:
+        for field in custom_fields.items():
+            if info_name not in field[1].get('n'):
+                continue
+            else:
+                return field[1].get('id'), field[1].get('v')
+        create_field = {
+                'svc': 'item/update_custom_field',
+                'params': json.dumps({
+                    'itemId': unit_id,
+                    'id': 0,
+                    'callMode': 'create',
+                    'n': info_name,
+                    'v': ''}),
+                'sid': ssid
+            }
+        response = requests.post(URL, data=create_field)
+        return response.json()[1].get('id'), response.json()[1].get('v')
+    else:
+        for info in admin_fields.items():
+            if info_name not in info[1].get('n'):
+                continue
+            else:
+                return info[1].get('id'), info[1].get('v')
+
+        info = {
+            'svc': 'item/update_admin_field',
+            'params': json.dumps({
+                "itemId": unit_id,
+                "id": 0,
+                "callMode": 'create',
+                "n": info_name,
+                "v": ''}),
+            'sid': ssid
+        }
+    response = requests.post(URL, data=info)
+    return response.json()[1].get('id'), response.json()[1].get('v')
+
+
+def check_info(ssid: str, unit_id: int, info_name: str) -> tuple:
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
