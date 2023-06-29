@@ -202,6 +202,28 @@ def remove_user(user_id: int):
     return redirect(url_for('admin'))
 
 
+def id_fields(sid, new_id) -> dict:
+    """
+        geozone_sim,
+        geozone_imei,
+        Vin,
+        Марка,
+        Модель,
+        Пин,ШАБЛОН КОНФИГУРАЦИИ	ТИП	РИСК	Инфо4
+
+    """
+    map_id = {
+        'geozone_imei': check_info(sid, new_id, 'geozone_imei')[0],
+        'geozone_sim': check_info(sid, new_id, 'geozone_sim')[0],
+        'Vin': check_info(sid, new_id, 'Vin')[0],
+        'Марка': check_info(sid, new_id, 'Марка')[0],
+        'Модель': check_info(sid, new_id, 'Модель')[0],
+        'Пин': check_info(sid, new_id, 'Пин')[0],
+        'Инфо4': check_info(sid, new_id, 'Инфо4')[0]
+    }
+    return map_id
+
+
 @app.route('/export', methods=['GET', 'POST'])
 @login_required
 def export_fms4():
@@ -242,14 +264,12 @@ def export_fms4():
                 try:
                     new_id = create_object(sid, unit_id, unit)
                     unit.update({'uid': new_id})
-                    id_info4 = check_info(sid, new_id, 'Инфо4')
-                    update_param(sid, new_id, unit, id_info4[0])
+                    update_param(sid, new_id, unit, id_fields(sid, new_id))
                     counter += 1
                 except AttributeError:
                     counter += 1
             else:
-                id_info4 = check_info(sid, unit_id, 'Инфо4')
-                update_param(sid, unit_id, unit, id_info4[0])
+                update_param(sid, unit_id, unit, id_fields(sid, unit_id))
                 counter += 1
         group_update(import_list)
         endtime = datetime.now()
@@ -261,9 +281,9 @@ def export_fms4():
             log.write(f'Обработано строк: {counter}\n')
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
-        with open('logging/import_report.log', 'r') as report:
-            user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'Импорт на виалон', report.read())
+        # with open('logging/import_report.log', 'r') as report:
+        #     user = User.query.filter_by(id=current_user.get_id()).first()
+        #     send_mail(user.email, 'Импорт на виалон', report.read())
         return redirect(url_for('export_fms4'))
     return render_template('export_fms4.html', form=form)
 
@@ -561,3 +581,7 @@ with app.app_context():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+    # sid = get_ssid()
+    # new_id = get_object_id(sid, '161100064977552')
+    # d = {'geozone_imei': check_info(sid, new_id, 'geozone_imei')[0]}
+    # print(d)
