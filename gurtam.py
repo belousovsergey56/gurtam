@@ -654,51 +654,6 @@ def update_group_by_mask(ssid: str, list_imei: list[dict]) -> int:
     return 0
 
 
-def fill_info5(ssid: str, unit_id: int, field_id: int, info_for_fill: str):
-    info5 = {
-        'svc': 'item/update_admin_field',
-        'params': json.dumps({
-            "itemId": unit_id,
-            "id": field_id,
-            "callMode": 'update',
-            "n": 'Инфо5',
-            "v": info_for_fill}),
-        'sid': ssid
-    }
-    requests.post(URL, data=info5)
-
-
-def check_create_info5(ssid: str, unit_id: int) -> int:
-    param = {
-        "svc": "core/search_item",
-        "params": json.dumps({
-            "id": unit_id,
-            "flags": 128
-        }),
-        "sid": ssid
-    }
-    response = requests.post(URL, data=param).json().get('item').get('aflds')
-
-    for info in response.items():
-        if 'Инфо5' not in info[1].get('n'):
-            continue
-        else:
-            return info[1].get('id')
-
-    info5 = {
-        'svc': 'item/update_admin_field',
-        'params': json.dumps({
-            "itemId": unit_id,
-            "id": 0,
-            "callMode": 'create',
-            "n": 'Инфо5',
-            "v": ''}),
-        'sid': ssid
-    }
-    response = requests.post(URL, data=info5).json()[1].get('id')
-    return response
-
-
 def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
     param = {
         "svc": "core/search_item",
