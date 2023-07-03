@@ -699,58 +699,38 @@ def check_create_info5(ssid: str, unit_id: int) -> int:
     return response
 
 
-def check_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
             "id": unit_id,
-            "flags": 136
+            "flags": 8
         }),
         "sid": ssid
     }
-    response = requests.post(URL, data=param)
-    admin_fields = response.json().get('item').get('aflds')
-    custom_fields = response.json().get('item').get('flds')
-    if info_name in CUSTOM_FIELDS:
-        for field in custom_fields.items():
-            if info_name not in field[1].get('n'):
-                continue
-            else:
-                return field[1].get('id'), field[1].get('v')
-        create_field = {
-                'svc': 'item/update_custom_field',
-                'params': json.dumps({
-                    'itemId': unit_id,
-                    'id': 0,
-                    'callMode': 'create',
-                    'n': info_name,
-                    'v': ''}),
-                'sid': ssid
-            }
-        response = requests.post(URL, data=create_field)
-        return response.json()[1].get('id'), response.json()[1].get('v')
-    else:
-        for info in admin_fields.items():
-            if info_name not in info[1].get('n'):
-                continue
-            else:
-                return info[1].get('id'), info[1].get('v')
+    response = requests.post(URL, data=param).json().get('item').get('flds')
 
-        info = {
-            'svc': 'item/update_admin_field',
-            'params': json.dumps({
-                "itemId": unit_id,
-                "id": 0,
-                "callMode": 'create',
-                "n": info_name,
-                "v": ''}),
-            'sid': ssid
-        }
+    for info in response.items():
+        if info_name not in info[1].get('n'):
+            continue
+        else:
+            return info[1].get('id'), info[1].get('v')
+
+    info = {
+        'svc': 'item/update_custom_field',
+        'params': json.dumps({
+            "itemId": unit_id,
+            "id": 0,
+            "callMode": 'create',
+            "n": info_name,
+            "v": ''}),
+        'sid': ssid
+    }
     response = requests.post(URL, data=info)
     return response.json()[1].get('id'), response.json()[1].get('v')
 
 
-def check_info(ssid: str, unit_id: int, info_name: str) -> tuple:
+def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
