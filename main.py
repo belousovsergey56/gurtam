@@ -17,9 +17,9 @@ from forms import SigninForm, UploadFile, UserForm
 
 from gurtam import create_object, get_ssid, group_update
 from gurtam import remove_groups, get_object_id
-from gurtam import fill_info5, check_create_info5, check_info
+from gurtam import fill_info5, check_create_info5, check_admin_fields
 from gurtam import update_param
-from gurtam import fill_info, upd_inn_field
+from gurtam import fill_info, upd_inn_field, check_custom_fields
 
 from models import User
 
@@ -209,17 +209,18 @@ def id_fields(sid, new_id) -> dict:
         Vin,
         Марка,
         Модель,
-        Пин,ШАБЛОН КОНФИГУРАЦИИ	ТИП	РИСК	Инфо4
+        Пин,
+        Инфо4
 
     """
     map_id = {
-        'geozone_imei': check_info(sid, new_id, 'geozone_imei')[0],
-        'geozone_sim': check_info(sid, new_id, 'geozone_sim')[0],
-        'Vin': check_info(sid, new_id, 'Vin')[0],
-        'Марка': check_info(sid, new_id, 'Марка')[0],
-        'Модель': check_info(sid, new_id, 'Модель')[0],
-        'Пин': check_info(sid, new_id, 'Пин')[0],
-        'Инфо4': check_info(sid, new_id, 'Инфо4')[0]
+        'geozone_imei': check_admin_fields(sid, new_id, 'geozone_imei')[0],
+        'geozone_sim': check_admin_fields(sid, new_id, 'geozone_sim')[0],
+        'Vin': check_custom_fields(sid, new_id, 'Vin')[0],
+        'Марка': check_custom_fields(sid, new_id, 'Марка')[0],
+        'Модель': check_custom_fields(sid, new_id, 'Модель')[0],
+        'Пин': check_admin_fields(sid, new_id, 'Пин')[0],
+        'Инфо4': check_admin_fields(sid, new_id, 'Инфо4')[0]
     }
     return map_id
 
@@ -281,9 +282,9 @@ def export_fms4():
             log.write(f'Обработано строк: {counter}\n')
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
-        # with open('logging/import_report.log', 'r') as report:
-        #     user = User.query.filter_by(id=current_user.get_id()).first()
-        #     send_mail(user.email, 'Импорт на виалон', report.read())
+        with open('logging/import_report.log', 'r') as report:
+            user = User.query.filter_by(id=current_user.get_id()).first()
+            send_mail(user.email, 'Импорт на виалон', report.read())
         return redirect(url_for('export_fms4'))
     return render_template('export_fms4.html', form=form)
 
@@ -417,10 +418,10 @@ def update_info():
                     log.write('{0} - не найден\n'.format(unit.get('IMEI')))
                     counter += 1
             else:
-                id_info1 = check_info(sid, unit_id, 'Инфо1')
-                id_info5 = check_info(sid, unit_id, 'Инфо5')
-                id_info6 = check_info(sid, unit_id, 'Инфо6')
-                id_info7 = check_info(sid, unit_id, 'Инфо7')
+                id_info1 = check_admin_fields(sid, unit_id, 'Инфо1')
+                id_info5 = check_admin_fields(sid, unit_id, 'Инфо5')
+                id_info6 = check_admin_fields(sid, unit_id, 'Инфо6')
+                id_info7 = check_admin_fields(sid, unit_id, 'Инфо7')
                 id_value_list = [
                     id_info1,
                     id_info5,
@@ -486,7 +487,7 @@ def fill_inn():
                     log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
                     counter += 1
             else:
-                id_inn_field = check_info(sid, unit_id, 'ИНН')
+                id_inn_field = check_admin_fields(sid, unit_id, 'ИНН')
                 upd_inn_field(
                     sid,
                     unit_id,
@@ -581,7 +582,3 @@ with app.app_context():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    # sid = get_ssid()
-    # new_id = get_object_id(sid, '161100064977552')
-    # d = {'geozone_imei': check_info(sid, new_id, 'geozone_imei')[0]}
-    # print(d)
