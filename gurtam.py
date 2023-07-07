@@ -699,7 +699,7 @@ def check_create_info5(ssid: str, unit_id: int) -> int:
     return response
 
 
-def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+def get_custom_fields(ssid: str, unit_id: int) -> dict:
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
@@ -709,13 +709,10 @@ def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
         "sid": ssid
     }
     response = requests.post(URL, data=param).json().get('item').get('flds')
+    return response
 
-    for info in response.items():
-        if info_name not in info[1].get('n'):
-            continue
-        else:
-            return info[1].get('id'), info[1].get('v')
 
+def create_custom_field(ssid: str, unit_id: int, info_name: str) -> json:
     info = {
         'svc': 'item/update_custom_field',
         'params': json.dumps({
@@ -727,10 +724,23 @@ def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
         'sid': ssid
     }
     response = requests.post(URL, data=info)
-    return response.json()[1].get('id'), response.json()[1].get('v')
+    return response.json()
 
 
-def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+    response = get_custom_fields(ssid, unit_id)
+
+    for info in response.items():
+        if info_name not in info[1].get('n'):
+            continue
+        else:
+            return info[1].get('id'), info[1].get('v')
+
+    response = create_custom_field(ssid, unit_id, info_name)
+    return response[1].get('id'), response.json()[1].get('v')
+
+
+def get_admin_fields(ssid: str, unit_id: int) -> dict:
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
@@ -740,13 +750,10 @@ def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
         "sid": ssid
     }
     response = requests.post(URL, data=param).json().get('item').get('aflds')
+    return response
 
-    for info in response.items():
-        if info_name not in info[1].get('n'):
-            continue
-        else:
-            return info[1].get('id'), info[1].get('v')
 
+def create_admin_field(ssid: str, unit_id: int, info_name: str) -> dict:
     info = {
         'svc': 'item/update_admin_field',
         'params': json.dumps({
@@ -758,7 +765,20 @@ def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
         'sid': ssid
     }
     response = requests.post(URL, data=info)
-    return response.json()[1].get('id'), response.json()[1].get('v')
+    return response.json()
+
+
+def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+    response = get_admin_fields(ssid, unit_id)
+
+    for info in response.items():
+        if info_name not in info[1].get('n'):
+            continue
+        else:
+            return info[1].get('id'), info[1].get('v')
+
+    response = create_admin_field(ssid, unit_id, info_name)
+    return response[1].get('id'), response.json()[1].get('v')
 
 
 def fill_info(
