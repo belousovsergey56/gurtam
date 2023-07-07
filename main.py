@@ -20,6 +20,8 @@ from gurtam import remove_groups, get_object_id
 from gurtam import fill_info5, check_create_info5, check_admin_fields
 from gurtam import update_param
 from gurtam import fill_info, upd_inn_field, check_custom_fields
+from gurtam import get_admin_fields, get_custom_fields
+from gurtam import create_admin_field, create_custom_field
 
 from models import User
 
@@ -213,15 +215,37 @@ def id_fields(sid, new_id) -> dict:
         Инфо4
 
     """
+    admin_fields = get_admin_fields(sid, new_id)
+    custom_fields = get_custom_fields(sid, new_id)
     map_id = {
-        'geozone_imei': check_admin_fields(sid, new_id, 'geozone_imei')[0],
-        'geozone_sim': check_admin_fields(sid, new_id, 'geozone_sim')[0],
-        'Vin': check_custom_fields(sid, new_id, 'Vin')[0],
-        'Марка': check_custom_fields(sid, new_id, 'Марка')[0],
-        'Модель': check_custom_fields(sid, new_id, 'Модель')[0],
-        'Пин': check_admin_fields(sid, new_id, 'Пин')[0],
-        'Инфо4': check_admin_fields(sid, new_id, 'Инфо4')[0]
+        'geozone_imei': None,
+        'geozone_sim': None,
+        'Vin': None,
+        'Марка': None,
+        'Модель': None,
+        'Пин': None,
+        'Инфо4': None
     }
+    for field in admin_fields.items():
+        name_field = field[1].get('n')
+        id_field = field[1].get('id')
+        if name_field in map_id.keys():
+            map_id.update({name_field: id_field})
+
+    for field in custom_fields.items():
+        name_field = field[1].get('n')
+        id_field = field[1].get('id')
+        if name_field in map_id.keys():
+            map_id.update({name_field: id_field})
+
+    for names, values in map_id.items():
+        if values is None:
+            if names == 'Vin' or names == 'Марка' or names == 'Модель':
+                field = create_custom_field(sid, new_id, names)
+                map_id.update({names: field[1].get('id')})
+            else:
+                field = create_admin_field(sid, new_id, names)
+                map_id.update({names: field[1].get('id')})
     return map_id
 
 
@@ -282,9 +306,9 @@ def export_fms4():
             log.write(f'Обработано строк: {counter}\n')
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
-        with open('logging/import_report.log', 'r') as report:
-            user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'Импорт на виалон', report.read())
+        # with open('logging/import_report.log', 'r') as report:
+        #     user = User.query.filter_by(id=current_user.get_id()).first()
+        #     send_mail(user.email, 'Импорт на виалон', report.read())
         return redirect(url_for('export_fms4'))
     return render_template('export_fms4.html', form=form)
 
@@ -582,3 +606,7 @@ with app.app_context():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+    # sid = get_ssid()
+    # oid = get_object_id(sid, '16110006178506')
+    # idd = id_fields(sid, oid)
+    # print(idd)
