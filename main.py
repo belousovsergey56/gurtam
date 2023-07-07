@@ -20,6 +20,8 @@ from gurtam import remove_groups, get_object_id
 from gurtam import check_admin_fields
 from gurtam import update_param
 from gurtam import fill_info, upd_inn_field, check_custom_fields
+from gurtam import get_admin_fields, get_custom_fields
+from gurtam import create_admin_field, create_custom_field
 
 from models import User
 
@@ -213,15 +215,37 @@ def id_fields(sid, new_id) -> dict:
         Инфо4
 
     """
+    admin_fields = get_admin_fields(sid, new_id)
+    custom_fields = get_custom_fields(sid, new_id)
     map_id = {
-        'geozone_imei': check_admin_fields(sid, new_id, 'geozone_imei')[0],
-        'geozone_sim': check_admin_fields(sid, new_id, 'geozone_sim')[0],
-        'Vin': check_custom_fields(sid, new_id, 'Vin')[0],
-        'Марка': check_custom_fields(sid, new_id, 'Марка')[0],
-        'Модель': check_custom_fields(sid, new_id, 'Модель')[0],
-        'Пин': check_admin_fields(sid, new_id, 'Пин')[0],
-        'Инфо4': check_admin_fields(sid, new_id, 'Инфо4')[0]
+        'geozone_imei': None,
+        'geozone_sim': None,
+        'Vin': None,
+        'Марка': None,
+        'Модель': None,
+        'Пин': None,
+        'Инфо4': None
     }
+    for field in admin_fields.items():
+        name_field = field[1].get('n')
+        id_field = field[1].get('id')
+        if name_field in map_id.keys():
+            map_id.update({name_field: id_field})
+
+    for field in custom_fields.items():
+        name_field = field[1].get('n')
+        id_field = field[1].get('id')
+        if name_field in map_id.keys():
+            map_id.update({name_field: id_field})
+
+    for names, values in map_id.items():
+        if values is None:
+            if names == 'Vin' or names == 'Марка' or names == 'Модель':
+                field = create_custom_field(sid, new_id, names)
+                map_id.update({names: field[1].get('id')})
+            else:
+                field = create_admin_field(sid, new_id, names)
+                map_id.update({names: field[1].get('id')})
     return map_id
 
 
