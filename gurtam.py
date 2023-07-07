@@ -794,7 +794,7 @@ def fill_info(
                     info5,
                     info6,
                     info7
-                 ],
+                    ],
                  "flags": 0}),
              'sid': ssid
              }
