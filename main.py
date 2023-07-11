@@ -249,6 +249,12 @@ def id_fields(sid, new_id) -> dict:
     return map_id
 
 
+@app.route('/order')
+@login_required
+def order():
+    return render_template('order.html')
+
+
 @app.route('/export', methods=['GET', 'POST'])
 @login_required
 def export_fms4():
@@ -281,7 +287,7 @@ def export_fms4():
         counter = 0
         with open('logging/import_report.log', 'w') as log:
             log.write(f'Время начала: {start.ctime()}\n')
-            log.write(f'{import_list[0].get("ЛИЗИНГ")}\n')
+            log.write(f'Импорт по компании: {import_list[0].get("ЛИЗИНГ")}\n')
         for unit in import_list:
             unit_id = get_object_id(sid, unit.get('geozone_imei'))
             unit.update({'uid': unit_id})
@@ -307,9 +313,10 @@ def export_fms4():
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
         with open('logging/import_report.log', 'r') as report:
+            order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'Импорт на виалон', report.read())
-        return redirect(url_for('export_fms4'))
+            send_mail(user.email, 'Импорт на виалон', order)
+        return render_template('order.html', order=order.split('\n'))
     return render_template('export_fms4.html', form=form)
 
 
