@@ -555,7 +555,7 @@ def create_object(sid: str, unit_id: int, unit) -> None:
     obj_id = create_object_with_all_params(sid, unit)
     create_custom_fields(sid, obj_id)
     with open('logging/import_report.log', 'a') as log:
-        data_log = "Пин {0} - Имей {1} - не найден\n"
+        data_log = "Пин {0} - Имей {1} - не был найден на виалон, возможно мастер не звонил.\n"
         log.write(data_log.format(unit.get('Пин'), unit.get('geozone_imei')))
     return obj_id
 
