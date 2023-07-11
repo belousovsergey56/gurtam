@@ -373,9 +373,10 @@ def remove_group():
         os.remove(f'{file_path}.json')
 
         with open('logging/remove_group_report.log', 'r') as report:
+            order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'Удаление объектов из групп', report.read())
-        return redirect(url_for('remove_group'))
+            send_mail(user.email, 'Удаление объектов из групп', order)
+        return render_template('order.html', order=order.split('\n'))
     return render_template('remove_groups.html', form=form)
 
 
@@ -441,9 +442,10 @@ def update_info():
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
         with open('logging/update_info.log', 'r') as report:
+            order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'РДДБ обновление полей ИНФО', report.read())
-        return redirect(url_for('update_info'))
+            send_mail(user.email, 'РДДБ обновление полей ИНФО', order)
+        return render_template('order.html', order=order.split('\n'))
     return render_template('update_info.html', form=form)
 
 
@@ -504,9 +506,10 @@ def fill_inn():
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
         with open('logging/update_inn.log', 'r') as report:
+            order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'ГПБАЛ обновление полей ИНН', report.read())
-        return redirect(url_for('fill_inn'))
+            send_mail(user.email, 'ГПБАЛ обновление полей ИНН', order)
+        return render_template('order.html', order=order.split('\n'))
     return render_template('fill_inn.html', form=form)
 
 
