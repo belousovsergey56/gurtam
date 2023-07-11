@@ -654,7 +654,7 @@ def update_group_by_mask(ssid: str, list_imei: list[dict]) -> int:
     return 0
 
 
-def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+def get_custom_fields(ssid: str, unit_id: int) -> dict:
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
@@ -692,7 +692,7 @@ def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
             return info[1].get('id'), info[1].get('v')
 
     response = create_custom_field(ssid, unit_id, info_name)
-    return response[1].get('id'), response.json()[1].get('v')
+    return response[1].get('id'), response[1].get('v')
 
 
 def get_admin_fields(ssid: str, unit_id: int) -> dict:
@@ -733,7 +733,7 @@ def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
             return info[1].get('id'), info[1].get('v')
 
     response = create_admin_field(ssid, unit_id, info_name)
-    return response[1].get('id'), response.json()[1].get('v')
+    return response[1].get('id'), response[1].get('v')
 
 
 def fill_info(
