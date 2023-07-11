@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Цезарь Сателлит - Отчёт{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class="row">
+    <div class="col-3"></div>
+    <div class="col-6">
+      <div class="card text-center">
+        <div class="card-header bg-success" style="color: white;">
+          Отчёт
+        </div>
+        <div class="card-body bg-secondary">
+          {% for text in order %}
+          <p class="card-text" style="color: white;">{{ text }}</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-3"></div>
+  </div>
+  {% endblock %}
