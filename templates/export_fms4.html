@@ -38,28 +38,4 @@
     <a href="/static/excel_template.xlsx" download="">Скачать шаблон</a>
 </div>
 
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div id="load" class="modal-body my-3"></div>
-            </div>
-        </div>
-    </div>
-
-<script>
-    $(document).ready(function () {
-        $('form').submit(function(){
-            $.ajax({
-                url: "{{ url_for('spinner') }}",
-                type: "post",
-                contentType: "application/json",
-                success: function (response) {
-                    $('#load').empty();
-                    $('#load').append(response.data);
-                }
-            });
-        });
-    });
-</script>
 {% endblock %}
