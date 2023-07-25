@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from hardware import create_object_with_all_params
 
 import requests
-from requests import Response
 
 
 load_dotenv()
@@ -233,7 +232,7 @@ def update_param(
     unit_id: int,
     new_value: dict,
     id_field: dict
-):
+) -> None:
     """Fill object fields with new parameters.
 
     The function accepts a session ID, an object ID,
@@ -364,26 +363,6 @@ def update_param(
     print('start check fields')
     print(f'start update object fields {new_value.get("Пин")}')
     requests.post(URL, data=param)
-
-
-def get_log(response: Response, param: dict, value: dict):
-    """Write error to a log file.
-
-    Args:
-        response (str): response object in string
-        param (dict): parameter dictionary that is passed to the request
-        value (dict): dictionary with data to write the object
-    """
-    log_text = 'Запись параметра: {0} - объекта:\
-        {1} - завершена с ошибкой. Код ошибки - {2} \n'
-    if response.status_code != 200:
-        with open('logging/update_error.txt', 'a') as log:
-            log.write(
-                log_text.format(
-                    param.get('svc'),
-                    value.get('ДЛ'),
-                    response.text)
-            )
 
 
 def search_groups_by_name(ssid: str, group_name: str) -> dict:
@@ -540,7 +519,7 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
         requests.post(URL, data=param)
 
 
-def create_object(sid: str, unit_id: int, unit) -> None:
+def create_object(sid: str, unit_id: int, unit) -> int:
     """Check the presence of an object on the vialon.
 
     Checking dictionary objects by IMEI for presence on the Vialon portal
@@ -551,11 +530,15 @@ def create_object(sid: str, unit_id: int, unit) -> None:
 
     Args:
         data (dict): dictionary of objects
+
+    Returns:
+        obj_id: integer object id
     """
     obj_id = create_object_with_all_params(sid, unit)
     create_custom_fields(sid, obj_id)
     with open('logging/import_report.log', 'a') as log:
-        data_log = "Пин {0} - Имей {1} - не был найден на виалон, возможно мастер не звонил.\n"
+        data_log = """Пин{0} - Имей {1} - не был найден на виалон,
+         возможно мастер не звонил.\n"""
         log.write(data_log.format(unit.get('Пин'), unit.get('geozone_imei')))
     return obj_id
 
@@ -655,6 +638,15 @@ def update_group_by_mask(ssid: str, list_imei: list[dict]) -> int:
 
 
 def get_custom_fields(ssid: str, unit_id: int) -> dict:
+    """Get custom fields data.
+
+    Args:
+        ssid: string sesion id
+        unit_id: integer unit/object id
+
+    Returns:
+        custom fields: custom fields data in dictionary
+    """
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
@@ -667,7 +659,23 @@ def get_custom_fields(ssid: str, unit_id: int) -> dict:
     return response
 
 
-def create_custom_field(ssid: str, unit_id: int, info_name: str) -> json:
+def create_custom_field(ssid: str, unit_id: int, info_name: str) -> dict:
+    """Create custom field.
+
+    Args:
+        ssid: string session id
+        unit_id: integer unit/object id
+        info_name: field name to create
+
+    Returns:
+        fields info: When creating or updating custom fields,
+        response format will be ditionary
+        {
+            "id":<long>, custom field ID
+            "n":<text>, name
+            "v":<text> value
+        }
+    """
     info = {
         'svc': 'item/update_custom_field',
         'params': json.dumps({
@@ -683,6 +691,22 @@ def create_custom_field(ssid: str, unit_id: int, info_name: str) -> json:
 
 
 def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+    """Check custom field.
+
+        The function looks for the field id.
+        If the field is not found, go to the function of creating
+        the required field.
+        If the field is found, the function returns a tuple
+        in the form of the "field id", the "field value"
+
+    Args:
+        ssid: string session id
+        unit_id: integer unit/object id
+        info_name: field name to check id
+
+    Returns:
+        info data: tuple(field id(int), field value(str))
+    """
     response = get_custom_fields(ssid, unit_id)
 
     for info in response.items():
@@ -696,6 +720,15 @@ def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
 
 
 def get_admin_fields(ssid: str, unit_id: int) -> dict:
+    """Get admin fields data.
+
+    Args:
+        ssid: string sesion id
+        unit_id: integer unit/object id
+
+    Returns:
+        admin fields: admin fields data in dictionary
+    """
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
@@ -709,6 +742,22 @@ def get_admin_fields(ssid: str, unit_id: int) -> dict:
 
 
 def create_admin_field(ssid: str, unit_id: int, info_name: str) -> dict:
+    """Create admin field.
+
+    Args:
+        ssid: string session id
+        unit_id: integer unit/object id
+        info_name: field name to create
+
+    Returns:
+        fields info: When creating or updating admin fields,
+        response format will be ditionary
+        {
+            "id":<long>, admin field ID
+            "n":<text>, name
+            "v":<text>, value
+        }
+    """
     info = {
         'svc': 'item/update_admin_field',
         'params': json.dumps({
@@ -724,6 +773,22 @@ def create_admin_field(ssid: str, unit_id: int, info_name: str) -> dict:
 
 
 def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
+    """Check admin field.
+
+        The function looks for the field id.
+        If the field is not found, go to the function of creating
+        the required field.
+        If the field is found, the function returns a tuple
+        in the form of the "field id", the "field value"
+
+    Args:
+        ssid: string session id
+        unit_id: integer unit/object id
+        info_name: field name to check id
+
+    Returns:
+        info data: tuple(field id(int), field value(str))
+    """
     response = get_admin_fields(ssid, unit_id)
 
     for info in response.items():
@@ -741,7 +806,20 @@ def fill_info(
     unit_id: int,
     field_id_value: int,
     data: dict
-):
+) -> None:
+    """Update the fields for Karkade.
+
+        Finds an object by IMEI.
+        Updates fields Info1, Info4, 5, Info6, info7.
+        If fields not to be filled are not found, the script creates a field
+        and fills it with data.
+
+    Args:
+        ssid: string session id
+        unit_id: integer unit/object id
+        field_id_value: integer id field
+        data: data to fill
+    """
     info1 = {
         'svc': 'item/update_admin_field',
         'params': {
@@ -749,7 +827,8 @@ def fill_info(
             "id": field_id_value[0][0],
             "callMode": 'update',
             "n": 'Инфо1',
-            "v": data.get('РДДБ') if data.get('РДДБ') is not None else field_id_value[0][1]
+            "v": data.get('РДДБ') if data.get(
+                'РДДБ') is not None else field_id_value[0][1]
         },
         'sid': ssid
     }
@@ -761,7 +840,8 @@ def fill_info(
             "id": field_id_value[1][0],
             "callMode": 'update',
             "n": 'Инфо5',
-            "v": data.get('Специалист') if data.get('Специалист') is not None else field_id_value[1][1]},
+            "v": data.get('Специалист') if data.get(
+                'Специалист') is not None else field_id_value[1][1]},
         'sid': ssid
     }
 
@@ -772,7 +852,8 @@ def fill_info(
             "id": field_id_value[2][0],
             "callMode": 'update',
             "n": 'Инфо6',
-            "v": data.get('ИНН') if data.get('ИНН') is not None else field_id_value[2][1]},
+            "v": data.get('ИНН') if data.get(
+                'ИНН') is not None else field_id_value[2][1]},
         'sid': ssid
     }
 
@@ -783,7 +864,8 @@ def fill_info(
             "id": field_id_value[3][0],
             "callMode": 'update',
             "n": 'Инфо7',
-            "v": data.get('КПП') if data.get('КПП') is not None else field_id_value[3][1]},
+            "v": data.get('КПП') if data.get(
+                'КПП') is not None else field_id_value[3][1]},
         'sid': ssid
     }
 
@@ -801,7 +883,22 @@ def fill_info(
     requests.post(URL, data=param)
 
 
-def upd_inn_field(ssid: str, unit_id: int, field_id: int, inn_value: str):
+def upd_inn_field(
+    ssid: str, unit_id: int, field_id: int, inn_value: str
+) -> None:
+    """Update the fields for GPBL.
+
+    Finds an object by IMEI.
+    Updates fields INN.
+    If fields not to be filled are not found,
+    the script creates a field and fills it with data.
+
+    Args:
+        ssid: string session id
+        unit_id: integer unut/object id
+        field_id: integer field id
+        inn_value: data to fill
+    """
     inn = {
         'svc': 'item/update_admin_field',
         'params': json.dumps({
