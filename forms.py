@@ -38,6 +38,13 @@ class SigninForm(FlaskForm):
 
 
 class UserForm(FlaskForm):
+    """User in form.
+
+    Function form for user management in the admin panel.
+
+    Args:
+        FlaskForm (class): extends FlaskForm for create forms.
+    """
     login = StringField(
         label='',
         render_kw={'placeholder': 'Логин'},
