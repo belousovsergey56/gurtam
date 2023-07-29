@@ -1,3 +1,9 @@
+"""Additional tools module.
+
+This module contains such functions as:
+sending email, reading xlsx file and reading json into a dictionary,
+file comparison and snapshot of the latest wialon database state etc.
+"""
 import json
 
 import os
@@ -20,17 +26,25 @@ HOSTING_LOIGN = os.environ.get('hosting_login')
 HOSTING_EMAIL_PASSWORD = os.environ.get('hosting_email_password')
 
 
-def send_mail(
-        mail_address: str,
-        subject: str,
-        body: str
-):
+def send_mail(mail_address: str, subject: str, body: str) -> None:
+    """Send email.
+
+    The function of sending e-mails from the spb.csat.ru host
+    to the mail of an authorized user.
+
+    Args:
+        mail_address(str): Email address of the recipient
+        subject(str): Email Subject
+        body(str): Email Body
+    """
     time = datetime.now()
-    tmp_message = f'Subject: {subject}\n\n{time.ctime()}\nОперация завершена:\n{body}'.encode(
-        'UTF-8')
+    tmp_message = f"""Subject: {subject}\n\n{time.ctime()}\nОперация
+     завершена:\n{body}""".encode('UTF-8')
     context = ssl.create_default_context()
     try:
-        with smtplib.SMTP_SSL(host='smtp.spb.csat.ru', context=context, port=465) as connection:
+        with smtplib.SMTP_SSL(
+            host='smtp.spb.csat.ru', context=context, port=465
+        ) as connection:
             connection.login(
                 user=HOSTING_LOIGN,
                 password=HOSTING_EMAIL_PASSWORD
@@ -46,11 +60,14 @@ def send_mail(
                 f'{time.ctime()}\nmsg don`t send to {mail_address}\n{e}\n\n')
 
 
-def xls_to_json(xls_file):
+def xls_to_json(xls_file) -> str:
     """Convert Excel file to json.
 
     Args:
         xls_file (file.xlsx): Excel file to be converted to json
+
+    Returns:
+        path(str): path of the json file
     """
     new_file_name = f'{xls_file}'.replace('.xlsx', '')
     xls = pd.read_excel(xls_file, dtype=str)
@@ -73,12 +90,25 @@ def read_json(file_path) -> dict:
 
 
 def get_headers(json_file: dict) -> list[str]:
+    """Get column headers.
+
+    Args:
+        json_file(dict): dictionary with data
+
+    Returns:
+        headers(list): title list
+    """
     data_frame = pd.DataFrame(json_file)
     headers = data_frame.columns.values.tolist()
     return headers
 
 
 def update_bd(data: list[dict]) -> None:
+    """Get snapshot carcade data.
+
+    The function reads the incoming carcade file and saves the data
+    to a separate json file.
+    """
     bd = {}
     for value in data:
         imei = None
@@ -106,6 +136,18 @@ def update_bd(data: list[dict]) -> None:
 
 
 def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
+    """Comparing an input file with a snapshot.
+
+    The function compares the data from the input file with the data stored
+    since the last update and returns a list of objects that do not exist or
+    have changed relative to the snapshot.
+
+    Args:
+        new_file(list[dict]): incoming data
+
+    Returns:
+        to_update(list[dict]): data to be added or changed on wialon server
+    """
     to_update = []
     last_db = read_json('data_carcade/last_db')
     for value in new_file:
@@ -116,10 +158,18 @@ def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
         else:
             inn = value.get("ИНН")
         if imei in last_db:
-            if value.get("РДДБ") != last_db[imei].get("РДДБ") or\
-                    value.get("Специалист") != last_db[imei].get("Специалист") or\
-                    inn != last_db[imei].get("ИНН") or\
-                    value.get("КПП") != last_db[imei].get("КПП"):
+            if value.get(
+                "РДДБ"
+                ) != last_db[imei].get(
+                    "РДДБ"
+                    ) or value.get(
+                        "Специалист"
+                        ) != last_db[imei].get(
+                            "Специалист"
+                            ) or inn != last_db[imei].get(
+                                "ИНН"
+                                ) or value.get(
+                                    "КПП") != last_db[imei].get("КПП"):
                 last_db[imei].update(value)
                 to_update.append(value)
         else:

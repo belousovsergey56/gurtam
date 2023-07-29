@@ -19,7 +19,7 @@ from gurtam import create_object, get_ssid, group_update
 from gurtam import remove_groups, get_object_id
 from gurtam import check_admin_fields
 from gurtam import update_param
-from gurtam import fill_info, upd_inn_field, check_custom_fields
+from gurtam import fill_info, upd_inn_field
 from gurtam import get_admin_fields, get_custom_fields
 from gurtam import create_admin_field, create_custom_field
 
@@ -43,11 +43,29 @@ lgroup = {
 
 
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(user_id) -> User:
+    """Load user to login manager.
+
+    User manager saves data about the authorized user.
+
+    Args:
+        user_id(int): user id in data base
+
+    Returns:
+        current user
+    """
     return User.query.filter_by(id=user_id).first()
 
 
-def admin_only(f):
+def admin_only(f) -> str:
+    """Decorator, admin validator.
+
+    If the page is opened by a non-administrator,
+    the user is redirected to a 403 page.
+
+    Returns:
+        page 403: 403.html
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.get_id() != str(1):
@@ -57,7 +75,17 @@ def admin_only(f):
 
 
 @app.route('/', methods=['GET', 'POST'])
-def sign_in():
+def sign_in() -> str:
+    """Sign in page.
+
+    User authentication page.
+    If an incorrect username or password is entered, an error will pop up.
+    If the user is authorized, then he will be redirected to the main page
+    of the application.
+
+    Returns:
+        redirect to /home page
+    """
     year = datetime.now().year
     form = SigninForm()
     if form.validate_on_submit():
@@ -85,10 +113,12 @@ def sign_in():
 @app.route('/home')
 @login_required
 def home() -> str:
-    """Render home page.
+    """Home page.
+
+    Main page with a selection menu.
 
     Returns:
-        str: displays the home page of the application
+        displays the home page of the application
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     with open('logging/log_report.log', 'a') as report:
@@ -101,6 +131,14 @@ def home() -> str:
 @app.route('/owners', methods=['GET', 'POST'])
 @login_required
 def admin():
+    """Administration panel.
+
+    Administration panel for adding, deleting users,
+    updating user rights, changing passwords.
+
+    Returns:
+        render admin.html
+    """
     user = User.query.filter_by(id=current_user.get_id()).first()
     database = User.query.all()
     form = UserForm()
@@ -110,6 +148,14 @@ def admin():
 @app.route('/create_user', methods=['POST', 'GET'])
 @login_required
 def create_user():
+    """Create user.
+
+    Add new user and save him in data base.
+    login, email, password, groups, accesses
+
+    Returns:
+        new user in DB and redirect admin.html
+    """
     form = UserForm()
     leasing = User.query.filter_by(id=current_user.get_id()).first()
 
@@ -117,7 +163,8 @@ def create_user():
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data).first():
             flash(
-                message='Пользователь с такой почтой уже существует, попробуйте ввести новую почту')
+                message="""Пользователь с такой почтой уже существует,
+                 попробуйте ввести новую почту""")
             return redirect(url_for('create_user'))
         new_user = User(
             login=form.login.data,
@@ -138,6 +185,17 @@ def create_user():
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def edit_user(user_id: int):
+    """Edit user.
+
+    Edit user name, email, group.
+    Page have a link to change password.
+
+    Args:
+        user_id(int): ID of the user to whom the data is being updated
+
+    Returns:
+        update user data and redirect to admin.html
+    """
     user = User.query.filter_by(id=current_user.get_id()).first()
     edit_user = User.query.filter_by(id=user_id).first()
     form = UserForm(
@@ -170,6 +228,16 @@ def edit_user(user_id: int):
 @app.route('/edit_password/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def edit_password(user_id: int):
+    """Edit password.
+
+    Edit user password.
+
+    Args:
+        user_id(int): ID of the user to whom the data is being updated
+
+    Returns:
+        update user data and redirect to admin.html
+    """
     user = User.query.filter_by(id=current_user.get_id()).first()
     edit_password = User.query.filter_by(id=user_id).first()
     form = UserForm(
@@ -198,6 +266,16 @@ def edit_password(user_id: int):
 @app.route('/remove_user/<int:user_id>')
 @login_required
 def remove_user(user_id: int):
+    """Remove user.
+
+    Remove user from database.
+
+    Args:
+        user_id(int): user id to be deleted
+
+    Returns:
+        remove user from database and redirect to admin.html
+    """
     teacher_to_delete = User.query.get(user_id)
     db.session.delete(teacher_to_delete)
     db.session.commit()
@@ -205,15 +283,23 @@ def remove_user(user_id: int):
 
 
 def id_fields(sid, new_id) -> dict:
-    """
-        geozone_sim,
-        geozone_imei,
-        Vin,
-        Марка,
-        Модель,
-        Пин,
-        Инфо4
+    """Get id fields.
 
+    Helper function.
+    Create map id fields.
+    Search field id and add to dict.
+    Search custom and admin fields.
+    If id field not found, go to create field and add new id to dict.
+    Them return dict with field name and current id.
+    Current name and id:
+    geozone_sim, geozone_imei, Vin, Марка, Модель, Пин, Инфо4
+
+    Args:
+        sid (str): current session id
+        new_id: integer unit/object id
+
+    Returns:
+        map_id (dict): dict with current field name and field id
     """
     admin_fields = get_admin_fields(sid, new_id)
     custom_fields = get_custom_fields(sid, new_id)
@@ -252,6 +338,13 @@ def id_fields(sid, new_id) -> dict:
 @app.route('/order')
 @login_required
 def order():
+    """Order page.
+
+    This page open, when script work is done and data write in log.
+
+    Returns:
+        display order.html
+    """
     return render_template('order.html')
 
 
@@ -260,12 +353,25 @@ def order():
 def export_fms4():
     """Import object data to Wialon.
 
+    Page displays a field for uploading an excel file and
+    buttons for sending the file for processing.
+    Right there, just below the form, there is a description field
+    with a hint about which file can and should be uploaded here.
+    The function will convert the excel file into json then into a dictionary.
+    The function checks if the file is suitable for processing by the main
+    script, if not, then it reports an error to the user.
+    Next, the data from the dictionary is uploaded to the wialon server.
+    When the download is completed, the user will be redirected to a page with
+    a report on the data upload to the server.
+    At the same time, the user will receive an email with the same report.
+
     Returns:
-        Html template export_fms4.html
+        display page export_fms4.html
     """
     with open('logging/log_report.log', 'a') as report:
         user = User.query.filter_by(id=current_user.get_id()).first()
-        text = f'{datetime.now().ctime()} - {user.login} - open page import on fms4\n'
+        text = f"""{datetime.now().ctime()} - {user.login} - open page import
+         on fms4\n"""
         report.write(text)
     form = UploadFile()
     if form.validate_on_submit():
@@ -273,8 +379,11 @@ def export_fms4():
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         import_list = read_json(file_path)
-        if 'Инфо4' not in import_list[0] and 'ДЛ' not in import_list[0] and 'Пин' not in import_list[0]:
-            flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
+        if """Инфо4
+        """ not in import_list[0] and """ДЛ
+        """ not in import_list[0] and """Пин""" not in import_list[0]:
+            flash(message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
             return render_template(
@@ -331,7 +440,7 @@ def remove_group():
     objects from groups.
 
     Returns:
-        Html template remove_groups.html
+        display page remove_groups.html
     """
     form = UploadFile()
 
@@ -342,7 +451,8 @@ def remove_group():
         imei_list = read_json(file_path)
 
         if 'ГРУППА' not in imei_list[0] and 'ИМЕЙ' not in imei_list[0]:
-            flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
+            flash(message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
             return render_template(
@@ -356,8 +466,8 @@ def remove_group():
         count_lines = len(imei_list)
         with open('logging/remove_group_report.log', 'w') as log:
             log.write(f'Время начала: {start.ctime()}\n')
-            log.write(
-                f'\nУдаление объектов из группы по маске - {imei_list[0].get("ГРУППА")}\n')
+            log.write(f"""\nУдаление объектов из группы по маске
+             - {imei_list[0].get("ГРУППА")}\n""")
         remove_groups(sid, imei_list)
 
         endtime = datetime.now()
@@ -383,6 +493,22 @@ def remove_group():
 @app.route('/update_info', methods=['GET', 'POST'])
 @login_required
 def update_info():
+    """Carcade, update info fields.
+
+    Page update info display field for upload current xlsx file.
+    If file is not correct, popup error text.
+    First, the uploaded file is compared with the current state of the
+    database, the snapshot of the database is stored on the server in json
+    format.
+    The data is updated in such fields as Info1, Info5, Info6, Info7.
+    Where Инфо1 - РДДБ, Инфо5 - Специалист, Инфо6 - ИНН, Инфо7 - КПП.
+    When the download is complete, the user will be redirected to the page
+    with the report and the script will be sent. In parallel with this, the
+    script will send a letter to the user with the same report.
+
+    Returns:
+        display update_info.html then the report page order.html
+    """
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -390,8 +516,12 @@ def update_info():
         file_path = xls_to_json('upload/{0}'.format(filename))
         new_file = read_json(file_path)
         file_with_data = get_diff_in_upload_file(new_file)
-        if 'РДДБ' not in file_with_data[0] and 'ИНН' not in file_with_data[0] and 'Специалист' not in file_with_data[0]:
-            flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
+        if """РДДБ
+        """ not in file_with_data[0] and """ИНН
+        """ not in file_with_data[0] and """Специалист
+        """ not in file_with_data[0]:
+            flash(message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
             return render_template(
@@ -451,6 +581,18 @@ def update_info():
 
 @app.route('/fill_inn', methods=['GET', 'POST'])
 def fill_inn():
+    """GPBL, fill field INN.
+
+    Page update info display field for upload current xlsx file.
+    If file is not correct, pop up error text.
+    The data is create and updated field ИНН.
+    When the download is complete, the user will be redirected to the page
+    with the report and the script will be sent. In parallel with this, the
+    script will send a letter to the user with the same report.
+
+    Returns:
+        display fill_inn.html then the report page order.html
+    """
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -458,7 +600,8 @@ def fill_inn():
         file_path = xls_to_json('upload/{0}'.format(filename))
         new_file = read_json(file_path)
         if 'ИНН' not in new_file[0] and 'IMEI' not in new_file[0]:
-            flash(message="Ошибка иморта. Необходимые данные не находятся на первом листе, не соответвуют шаблону или не в формате .XLSX")
+            flash(message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
             return render_template(
@@ -484,7 +627,6 @@ def fill_inn():
                 continue
             if unit_id == -1:
                 with open('logging/update_inn.log', 'a') as log:
-                    print('iffff???')
                     log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
                     counter += 1
             else:
@@ -493,7 +635,7 @@ def fill_inn():
                     sid,
                     unit_id,
                     id_inn_field[0],
-                    str(unit.get('ИНН'))
+                    unit.get('ИНН')
                 )
                 counter += 1
         endtime = datetime.now()
@@ -515,6 +657,15 @@ def fill_inn():
 
 @app.route('/logout')
 def logout():
+    """User logout.
+
+    When a user clicks the "Выход" button, the login manager removes
+    the user from the pool of active sessions.
+    And redirects to the authentication page.
+
+    Returns:
+        redirects to the authentication page
+    """
     with open('logging/log_report.log', 'a') as report:
         user = User.query.filter_by(id=current_user.get_id()).first()
         text = f'{datetime.now().ctime()} - {user.login} - logout\n'
@@ -525,10 +676,16 @@ def logout():
 
 @app.route('/spinner', methods=['POST'])
 def spinner():
+    """Spinner.
+
+    A pop-up window with a spinner to let the user understand that the process
+    is running and the data is being updated on the wialon server.
+    """
     return jsonify({'data': render_template('spinner.html')})
 
 
-def add_admin():
+def add_admin() -> None:
+    """Add user admin in data base."""
     password = os.getenv('admin_password')
     admin = User(
         login='admin',
@@ -543,7 +700,8 @@ def add_admin():
     db.session.commit()
 
 
-def add_tech_crew():
+def add_tech_crew() -> None:
+    """Add user tech team in data base."""
     password = os.getenv('crew_password')
     crew = User(
         login='cesar',
@@ -559,6 +717,7 @@ def add_tech_crew():
 
 
 def add_carcade():
+    """Add user carcade in data base."""
     password = os.getenv('carcade_password')
     carcade = User(
         login='carcade',

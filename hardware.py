@@ -29,7 +29,7 @@ HW_TMP = {
 }
 
 
-def create_object(sid: str, hardware_id: int, object_name: str):
+def create_object(sid: str, hardware_id: int, object_name: str) -> dict:
     """Create new object.
 
     Args:
@@ -50,7 +50,21 @@ def create_object(sid: str, hardware_id: int, object_name: str):
     return response.json()
 
 
-def create_sensors(sid: str, hardware_id: int, object_id: int):
+def create_sensors(sid: str, hardware_id: int, object_id: int) -> int:
+    """Creation of sensors.
+
+    The function reads the equipment field from the input,
+    reads the template with sensors and fills in the required fields
+    to send a request to create sensors to a specific object.
+
+    Args:
+        sid: string session id
+        hardware_id: integer hardware id
+        object_id: integer unit/object id
+
+    Returns:
+        data: integer 0
+    """
     with open(f'data_tmp/{HW_TMP.get(hardware_id)}.json', 'r') as f:
         tmp = json.loads(f.read())
         for sensor in tmp.get('sensors'):
@@ -75,7 +89,20 @@ def create_sensors(sid: str, hardware_id: int, object_id: int):
     return 0
 
 
-def add_phone(sid: str, obj_id: int, phone: str):
+def add_phone(sid: str, obj_id: int, phone: str) -> str:
+    """Add phone.
+
+    The function updates the phone field in the Main tab
+    to the wialon in the object card.
+
+    Args:
+        sid: string session id
+        obj_id: integer unit/object id
+        phone: string new phone number
+
+    Returns:
+        phone: string new phone number
+    """
     param = {
         'svc': 'unit/update_phone',
         'params': json.dumps({"itemId": obj_id,
@@ -86,6 +113,17 @@ def add_phone(sid: str, obj_id: int, phone: str):
 
 
 def add_obj_uid(sid: str, obj_id: int, hardware_id: int, uid: str):
+    """Update geozone imei.
+
+    The function updates the geozone imei field in the Main tab
+    to the wialon in the object card.
+
+    Args:
+        sid: string session id
+        obj_id: integer unit/object id
+        hardware_id: integer harware id
+        uid: integer unit/object id
+    """
     param = {
         'svc': 'unit/update_device_type',
         'params': json.dumps({"itemId": obj_id,
@@ -97,7 +135,18 @@ def add_obj_uid(sid: str, obj_id: int, hardware_id: int, uid: str):
     print(a.text)
 
 
-def add_param_engin_axel(sid: str, obj_id: int):
+def add_param_engin_axel(sid: str, obj_id: int) -> int:
+    """Update counter settings.
+
+    Resets the odometer and engine hours counter to zero.
+
+    Args:
+        sid: string session id
+        obj_id: integer unit/object id
+
+    Returns:
+        data: integer 0
+    """
     param = {
         'svc': 'unit/update_calc_flags',
         'params': json.dumps({"itemId": obj_id,
@@ -108,7 +157,20 @@ def add_param_engin_axel(sid: str, obj_id: int):
     return 0
 
 
-def update_advance_setting(sid: str, obj_id: int, hardware_id: int):
+def update_advance_setting(sid: str, obj_id: int, hardware_id: int) -> int:
+    """Update the settings Advanced driving.
+
+    Updates the settings in the Advanced tab.
+    First part.
+    For specific equipment.
+
+    Args:
+        sid: string session id
+        obj_id: integer unit/ogject id
+        hardware_id: integer hargware id
+    Returns:
+        data: integer 0
+    """
     with open(f'data_tmp/{HW_TMP.get(hardware_id)}.json', 'r') as f:
         tmp = json.loads(f.read()).get('reportProps')
         param = {
@@ -133,7 +195,22 @@ def update_advance_setting(sid: str, obj_id: int, hardware_id: int):
     return 0
 
 
-def update_advance_validity_filter(sid: str, obj_id: int, hardware_id: int):
+def update_advance_validity_filter(
+    sid: str, obj_id: int, hardware_id: int
+) -> int:
+    """Update the settings used in reports.
+
+    Updates the settings in the Advanced tab.
+    Second part.
+    For specific equipment.
+
+    Args:
+        sid: string session id
+        obj_id: integer unit/ogject id
+        hardware_id: integer hargware id
+    Returns:
+        data: integer 0
+    """
     with open(f'data_tmp/{HW_TMP.get(hardware_id)}.json', 'r') as f:
         tmp = json.loads(f.read()).get('advProps').get('msgFilter')
         param = {
@@ -151,7 +228,19 @@ def update_advance_validity_filter(sid: str, obj_id: int, hardware_id: int):
     return 0
 
 
-def create_driving_param(ssid: str, obj_id: int):
+def create_driving_param(ssid: str, obj_id: int) -> int:
+    """Driving Quality Tab. Add param.
+
+    Eco Driving tab.
+    Create and update params.
+
+    Args:
+        sid: string session id
+        obj_id: integer unit/ogject id
+
+    Returns:
+        integer: if param updated, return 0, else -1
+    """
     param = {
         'svc': 'unit/update_drive_rank_settings',
         'params': json.dumps({"itemId": obj_id,
@@ -246,24 +335,38 @@ def create_driving_param(ssid: str, obj_id: int):
     return 0 if len(response.json()) == 0 else -1
 
 
-def create_object_with_all_params(sid: str, object_param: dict) -> None:
+def create_object_with_all_params(sid: str, object_param: dict) -> int:
+    """Create an object with sensors.
+
+    The function creates an object on wialon,
+    fills it with data based on the template,
+    and returns the id of the new object.
+
+    Args:
+        sid: string session id
+        object_param: dict with object data
+
+    Returns:
+        object_id: integer object id
+    """
     hware = object_param.get('Оборудование').replace('Teltonika ', '')
     try:
         hard_id = HW_ID[hware]
     except KeyError:
         with open('logging/import_report.log', 'a') as log:
-            log.write(f'Шаблон оборудования {hware} для автоматического  создания объекта на виалон не найден.\nОбъект не создан.\n')
+            log.write(f"""Шаблон оборудования {hware} для автоматического
+              создания объекта на виалон не найден.\nОбъект не создан.\n""")
         return -1
-    # создать объект
+
     new_object = create_object(sid, hard_id, object_param.get('ДЛ'))
     obj_id = new_object.get('item').get('id')
-    # добавить сенсоры
+
     sensors = create_sensors(sid, hard_id, obj_id)
     print('sensors response', sensors)
     add_obj_uid(sid, obj_id, hard_id, object_param.get('geozone_imei'))
     add_phone(sid, obj_id, object_param.get('geozone_sim'))
     add_param_engin_axel(sid, obj_id)
-    # обновить дополнительно
+
     update_advance_setting(sid, obj_id, hard_id)
     update_advance_validity_filter(sid, obj_id, hard_id)
     create_driving_param(sid, obj_id)
