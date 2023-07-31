@@ -212,9 +212,14 @@ def edit_user(user_id: int):
         edit_user.login = form.login.data
         edit_user.email = form.email.data
         edit_user.group = form.group.data
-        edit_user.access_create = edit_user.access_create if user_id == user.id else form.access_create.data
-        edit_user.access_remove = edit_user.access_remove if user_id == user.id else form.access_remove.data
-        edit_user.access_edit = edit_user.access_edit if user_id == user.id else form.access_edit.data
+        if user_id == user.id:
+            edit_user.access_create = edit_user.access_create
+            edit_user.access_remove = edit_user.access_remove
+            edit_user.access_edit = edit_user.access_edit
+        else:
+            edit_user.access_create = form.access_create.data
+            edit_user.access_remove = form.access_remove.data
+            edit_user.access_edit = form.access_edit.data
         db.session.commit()
         return redirect(url_for('admin'))
     return render_template(
