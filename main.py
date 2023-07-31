@@ -130,6 +130,7 @@ def home() -> str:
 
 @app.route('/owners', methods=['GET', 'POST'])
 @login_required
+@admin_only
 def admin():
     """Administration panel.
 
@@ -402,6 +403,7 @@ def export_fms4():
         with open('logging/import_report.log', 'w') as log:
             log.write(f'Время начала: {start.ctime()}\n')
             log.write(f'Импорт по компании: {import_list[0].get("ЛИЗИНГ")}\n')
+            log.write('Не был найден на виалон, возможно мастер не звонил:\n')
         for unit in import_list:
             unit_id = get_object_id(sid, unit.get('geozone_imei'))
             unit.update({'uid': unit_id})
@@ -473,6 +475,7 @@ def remove_group():
             log.write(f'Время начала: {start.ctime()}\n')
             log.write(f"""\nУдаление объектов из группы по маске
              - {imei_list[0].get("ГРУППА")}\n""")
+            log.write('Не были найдены на виалон:\n')
         remove_groups(sid, imei_list)
 
         endtime = datetime.now()
@@ -585,6 +588,7 @@ def update_info():
 
 
 @app.route('/fill_inn', methods=['GET', 'POST'])
+@login_required
 def fill_inn():
     """GPBL, fill field INN.
 
@@ -661,6 +665,7 @@ def fill_inn():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     """User logout.
 
