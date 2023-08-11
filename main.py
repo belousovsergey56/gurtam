@@ -74,6 +74,36 @@ def admin_only(f) -> str:
     return decorated_function
 
 
+@app.errorhandler(401)
+def page_unauthorized(e):
+    """401 Unauthorized.
+
+    Page opens if user is not logged in.
+
+    Args:
+        e: response
+
+    Returns:
+        open page 401.html
+    """
+    return render_template('401.html'), 401
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """404 Not Found.
+
+    Page opens if page note found.
+
+    Args:
+        e: response
+
+    Returns:
+        open page 404.html
+    """
+    return render_template('404.html'), 404
+
+
 @app.route('/', methods=['GET', 'POST'])
 def sign_in() -> str:
     """Sign in page.
@@ -524,10 +554,7 @@ def update_info():
         file_path = xls_to_json('upload/{0}'.format(filename))
         new_file = read_json(file_path)
         file_with_data = get_diff_in_upload_file(new_file)
-        if """РДДБ
-        """ not in file_with_data[0] and """ИНН
-        """ not in file_with_data[0] and """Специалист
-        """ not in file_with_data[0]:
+        if "РДДБ" not in file_with_data[0] and "ИНН" not in file_with_data[0] and "Специалист" not in file_with_data[0]:
             flash(message="""Ошибка иморта. Необходимые данные не находятся на
              первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
