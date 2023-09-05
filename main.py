@@ -6,10 +6,10 @@ Run browser and run all project for export data object to Gurtam.
 import os
 from functools import wraps
 
-from config import app, db, login_manager
+from config import app, db, login_manager, logger, get_ip, log_message
 
 from flask import flash, redirect, render_template, url_for
-from flask import jsonify
+from flask import jsonify, request
 
 from flask_login import current_user, login_required, login_user, logout_user
 
@@ -43,6 +43,7 @@ lgroup = {
 
 
 @login_manager.user_loader
+@logger.catch
 def load_user(user_id) -> User:
     """Load user to login manager.
 
@@ -54,9 +55,11 @@ def load_user(user_id) -> User:
     Returns:
         current user
     """
-    return User.query.filter_by(id=user_id).first()
+    admin = User.query.filter_by(id=user_id).first()
+    return admin
 
 
+@logger.catch
 def admin_only(f) -> str:
     """Decorator, admin validator.
 
@@ -69,12 +72,14 @@ def admin_only(f) -> str:
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.get_id() != str(1):
+            logger.info(log_message('не хватает прав для входа'))
             return render_template('403.html')
         return f(*args, **kwargs)
     return decorated_function
 
 
 @app.errorhandler(401)
+@logger.catch
 def page_unauthorized(e):
     """401 Unauthorized.
 
@@ -86,10 +91,12 @@ def page_unauthorized(e):
     Returns:
         open page 401.html
     """
+    logger.info(log_message('пользователь не авторизован, редирект на 401'))
     return render_template('401.html'), 401
 
 
 @app.errorhandler(404)
+@logger.catch
 def page_not_found(e):
     """404 Not Found.
 
@@ -101,10 +108,12 @@ def page_not_found(e):
     Returns:
         open page 404.html
     """
+    logger.info(log_message('страница не найдена, редирект на 404'))
     return render_template('404.html'), 404
 
 
 @app.route('/', methods=['GET', 'POST'])
+@logger.catch
 def sign_in() -> str:
     """Sign in page.
 
@@ -116,22 +125,27 @@ def sign_in() -> str:
     Returns:
         redirect to /home page
     """
+    logger.info(log_message('вход на страницу авторизации'))
     year = datetime.now().year
     form = SigninForm()
     if form.validate_on_submit():
         user = User.query.filter_by(login=form.login.data).first()
         if not user:
+            logger.info(
+                log_message(f'введён не верный логин {form.login.data}')
+                )
             flash(message="Не верный логин,\
                 попробуйте снова или обратитесть к своему администратору")
             return render_template('signin.html', form=form, year=year)
         if check_password_hash(user.password, form.password.data):
             login_user(user)
-            with open('logging/log_report.log', 'a') as report:
-                text = f'{datetime.now().ctime()} - {user.login} - sign in\n'
-                report.write(text)
+            logger.info(log_message('успешная авторизация'))
             return redirect(url_for('home'))
         else:
             flash(message="Не верный пароль, попробуйте снова")
+            logger.info(
+                log_message(f'не верный пароль к логину {form.login.data}')
+                )
             return render_template(
                 "signin.html",
                 form=form,
@@ -142,6 +156,7 @@ def sign_in() -> str:
 
 @app.route('/home')
 @login_required
+@logger.catch
 def home() -> str:
     """Home page.
 
@@ -151,16 +166,14 @@ def home() -> str:
         displays the home page of the application
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
-    with open('logging/log_report.log', 'a') as report:
-        user = User.query.filter_by(id=current_user.get_id()).first()
-        text = f'{datetime.now().ctime()} - {user.login} - open home page\n'
-        report.write(text)
+    logger.info(log_message('основная страница'))
     return render_template('index.html', user=user)
 
 
 @app.route('/owners', methods=['GET', 'POST'])
 @login_required
 @admin_only
+@logger.catch
 def admin():
     """Administration panel.
 
@@ -171,6 +184,7 @@ def admin():
         render admin.html
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
+    logger.info(log_message('админ панель'))
     database = User.query.all()
     form = UserForm()
     return render_template('admin.html', form=form, user=user, db=database)
@@ -178,6 +192,7 @@ def admin():
 
 @app.route('/create_user', methods=['POST', 'GET'])
 @login_required
+@logger.catch
 def create_user():
     """Create user.
 
@@ -189,10 +204,12 @@ def create_user():
     """
     form = UserForm()
     leasing = User.query.filter_by(id=current_user.get_id()).first()
-
+    logger.info(log_message('создание пользователя'))
     form.group.choices = lgroup.get(leasing.group)
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data).first():
+            logger.info(log_message('пользователь уже существует!!!'))
+            logger.info(log_message(f'введены данные: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data}, права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}'))
             flash(
                 message="""Пользователь с такой почтой уже существует,
                  попробуйте ввести новую почту""")
@@ -207,6 +224,8 @@ def create_user():
             access_remove=form.access_remove.data,
             access_edit=form.access_edit.data
         )
+        logger.info(log_message('пользователь успешно создан'))
+        logger.info(log_message(f'введены данные: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data},права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}'))
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('admin'))
@@ -215,6 +234,7 @@ def create_user():
 
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
+@logger.catch
 def edit_user(user_id: int):
     """Edit user.
 
@@ -229,6 +249,8 @@ def edit_user(user_id: int):
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     edit_user = User.query.filter_by(id=user_id).first()
+    logger.info(
+        log_message(f'изменение данных пользователя {edit_user.login}'))
     form = UserForm(
         login=edit_user.login,
         email=edit_user.email,
@@ -247,10 +269,16 @@ def edit_user(user_id: int):
             edit_user.access_create = edit_user.access_create
             edit_user.access_remove = edit_user.access_remove
             edit_user.access_edit = edit_user.access_edit
+            logger.info(
+                log_message(f'данные изменены: права на создание: {edit_user.access_create}, права на удаление:{edit_user.access_remove}, права на изменение: {edit_user.access_edit}')
+                )
         else:
             edit_user.access_create = form.access_create.data
             edit_user.access_remove = form.access_remove.data
             edit_user.access_edit = form.access_edit.data
+            logger.info(
+                log_message(f'данные изменены: права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}'))
+        logger.info(log_message(f'данные изменены: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data}'))
         db.session.commit()
         return redirect(url_for('admin'))
     return render_template(
@@ -263,6 +291,7 @@ def edit_user(user_id: int):
 
 @app.route('/edit_password/<int:user_id>', methods=['GET', 'POST'])
 @login_required
+@logger.catch
 def edit_password(user_id: int):
     """Edit password.
 
@@ -276,6 +305,8 @@ def edit_password(user_id: int):
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     edit_password = User.query.filter_by(id=user_id).first()
+    logger.info(
+        log_message(f'изменение пароля пользователя: {edit_password.login}'))
     form = UserForm(
         login=edit_password.login,
         email=edit_password.email,
@@ -290,6 +321,7 @@ def edit_password(user_id: int):
         edit_password.password = generate_password_hash(
             form.password.data, salt_length=13)
         db.session.commit()
+        logger.info(log_message('пароль успешно изменён'))
         return redirect(url_for('admin'))
     return render_template(
         'edit_password.html',
@@ -301,6 +333,7 @@ def edit_password(user_id: int):
 
 @app.route('/remove_user/<int:user_id>')
 @login_required
+@logger.catch
 def remove_user(user_id: int):
     """Remove user.
 
@@ -313,11 +346,18 @@ def remove_user(user_id: int):
         remove user from database and redirect to admin.html
     """
     teacher_to_delete = User.query.get(user_id)
+    login = teacher_to_delete.login
+    email = teacher_to_delete.email
+    logger.info(
+        log_message(
+            f'пользователь "{login}" - "{email}" удалён'
+            ))
     db.session.delete(teacher_to_delete)
     db.session.commit()
     return redirect(url_for('admin'))
 
 
+@logger.catch
 def id_fields(sid, new_id) -> dict:
     """Get id fields.
 
@@ -337,6 +377,8 @@ def id_fields(sid, new_id) -> dict:
     Returns:
         map_id (dict): dict with current field name and field id
     """
+    logger.debug(
+        f'старт функции {id_fields.__name__}, получен айди объекта: {new_id}, айди сессии: {sid}')
     admin_fields = get_admin_fields(sid, new_id)
     custom_fields = get_custom_fields(sid, new_id)
     map_id = {
@@ -348,18 +390,27 @@ def id_fields(sid, new_id) -> dict:
         'Пин': None,
         'Инфо4': None
     }
+    logger.debug(f'получен список админ полей: {admin_fields}')
+    logger.debug(f'получен список произвольных полей: {custom_fields}')
+    logger.debug('старт цикла for для поиска айди админ полей')
     for field in admin_fields.items():
         name_field = field[1].get('n')
         id_field = field[1].get('id')
+        logger.debug(f'имя поля: {name_field}')
+        logger.debug(f'айди поля: {id_field}')
         if name_field in map_id.keys():
             map_id.update({name_field: id_field})
-
+    logger.debug('конец цикла for для поиска айди админ полей')
+    logger.debug('старт цикла for для поиска айди произвольных полей')
     for field in custom_fields.items():
         name_field = field[1].get('n')
         id_field = field[1].get('id')
+        logger.debug(f'имя поля: {name_field}')
+        logger.debug(f'айди поля: {id_field}')
         if name_field in map_id.keys():
             map_id.update({name_field: id_field})
-
+    logger.debug('конец цикла for для поиска айди админ полей')
+    logger.debug('старт цикла for, проверка что все нужные айди собраны. Если значение поля None, тода поле создаётся и присваивается id')
     for names, values in map_id.items():
         if values is None:
             if names == 'Vin' or names == 'Марка' or names == 'Модель':
@@ -368,11 +419,14 @@ def id_fields(sid, new_id) -> dict:
             else:
                 field = create_admin_field(sid, new_id, names)
                 map_id.update({names: field[1].get('id')})
+    logger.debug('конец цикла for для проверки id')
+    logger.debug(f'Получен результат: {map_id}')
     return map_id
 
 
 @app.route('/order')
 @login_required
+@logger.catch
 def order():
     """Order page.
 
@@ -381,11 +435,16 @@ def order():
     Returns:
         display order.html
     """
+    logger.info(
+        log_message('процесс завершён, редирект на страницу с отчётом'))
+    logger.debug(
+        log_message('процесс завершён, редирект на страницу с отчётом'))
     return render_template('order.html')
 
 
 @app.route('/export', methods=['GET', 'POST'])
 @login_required
+@logger.catch
 def export_fms4():
     """Import object data to Wialon.
 
@@ -404,11 +463,7 @@ def export_fms4():
     Returns:
         display page export_fms4.html
     """
-    with open('logging/log_report.log', 'a') as report:
-        user = User.query.filter_by(id=current_user.get_id()).first()
-        text = f"""{datetime.now().ctime()} - {user.login} - open page import
-         on fms4\n"""
-        report.write(text)
+    logger.info(log_message('импорт на Виалон FMS4'))
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -420,6 +475,8 @@ def export_fms4():
         """ not in import_list[0] and """Пин""" not in import_list[0]:
             flash(message="""Ошибка иморта. Необходимые данные не находятся на
              первом листе, не соответвуют шаблону или не в формате .XLSX""")
+            logger.info(
+                log_message('данные в загружаемом файле на соответсвуют необходимому формату. Загружаемый файл удалён.'))
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
             return render_template(
@@ -434,9 +491,14 @@ def export_fms4():
             log.write(f'Время начала: {start.ctime()}\n')
             log.write(f'Импорт по компании: {import_list[0].get("ЛИЗИНГ")}\n')
             log.write('Не был найден на виалон, возможно мастер не звонил:\n')
+        logger.info(
+            log_message(f'начало загрузки на виалон {import_list[0].get("ЛИЗИНГ")}'))
         for unit in import_list:
             unit_id = get_object_id(sid, unit.get('geozone_imei'))
             unit.update({'uid': unit_id})
+            logger.info(
+                log_message(
+                    f'Обновление полей объекта по ПИН {unit.get("Пин")}:{unit}'))
             if unit_id == -1:
                 try:
                     new_id = create_object(sid, unit_id, unit)
@@ -448,7 +510,11 @@ def export_fms4():
             else:
                 update_param(sid, unit_id, unit, id_fields(sid, unit_id))
                 counter += 1
+        logger.info(log_message('загрузка завершена'))
+        logger.info(log_message('распределение объектов по группам'))
         group_update(import_list)
+        logger.info(log_message('объекты распределены'))
+        logger.info(log_message('загрузка завершена'))
         endtime = datetime.now()
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
@@ -456,18 +522,22 @@ def export_fms4():
             log.write(f'Время окончания: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Обработано строк: {counter}\n')
+            logger.info(log_message(f'обработано строк {counter}'))
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
         with open('logging/import_report.log', 'r') as report:
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
             send_mail(user.email, 'Импорт на виалон', order)
+            logger.info(
+                log_message(f'отчёт отправлен на почту "{user.email}"'))
         return render_template('order.html', order=order.split('\n'))
     return render_template('export_fms4.html', form=form)
 
 
 @app.route('/remove_groups', methods=['GET', 'POST'])
 @login_required
+@logger.catch
 def remove_group():
     """Remove object from group.
 
@@ -480,7 +550,8 @@ def remove_group():
         display page remove_groups.html
     """
     form = UploadFile()
-
+    logger.info(
+        log_message('удалить объекты из групп по маске'))
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
         form.export_file.data.save('upload/{0}'.format(filename))
@@ -492,6 +563,7 @@ def remove_group():
              первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
+            logger.info(log_message('данные в файле не соответсвуют шаблону'))
             return render_template(
                 "remove_groups.html",
                 form=form,
@@ -501,6 +573,7 @@ def remove_group():
         sid = get_ssid()
         start = datetime.now()
         count_lines = len(imei_list)
+        logger.info(log_message('старт обработки списка объектов'))
         with open('logging/remove_group_report.log', 'w') as log:
             log.write(f'Время начала: {start.ctime()}\n')
             log.write(f"""\nУдаление объектов из группы по маске
@@ -508,6 +581,8 @@ def remove_group():
             log.write('Не были найдены на виалон:\n')
         remove_groups(sid, imei_list)
 
+        logger.info(
+            log_message(f'объекты удалены из групп по маске {imei_list[0].get("ГРУППА")}'))
         endtime = datetime.now()
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
@@ -517,6 +592,7 @@ def remove_group():
             log.write(
                 f'Ушло времени на удаление объектов из групп: {delta_time}\n')
             log.write(f'Колличество загруженных строк : {count_lines}\n')
+            logger.info(log_message(f'обработано строк {count_lines}'))
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
 
@@ -524,12 +600,15 @@ def remove_group():
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
             send_mail(user.email, 'Удаление объектов из групп', order)
+            logger.info(
+                log_message(f'отчёт отправлена на почту "{user.email}"'))
         return render_template('order.html', order=order.split('\n'))
     return render_template('remove_groups.html', form=form)
 
 
 @app.route('/update_info', methods=['GET', 'POST'])
 @login_required
+@logger.catch
 def update_info():
     """Carcade, update info fields.
 
@@ -548,6 +627,7 @@ def update_info():
         display update_info.html then the report page order.html
     """
     form = UploadFile()
+    logger.info(log_message('обновление полей инфо Каркаде'))
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
         form.export_file.data.save('upload/{0}'.format(filename))
@@ -559,6 +639,7 @@ def update_info():
              первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
+            logger.info(log_message('данные в файле не соответсвуют формату'))
             return render_template(
                 "update_info.html",
                 form=form,
@@ -568,6 +649,7 @@ def update_info():
         counter = 0
         length = len(file_with_data)
         start = datetime.now()
+        logger.info(log_message('старт обработки списка'))
         with open('logging/update_info.log', 'w') as log:
             log.write(f'Начало загрузки: {start.ctime()}\n')
         for unit in file_with_data:
@@ -594,15 +676,19 @@ def update_info():
                     id_info7
                 ]
                 fill_info(sid, unit_id, id_value_list, unit)
-                print(f'Готово {round(counter / length*100, 2)} %')
+                logger.info(
+                    log_message(f'{unit.get("IMEI")} - {id_value_list}'))
+                logger.debug(f'Готово {round(counter / length*100, 2)} %')
                 counter += 1
         endtime = datetime.now()
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
+        logger.info(log_message('обновление полей инфо завершено'))
         with open('logging/update_info.log', 'a') as log:
             log.write(f'Окончание импорта данных: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Всего строк обработано: {counter} из {length}\n')
+            logger.info(log_message(f'обработано строк {counter} из {length}'))
         update_bd(new_file)
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
@@ -610,12 +696,15 @@ def update_info():
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
             send_mail(user.email, 'РДДБ обновление полей ИНФО', order)
+            logger.info(
+                log_message(f'отчёт отправлен на почту "{user.email}"'))
         return render_template('order.html', order=order.split('\n'))
     return render_template('update_info.html', form=form)
 
 
 @app.route('/fill_inn', methods=['GET', 'POST'])
 @login_required
+@logger.catch
 def fill_inn():
     """GPBL, fill field INN.
 
@@ -629,6 +718,7 @@ def fill_inn():
     Returns:
         display fill_inn.html then the report page order.html
     """
+    logger.info(log_message('обновить поле ИНН ГПБАЛ'))
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -640,6 +730,7 @@ def fill_inn():
              первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
+            logger.info(log_message('данные в файле не соответвуют формату'))
             return render_template(
                 "fill_inn.html",
                 form=form,
@@ -649,6 +740,7 @@ def fill_inn():
         counter = 0
         length = len(new_file)
         start = datetime.now()
+        logger.info(log_message('старт обновления полей ИНН'))
         with open('logging/update_inn.log', 'w') as log:
             log.write(f'Начало загрузки: {start.ctime()}\n')
         for unit in new_file:
@@ -674,19 +766,25 @@ def fill_inn():
                     unit.get('ИНН')
                 )
                 counter += 1
+                logger.info(
+                    log_message(f'{unit.get("IMEI")} - {unit.get("ИНН")}'))
         endtime = datetime.now()
+        logger.info(log_message('обновление ИНН завершено'))
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
         with open('logging/update_inn.log', 'a') as log:
             log.write(f'Окончание импорта данных: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Всего строк обработано: {counter} из {length}\n')
+            logger.info(log_message(f'обработано строк {counter} из {length}'))
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
         with open('logging/update_inn.log', 'r') as report:
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
             send_mail(user.email, 'ГПБАЛ обновление полей ИНН', order)
+            logger.info(
+                log_message(f'отчёт отправлен на почту "{user.email}"'))
         return render_template('order.html', order=order.split('\n'))
     return render_template('fill_inn.html', form=form)
 
@@ -703,10 +801,7 @@ def logout():
     Returns:
         redirects to the authentication page
     """
-    with open('logging/log_report.log', 'a') as report:
-        user = User.query.filter_by(id=current_user.get_id()).first()
-        text = f'{datetime.now().ctime()} - {user.login} - logout\n'
-        report.write(text)
+    logger.info(log_message(f'пользователь "{current_user.login}" вышел'))
     logout_user()
     return redirect(url_for('sign_in'))
 
@@ -718,6 +813,7 @@ def spinner():
     A pop-up window with a spinner to let the user understand that the process
     is running and the data is being updated on the wialon server.
     """
+    logger.debug('старт спиннера')
     return jsonify({'data': render_template('spinner.html')})
 
 
@@ -733,6 +829,7 @@ def add_admin() -> None:
         access_remove=True,
         access_edit=True
     )
+    logger.debug(f'создание учётки админа - login: {admin.login}, email: {admin.email}, группа: {admin.group}, полный доступ на чтение, создание, удаление')
     db.session.add(admin)
     db.session.commit()
 
@@ -749,6 +846,7 @@ def add_tech_crew() -> None:
         access_remove=False,
         access_edit=False
     )
+    logger.debug(f'создание учётки отдела - login: {crew.login}, email: {crew.email}, группа: {crew.group}, доступ к адмике отсутвует')
     db.session.add(crew)
     db.session.commit()
 
@@ -765,6 +863,7 @@ def add_carcade():
         access_remove=True,
         access_edit=True
     )
+    logger.debug(f'создание учётки Каркаде - login: {carcade.login}, email: {carcade.email}, группа: {carcade.group}, полный доступ на чтение, создание, удаление')
     db.session.add(carcade)
     db.session.commit()
 
@@ -779,4 +878,6 @@ with app.app_context():
 
 
 if __name__ == '__main__':
+    logger.info(f'запуск сервера {app}')
     app.run(host='0.0.0.0', port=5000)
+    logger.info('сервер остановлен')

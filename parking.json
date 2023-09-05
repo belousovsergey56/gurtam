@@ -1,0 +1,44 @@
+[
+    {'id': 94, 'n': 'Простой Белоусов', 'ct': 'avl_unit_group', 'tbl': [
+            {'n': 'unit_group_stats', 'l': 'Статистика', 'c': '', 'cl': '', 'cp': '', 's': '[
+                    "address_format",
+                    "time_format",
+                    "us_units",
+                    "skip_empty_rows"
+                ]', 'sl': '[
+                    "Address",
+                    "Time Format",
+                    "Measure",
+                    "Пропускать пустые строки"
+                ]', 'filter_order': [], 'p': '{
+                    "address_format": "1255211008_10_5",
+                    "time_format": "%Y-%m-%E_%H:%M:%S",
+                    "us_units": 0
+                }', 'sch': {'f1': 0, 'f2': 0, 't1': 0, 't2': 0, 'm': 0, 'y': 0, 'w': 0, 'fl': 0
+                }, 'f': 0
+            },
+            {'n': 'unit_group_stays', 'l': 'Стоянки', 'c': '[
+                    "time_begin",
+                    "time_end",
+                    "duration"
+                ]', 'cl': '[
+                    "Начало",
+                    "Конец",
+                    "Длительность"
+                ]', 'cp': '[
+                    {},
+                    {},
+                    {}
+                ]', 's': '', 'sl': '', 'filter_order': ['duration', 'sensors', 'sensor_name', 'fillings', 'thefts', 'driver', 'trailer', 'geozones_ex'
+                ], 'p': '{
+                    "unfinished_ival": "1",
+                    "duration": {
+                        "min": 356401,
+                        "flags": 1
+                    }
+                }', 'sch': {'f1': 0, 'f2': 0, 't1': 0, 't2': 0, 'm': 0, 'y': 0, 'w': 0, 'fl': 0
+                }, 'f': 4352
+            }
+        ]
+    }
+]
