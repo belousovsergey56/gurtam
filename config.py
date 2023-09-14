@@ -68,3 +68,12 @@ def get_ip() -> str:
         str: remote ip
     '''
     return request.remote_addr
+
+
+def fstart_stop(func, *args, **kwargs):
+    def wraper(*args, **kwargs):
+        logger.debug(f'старт работы функции: "{func.__name__}"')
+        a = func(*args, **kwargs)
+        logger.debug(f'окончание работы функции: "{func.__name__}"')
+        return a
+    return wraper
