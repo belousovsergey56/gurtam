@@ -95,6 +95,17 @@ def xls_to_json(xls_file) -> str:
 
 @fstart_stop
 @logger.catch
+def is_xlsx(input_file) -> bool:
+    logger.debug(f'Проверка {input_file} на наличие расширения xlsx')
+    if 'xlsx' not in input_file:
+        logger.debug('Расширение не соответсвует')
+        return False
+    logger.debug('Расширение соответсвует')
+    return True
+
+
+@fstart_stop
+@logger.catch
 def read_json(file_path) -> dict:
     """Read a file.
 
