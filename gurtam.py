@@ -3,7 +3,7 @@ import json
 import os
 import random
 
-from config import logger
+from config import logger, fstart_stop
 
 from dotenv import load_dotenv
 
@@ -24,6 +24,7 @@ RISK = (40166, 59726)
 CUSTOM_FIELDS = ('Vin', 'Марка', 'Модель')
 
 
+@fstart_stop
 @logger.catch
 def get_header() -> dict:
     """Get the User Agent.
@@ -46,6 +47,7 @@ def get_header() -> dict:
     return header
 
 
+@fstart_stop
 @logger.catch
 def get_ssid() -> str:
     """Authorize by token and getting the session number.
@@ -68,6 +70,7 @@ def get_ssid() -> str:
     return response.json().get('eid')
 
 
+@fstart_stop
 @logger.catch
 def get_object_info_by_imei(ssid: str, imei: str) -> dict:
     """Search object by imei.
@@ -103,6 +106,7 @@ def get_object_info_by_imei(ssid: str, imei: str) -> dict:
     return response.json()
 
 
+@fstart_stop
 @logger.catch
 def get_object_info_by_name(ssid: str, object_name: str) -> dict:
     """Search object by imei.
@@ -139,6 +143,7 @@ def get_object_info_by_name(ssid: str, object_name: str) -> dict:
     return response.json()
 
 
+@fstart_stop
 @logger.catch
 def get_object_id(ssid: str, imei: str) -> int:
     """Find object by imei and returns object id.
@@ -155,7 +160,7 @@ def get_object_id(ssid: str, imei: str) -> int:
     """
     response = get_object_info_by_imei(ssid, imei)
     logger.debug(f'получение id объекта: "{imei}"')
-    logger.debug('imei отаётся в обработку функции "get_object_info_by_imei"')
+    logger.debug('imei отдаётся в обработку функции "get_object_info_by_imei"')
     if response.get('items'):
         logger.debug(f'результат id обекта: {response.get("items")[0].get("id")}')
         return response.get('items')[0].get('id')
@@ -163,6 +168,7 @@ def get_object_id(ssid: str, imei: str) -> int:
     return -1
 
 
+@fstart_stop
 @logger.catch
 def create_custom_fields(ssid: str, unit_id: int) -> None:
     """Create of arbitrary fields in the object card on the vialon.
@@ -175,8 +181,7 @@ def create_custom_fields(ssid: str, unit_id: int) -> None:
         ssid (str): session id
         unit_id (int): object id on vialon
     """
-    logger.debug('старт функции создания произвольных и административных полей')
-    logger.debug(f'на вход получены параметры - ssid: "{ssid}, unit_id: "{unit_id}"')
+    logger.debug(f'параметры на входе - ssid: "{ssid}, unit_id: "{unit_id}"')
     admin_fields = (
         'geozone_imei',
         'geozone_sim',
@@ -241,7 +246,7 @@ def create_custom_fields(ssid: str, unit_id: int) -> None:
             "sid": ssid
         }
         response = requests.post(URL, data=param)
-        logger.debug(f'получени данных о произвольных полях: {response.url}, параметры: {param}')
+        logger.debug(f'получение данных о произвольных полях: {response.url}, параметры: {param}')
         logger.debug(f'результат: {response.json()}')
         if field not in response.text:
             create_field = {
@@ -259,9 +264,9 @@ def create_custom_fields(ssid: str, unit_id: int) -> None:
         else:
             logger.debug(f'поле {field} существует')
             continue
-    logger.debug('конец работы функции')
 
 
+@fstart_stop
 @logger.catch
 def update_param(
     session_id: str,
@@ -281,8 +286,11 @@ def update_param(
         unit_id (int): gurtam object id
         new_value (dict): dictionary with new params
     """
-    logger.debug('старт функции заполения данных об объекте на ФМС4')
-    logger.gebug(f'поступившие данные на вход функии: session id: {session_id}, unit_id: {unit_id}, json object info: {new_value}, id field info4: {id_field}')
+    logger.debug('входящие параметры:')
+    logger.debug(f'id сессии: "{session_id}"')
+    logger.debug(f'id объекта: "{unit_id}"')
+    logger.debug(f'json с данными для заполнения: "{new_value}"')
+    logger.debug(f'id поля Инфо4: "{id_field}"')
     contract_name = {
         'svc': 'item/update_name',
         'params': {
@@ -402,6 +410,7 @@ def update_param(
     requests.post(URL, data=param)
 
 
+@fstart_stop
 @logger.catch
 def search_groups_by_name(ssid: str, group_name: str) -> dict:
     """Find groups by name.
@@ -415,6 +424,9 @@ def search_groups_by_name(ssid: str, group_name: str) -> dict:
         dict: dictionari with group names
         and id's that matched by name
     """
+    logger.debug('вхводящие параметры: ')
+    logger.debug(f'id сессии: "{ssid}"')
+    logger.debug(f'маска искомой группы: "{group_name}"')
     param = {
         "svc": "core/search_items",
         "params": json.dumps({
@@ -432,9 +444,14 @@ def search_groups_by_name(ssid: str, group_name: str) -> dict:
         "sid": ssid
     }
     response = requests.post(URL, data=param)
+    logger.debug(f'URL: {response.url}')
+    logger.debug(f'параметры запроса: {param}')
+    logger.debug(f'результат выполнения запроса: {response.json()}')
     return response.json()
 
 
+@fstart_stop
+@logger.catch
 def search_group_by_id(ssid: str, group_id: int) -> dict:
     """Find group by id.
 
@@ -447,6 +464,9 @@ def search_group_by_id(ssid: str, group_id: int) -> dict:
         the id of the group,
         the list of id objects that belong to this group, etc.
     """
+    logger.debug('параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id искомой группы: {group_id}')
     param = {
         'svc': 'core/search_item',
         'params': json.dumps({"id": group_id,
@@ -455,9 +475,14 @@ def search_group_by_id(ssid: str, group_id: int) -> dict:
     }
 
     response = requests.post(URL, data=param)
+    logger.debug(f'URL: {response.url}')
+    logger.debug(f'параметры запроса: {param}')
+    logger.debug(f'результат выполнения запроса: {response.json()}')
     return response.json()
 
 
+@fstart_stop
+@logger.catch
 def get_id_group(group: dict) -> int | str:
     """Get ID group.
 
@@ -468,12 +493,17 @@ def get_id_group(group: dict) -> int | str:
         int|str: if group finded, return group id as integer,
         if not finded return traceback 'this is group is not finded'
     """
+    logger.debug(f'параметр на входе: {group}')
     try:
+        logger.debug(f'полученный id группы: {group["items"][0].get("id")}')
         return group['items'][0].get('id')
     except IndexError:
+        logger.debug('Группа не найдена')
         return 'Группа не найдена'
 
 
+@fstart_stop
+@logger.catch
 def get_group_unit_list(group: dict) -> list | str:
     """Get group unit list.
 
@@ -484,15 +514,21 @@ def get_group_unit_list(group: dict) -> list | str:
         list|str: if group finded, return unit list id as [123, 456, ...etc],
         if not finded return traceback 'this is list empty'
     """
+    logger.debug(f'параметр на входе: {group}')
     try:
         if 'items' in group:
+            logger.debug(f'результат, список id объектов в группе: {group["items"][0].get("u")}')
             return group['items'][0].get('u')
         else:
+            logger.debug(f'результат, список id объектов в группе: {group["item"].get("u")}')
             return group['item'].get('u')
-    except IndexError:
+    except IndexError as e:
+        logger.debug(f'{e}')
         return 'Список пуст'
 
 
+@fstart_stop
+@logger.catch
 def add_groups(
     ssid: str,
     leasing_id: int | str,
@@ -507,6 +543,11 @@ def add_groups(
         leasing_unit_list (list[int]): list of current id group objects
         added_unit (int): list of id objects to add
     """
+    logger.debug('параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id группы: {leasing_id}')
+    logger.debug(f'список текущих id объектов в группе: {leasing_unit_list}')
+    logger.debug(f'список добавляемых id объектов в группу: {added_unit}')
     param = {
         'svc': 'unit_group/update_units',
         'params': json.dumps({
@@ -514,9 +555,12 @@ def add_groups(
             "units": leasing_unit_list + added_unit}),
         'sid': ssid
     }
+    logger.debug(f'параметры запроса: {param}')
     requests.post(URL, data=param)
 
 
+@fstart_stop
+@logger.catch
 def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
     """Remove unit from a group.
 
@@ -524,6 +568,9 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
         ssid (str): session id
         removed_unit_list (list[int]): list of id objects to remove
     """
+    logger.debug('парметры на входе')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'список IMEI объектов на удаление: {removed_unit_list}')
     group_name = search_groups_by_name(
         ssid,
         removed_unit_list[0].get('ГРУППА')
@@ -532,18 +579,23 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
     remove_unit_id = [
         get_object_id(ssid, unit.get('ИМЕЙ')) for unit in removed_unit_list
     ]
+    logger.debug(f'получение json группы: {group_name}')
+    logger.debug(f'получение списка id групп по маске: {group_id}')
+    logger.debug(f'получение списка id объектов из списка: {remove_unit_id}')
     for index_group, group in enumerate(group_id):
         group_data = search_group_by_id(ssid, group)
         group_list = get_group_unit_list(group_data)
         for index_unit, unit in enumerate(remove_unit_id):
             if unit in group_list:
                 group_list.remove(unit)
+                logger.debug('если объект есть в группе, удалить из списка объектов')
             else:
                 with open('logging/unremoved.log', 'a') as log:
                     text = 'not found {0} in {1}\n'
                     imei = removed_unit_list[index_unit].get('ИМЕЙ')
                     glog_name = group_name.get('items')[index_group].get('nm')
                     log.write(text.format(imei, glog_name))
+                    logger.debug(f'объект по IMEI не найден: {imei}')
                 continue
 
         param = {
@@ -553,11 +605,13 @@ def remove_groups(ssid: str, removed_unit_list: list[int]) -> None:
                 "units": group_list}),
             'sid': ssid
         }
-
+        logger.debug(f'параметры запроса: {param}')
         requests.post(URL, data=param)
 
 
-def create_object(sid: str, unit_id: int, unit) -> int:
+@fstart_stop
+@logger.catch
+def create_object(sid: str, unit_id: int, unit: dict) -> int:
     """Check the presence of an object on the vialon.
 
     Checking dictionary objects by IMEI for presence on the Vialon portal
@@ -567,19 +621,26 @@ def create_object(sid: str, unit_id: int, unit) -> int:
     To create a separate function is used.
 
     Args:
-        data (dict): dictionary of objects
+        unit (dict): dictionary of objects
 
     Returns:
         obj_id: integer object id
     """
+    logger.debug(f'id сесиии: {sid}')
+    logger.debug(f'id объектка: {unit_id}')
+    logger.debug(f'json с данными создаваемого объекта: {unit}')
     obj_id = create_object_with_all_params(sid, unit)
     create_custom_fields(sid, obj_id)
     with open('logging/import_report.log', 'a') as log:
         data_log = """Пин {0} - Имей {1}.\n"""
+        logger.debug(f'объект создан: {data_log}')
         log.write(data_log.format(unit.get('Пин'), unit.get('geozone_imei')))
+    logger.debug(f'результат id созданного объекта: {obj_id}')
     return obj_id
 
 
+@fstart_stop
+@logger.catch
 def group_update(data: dict) -> None:
     """Update list of objects in groups.
 
@@ -595,6 +656,7 @@ def group_update(data: dict) -> None:
     Args:
         data (dict): dictionary with data on objects
     """
+    logger.debug(f'аргумент на входе json: {data}')
     sid = get_ssid()
     truck = []
     auto = []
@@ -602,6 +664,7 @@ def group_update(data: dict) -> None:
     all_unit = []
     risk_auto = []
 
+    logger.debug('распределение объектов в списки по группам')
     for unit in data:
         all_unit.append(unit.get('uid'))
         if unit.get('ТИП') == str(0):
@@ -613,9 +676,16 @@ def group_update(data: dict) -> None:
         if unit.get('РИСК') == str(9):
             risk_auto.append(unit.get('uid'))
 
+    logger.debug(f'колличество грузовых: {len(truck)}')
+    logger.debug(f'колличество легковых: {len(auto)}')
+    logger.debug(f'колличество спецтехники: {len(special)}')
+    logger.debug(f'колличество рисковых: {len(risk_auto)}')
+
     finded_group = search_groups_by_name(
         sid, data[0].get('ЛИЗИНГ')).get('items')
-    print('start update groups')
+
+    logger.debug(f'Ищем группы по маске: {data[0].get("ЛИЗИНГ")}')
+
     for group in finded_group:
         id_group = group.get('id')
         leasing_unit_list = group.get('u')
@@ -629,8 +699,11 @@ def group_update(data: dict) -> None:
             add_groups(sid, id_group, leasing_unit_list, risk_auto)
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit)
+    logger.debug('Объекты добавлены')
 
 
+@fstart_stop
+@logger.catch
 def update_group_by_mask(ssid: str, list_imei: list[dict]) -> int:
     """Update list objects in groups by mask.
 
@@ -654,12 +727,14 @@ def update_group_by_mask(ssid: str, list_imei: list[dict]) -> int:
         is completed successfully, the script returns 0,
         if it fails, it returns -1
     """
+    logger.debug('Аргументы на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'список json объектов ИМЕЙ, Группа: {list_imei}')
     upload_obj_id_list = []
     group_by_mask = search_groups_by_name(ssid, list_imei[0].get('Группа'))
 
     id_group = group_by_mask.get('items')[0].get('id')
     actual_object_id_list = group_by_mask.get('items')[0].get('u')
-    print('group_id -', id_group)
     for object_id in list_imei:
         object_id = get_object_id(ssid, object_id.get('IMEI'))
         if object_id > 0:
@@ -667,13 +742,16 @@ def update_group_by_mask(ssid: str, list_imei: list[dict]) -> int:
         else:
             continue
     try:
+        logger.debug('добавление объектов')
         add_groups(ssid, id_group, actual_object_id_list, upload_obj_id_list)
     except Exception as e:
-        print(e)
+        logger.debug(e)
         return -1
     return 0
 
 
+@fstart_stop
+@logger.catch
 def get_custom_fields(ssid: str, unit_id: int) -> dict:
     """Get custom fields data.
 
@@ -692,10 +770,17 @@ def get_custom_fields(ssid: str, unit_id: int) -> dict:
         }),
         "sid": ssid
     }
+    logger.debug('параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id объекта: {unit_id}')
+    logger.debug(f'параметры запроса: {param}')
     response = requests.post(URL, data=param).json().get('item').get('flds')
+    logger.debug(f'результат выполнения запроса: {response}')
     return response
 
 
+@fstart_stop
+@logger.catch
 def create_custom_field(ssid: str, unit_id: int, info_name: str) -> dict:
     """Create custom field.
 
@@ -724,9 +809,17 @@ def create_custom_field(ssid: str, unit_id: int, info_name: str) -> dict:
         'sid': ssid
     }
     response = requests.post(URL, data=info)
+    logger.debug('параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id объекта: {unit_id}')
+    logger.debug(f'имя поля: {info_name}')
+    logger.debug(f'параметры запроса: {info}')
+    logger.debug('поле создано')
     return response.json()
 
 
+@fstart_stop
+@logger.catch
 def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
     """Check custom field.
 
@@ -746,16 +839,30 @@ def check_custom_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
     """
     response = get_custom_fields(ssid, unit_id)
 
+    logger.debug('параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id объекта: {unit_id}')
+    logger.debug(f'имя поля: {info_name}')
+
     for info in response.items():
+        logger.debug(f'обход полей в цикле: {info}')
         if info_name not in info[1].get('n'):
             continue
         else:
+            logger.debug('поле найдено')
+            logger.debug(f'результат - id поля: {info[1].get("id")}')
+            logger.debug(f'результат - значение поля: {info[1].get("v")}')
             return info[1].get('id'), info[1].get('v')
-
+    logger.debug('поле не найдено')
     response = create_custom_field(ssid, unit_id, info_name)
+    logger.debug('поле создано')
+    logger.debug(f'результат - id поля: {response[1].get("id")}')
+    logger.debug(f'результат - значение поля: {response[1].get("v")}')
     return response[1].get('id'), response[1].get('v')
 
 
+@fstart_stop
+@logger.catch
 def get_admin_fields(ssid: str, unit_id: int) -> dict:
     """Get admin fields data.
 
@@ -766,6 +873,9 @@ def get_admin_fields(ssid: str, unit_id: int) -> dict:
     Returns:
         admin fields: admin fields data in dictionary
     """
+    logger.debug('параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id объекта: {unit_id}')
     param = {
         "svc": "core/search_item",
         "params": json.dumps({
@@ -774,10 +884,14 @@ def get_admin_fields(ssid: str, unit_id: int) -> dict:
         }),
         "sid": ssid
     }
+    logger.debug(f'параметры запроса: {param}')
     response = requests.post(URL, data=param).json().get('item').get('aflds')
+    logger.debug(f'результат id поля - {response}')
     return response
 
 
+@fstart_stop
+@logger.catch
 def create_admin_field(ssid: str, unit_id: int, info_name: str) -> dict:
     """Create admin field.
 
@@ -806,9 +920,17 @@ def create_admin_field(ssid: str, unit_id: int, info_name: str) -> dict:
         'sid': ssid
     }
     response = requests.post(URL, data=info)
+    logger.debug('параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id объекта: {unit_id}')
+    logger.debug(f'имя поля: {info_name}')
+    logger.debug(f'параметры запроса: {info}')
+    logger.debug('поле создано')
     return response.json()
 
 
+@fstart_stop
+@logger.catch
 def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
     """Check admin field.
 
@@ -828,20 +950,34 @@ def check_admin_fields(ssid: str, unit_id: int, info_name: str) -> tuple:
     """
     response = get_admin_fields(ssid, unit_id)
 
+    logger.debug('параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id объекта: {unit_id}')
+    logger.debug(f'имя поля: {info_name}')
+
     for info in response.items():
+        logger.debug(f'обход полей объекта в цикле: {info}')
         if info_name not in info[1].get('n'):
             continue
         else:
+            logger.debug('поле найдено')
+            logger.debug(f'результат id поля: {info[1].get("id")}')
+            logger.debug(f'результат значение поля: {info[1].get("v")}')
             return info[1].get('id'), info[1].get('v')
-
+    logger.debug('поле не найдено')
     response = create_admin_field(ssid, unit_id, info_name)
+    logger.debug('поле создано')
+    logger.debug(f'результат id поля: {response[1].get("id")}')
+    logger.debug(f'результата значение поля: {response[1].get("v")}')
     return response[1].get('id'), response[1].get('v')
 
 
+@fstart_stop
+@logger.catch
 def fill_info(
     ssid: str,
     unit_id: int,
-    field_id_value: int,
+    field_id_value: list[tuple],
     data: dict
 ) -> None:
     """Update the fields for Karkade.
@@ -854,9 +990,14 @@ def fill_info(
     Args:
         ssid: string session id
         unit_id: integer unit/object id
-        field_id_value: integer id field
+        field_id_value: list of tupels with integer id field, str value field
         data: data to fill
     """
+    logger.debug('параметры на входе')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id объекта: {unit_id}')
+    logger.debug(f'кортеж (id поля, значение поля к заполнению): {field_id_value}')
+    logger.debug(f'json с текущими значениями полей объекта: {data}')
     info1 = {
         'svc': 'item/update_admin_field',
         'params': {
@@ -917,9 +1058,12 @@ def fill_info(
                  "flags": 0}),
              'sid': ssid
              }
+    logger.debug(f'параметры запроса: {param}')
     requests.post(URL, data=param)
 
 
+@fstart_stop
+@logger.catch
 def upd_inn_field(
     ssid: str, unit_id: int, field_id: int, inn_value: str
 ) -> None:
@@ -936,6 +1080,11 @@ def upd_inn_field(
         field_id: integer field id
         inn_value: data to fill
     """
+    logger.debug('параметры на вход: ')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'id объекта: {unit_id}')
+    logger.debug(f'id поля ИНН: {field_id}')
+    logger.debug(f'ИНН: {inn_value}')
     inn = {
         'svc': 'item/update_admin_field',
         'params': json.dumps({
@@ -946,225 +1095,5 @@ def upd_inn_field(
             "v": inn_value}),
         'sid': ssid
     }
+    logger.debug(f'параметры запроса: {inn}')
     requests.post(URL, data=inn)
-
-
-if __name__ == "__main__":
-    sid = 123456
-    # inf = get_object_info_by_imei(sid, 350612073837112)
-    # idd = get_object_id(sid, '050612073837112')
-    logger.debug({'получены данные на вход': {'name': 'Name', 'last_name': 'belousov', 'imei': 12312313}})
-    # настройки отчёта, 118 - это айди ресурса, [94], массив из айди отчётов
-    param = {'svc': 'report/get_report_data',
-             'params': json.dumps({"itemId": 118,
-                                   "col": [99],
-                                   "flags": 4}),
-             'sid': sid}
-
-    # поиск ресурса
-    source = {'svc': 'core/search_items',
-              'params': json.dumps({
-                  "spec": {
-                      "itemsType": "avl_resource",
-                      "propName": "sys_name",
-                      "propValueMask": "*spb.csat*",
-                      "sortType": "sys_name"
-                  },
-                  "force": 1,
-                  "flags": 4611686018427387903,
-                  "from": 0,
-                  "to": 0
-              }),
-              'sid': sid}
-
-    # изменить шаблон отчёта
-    order = {
-        'svc': 'report/update_report',
-        'params': json.dumps(
-            {"itemId": 118,
-             "id": 94,
-             "callMode": 'update',
-             "n": 'Простой Белоусов',
-             "ct": 'avl_unit_group',
-             "p": "{\"filter_order\": ['duration', 'sensors', 'sensor_name', 'fillings', 'thefts', 'driver', 'trailer', 'geozones_ex']}",
-             "tbl": [
-                 {
-                     "n": 'unit_group_stats',
-                     "l": 'Статистика',
-                     "c": '',
-                     "cl": '',
-                     "s": '["address_format","time_format","us_units","skip_empty_rows"]',
-                     "sl": '["Address","Time Format","Measure","Пропускать пустые строки"]',
-                     "p": "{\"address_format\": \"1255211008_10_5\",\"time_format\": \"%Y-%m-%E_%H:%M:%S\",\"us_units\": 0}",
-                     "sch": {
-                         "f1": 0,
-                         "f2": 0,
-                         "t1": 0,
-                         "t2": 0,
-                         "m": 0,
-                         "y": 0,
-                         "w": 0,
-                         "fl": 0
-                     },
-                     "f": 0
-                 },
-                 {
-                     "n": 'unit_group_stays',
-                     "l": 'Стоянки',
-                     "c": '["time_begin","time_end","duration"]',
-                     "cl": '["Начало","Конец","Длительность"]',
-                     "s": '',
-                     "sl": '',
-                     "p": "{\"unfinished_ival\": \"1\",\"duration\": {\"min\": 1209600,\"flags\": 1}}",
-
-                     "sch": {
-                         "f1": 0,
-                         "f2": 0,
-                         "t1": 0,
-                         "t2": 0,
-                         "m": 0,
-                         "y": 0,
-                         "w": 0,
-                         "fl": 0
-                     },
-                     "f": 4352
-                 }]
-             }),
-        'sid': sid}
-
-
-    bel2 = {
-        'svc': 'report/update_report',
-        'params': json.dumps(
-            {"itemId": 118,
-             "id": 95,
-             "callMode": 'update',
-             "n": 'Простой Белоусов 2',
-             "ct": 'avl_unit_group',
-             "p": "{\"filter_order\": ['duration', 'sensors', 'sensor_name', 'fillings', 'thefts', 'driver', 'trailer', 'geozones_ex']}",
-             "tbl": [
-                 {
-                     "n": 'unit_group_stats',
-                     "l": 'Статистика',
-                     "c": '',
-                     "cl": '',
-                     "s": '["address_format","time_format","us_units","skip_empty_rows"]',
-                     "sl": '["Address","Time Format","Measure","Пропускать пустые строки"]',
-                     "p": "{\"address_format\": \"1255211008_10_5\",\"time_format\": \"%Y-%m-%E_%H:%M:%S\",\"us_units\": 0}",
-                     "sch": {
-                         "f1": 0,
-                         "f2": 0,
-                         "t1": 0,
-                         "t2": 0,
-                         "m": 0,
-                         "y": 0,
-                         "w": 0,
-                         "fl": 0
-                     },
-                     "f": 0
-                 },
-                 {
-                     "n": 'unit_group_stays',
-                     "l": 'Стоянки',
-                     "c": '["time_begin","time_end","duration"]',
-                     "cl": '["Начало","Конец","Длительность"]',
-                     "s": '',
-                     "sl": '',
-                     "p": "{\"unfinished_ival\": \"1\",\"duration\": {\"min\": 1209600,\"flags\": 1}, \"sensors\": {\"type\": 1, \"min\": 1209600, \"flags\": 1}}",
-
-                     "sch": {
-                         "f1": 0,
-                         "f2": 0,
-                         "t1": 0,
-                         "t2": 0,
-                         "m": 0,
-                         "y": 0,
-                         "w": 0,
-                         "fl": 0
-                     },
-                     "f": 4352
-                 }]
-             }),
-        'sid': sid}
-
-    bel3 = {
-        'svc': 'report/update_report',
-        'params': json.dumps(
-            {"itemId": 118,
-             "id": 99,
-             "callMode": 'update',
-             "n": 'Сложный Белоусов',
-             "ct": 'avl_unit_group',
-             "p": "{\"filter_order\": ['base_eh_sensor', 'duration', 'mileage', 'engine_hours', 'speed', 'trips', 'stops', 'parkings', 'sensors', 'sensor_name', 'driver', 'trailer', 'fillings', 'thefts', 'geozones_ex']}",
-             "tbl": [
-                 {
-                     "n": 'unit_group_stats',
-                     "l": 'Статистика',
-                     "c": '',
-                     "cl": '',
-                     "s": '["address_format","time_format","us_units","skip_empty_rows"]',
-                     "sl": '["Address","Time Format","Measure","Пропускать пустые строки"]',
-                     "p": "{\"address_format\": \"1255211008_10_5\",\"time_format\": \"%Y-%m-%E_%H:%M:%S\",\"us_units\": 0}",
-                     "sch": {
-                         "f1": 0,
-                         "f2": 0,
-                         "t1": 0,
-                         "t2": 0,
-                         "m": 0,
-                         "y": 0,
-                         "w": 0,
-                         "fl": 0
-                     },
-                     "f": 0
-                 },
-                 {
-                     "n": 'unit_group_engine_hours',
-                     "l": 'Моточасы',
-                     "c": '["time_begin","time_end"]',
-                     "cl": '["Начало","Конец"]',
-                     "s": '',
-                     "sl": '',
-                     "p": "{\"unfinished_ival\": \"1\",\"mileage\": {\"max\": 0}, \"trips\": \"0\",\"parkings\": {\"type\": 1, \"min\": 1209600, \"flags\": 1}}",
-
-                     "sch": {
-                         "f1": 0,
-                         "f2": 0,
-                         "t1": 0,
-                         "t2": 0,
-                         "m": 0,
-                         "y": 0,
-                         "w": 0,
-                         "fl": 0
-                     },
-                     "f": 4352
-                 }]
-             }),
-        'sid': sid}
-
-# 1209600
-    # chorder = requests.post(URL, data=bel3)
-    # print(chorder.text)
-    # spb.csat id 118, id 94 простой белоусов
-    # responce = requests.post(URL, data=param)
-    
-
-    # print(responce.json())
-    # about = get_object_info_by_imei(sid, '350317174001606')
-    # with open('about3.json', 'w') as f:
-    #     json.dumps(f.write(str(responce.json())))
-    param = {
-        "svc": "core/search_items",
-        "params": json.dumps({
-            "spec": {
-                "itemsType": "avl_unit",
-                "propName": "sys_unique_id",
-                "propValueMask": "*{0}*".format(1515151515151),
-                "sortType": "sys_name"
-            },
-            "force": 1,
-            "flags": 4611686018427387903,
-            "from": 0,
-            "to": 0
-        }),
-        "sid": 123456
-    }

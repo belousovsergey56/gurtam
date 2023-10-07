@@ -14,6 +14,8 @@ import smtplib
 
 import ssl
 
+from config import logger, fstart_stop
+
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -26,6 +28,8 @@ HOSTING_LOIGN = os.environ.get('hosting_login')
 HOSTING_EMAIL_PASSWORD = os.environ.get('hosting_email_password')
 
 
+@fstart_stop
+@logger.catch
 def send_mail(mail_address: str, subject: str, body: str) -> None:
     """Send email.
 
@@ -38,9 +42,12 @@ def send_mail(mail_address: str, subject: str, body: str) -> None:
         body(str): Email Body
     """
     time = datetime.now()
-    tmp_message = f"""Subject: {subject}\n\n{time.ctime()}\nОперация
-     завершена:\n{body}""".encode('UTF-8')
+    tmp_message = f"""Subject: {subject}\n\n{time.ctime()}\nОперация завершена:\n{body}""".encode('UTF-8')
     context = ssl.create_default_context()
+    logger.debug('Отправка элетронного письма')
+    logger.debug(f'Кому: {mail_address}')
+    logger.debug(f'Тема: {subject}')
+    logger.debug(f'Текст письма: {body}')
     try:
         with smtplib.SMTP_SSL(
             host='smtp.spb.csat.ru', context=context, port=465
@@ -54,12 +61,18 @@ def send_mail(mail_address: str, subject: str, body: str) -> None:
                 to_addrs=mail_address,
                 msg=tmp_message
             )
+        logger.debug(f'user: {HOSTING_LOIGN}')
+        logger.debug(f'mail: {HOSTING_EMAIL}')
     except smtplib.SMTPException as e:
         with open('logging/email_log.log', 'a') as log:
             log.write(
                 f'{time.ctime()}\nmsg don`t send to {mail_address}\n{e}\n\n')
+        logger.error(f'Письмо на адрес {mail_address} не отправлено')
+        logger.debug(e)
 
 
+@fstart_stop
+@logger.catch
 def xls_to_json(xls_file) -> str:
     """Convert Excel file to json.
 
@@ -69,12 +82,19 @@ def xls_to_json(xls_file) -> str:
     Returns:
         path(str): path of the json file
     """
+    logger.info('Файл на входе:')
+    logger.info(str(xls_file))
     new_file_name = f'{xls_file}'.replace('.xlsx', '')
+    logger.debug(f'Убрать расширение - {new_file_name}')
     xls = pd.read_excel(xls_file, dtype=str)
+    logger.debug(f'Чтение файла Пандас - {xls}')
     xls.to_json(f'{new_file_name}.json', orient='records')
+    logger.debug(f'Преобразованный файл в json - {new_file_name}')
     return new_file_name
 
 
+@fstart_stop
+@logger.catch
 def read_json(file_path) -> dict:
     """Read a file.
 
@@ -84,11 +104,16 @@ def read_json(file_path) -> dict:
     Returns:
         dict: dictionary ready to use
     """
+    logger.info('Файл на входе:')
+    logger.info(f'{file_path}')
     with open(f'{file_path}.json', 'r', encoding='UTF-8') as f:
         json_file = json.loads(f.read())
+        logger.debug(f'Файл преобразованный в json формат - {json_file}')
         return json_file
 
 
+@fstart_stop
+@logger.catch
 def get_headers(json_file: dict) -> list[str]:
     """Get column headers.
 
@@ -98,27 +123,34 @@ def get_headers(json_file: dict) -> list[str]:
     Returns:
         headers(list): title list
     """
+    logger.debug('Файл на входе:')
     data_frame = pd.DataFrame(json_file)
     headers = data_frame.columns.values.tolist()
+    logger.debug(f'Получение заголовков файла - {headers}')
     return headers
 
 
+@fstart_stop
+@logger.catch
 def update_bd(data: list[dict]) -> None:
     """Get snapshot carcade data.
 
     The function reads the incoming carcade file and saves the data
     to a separate json file.
     """
+    logger.debug(f'На входе функции словарь - {data}')
     bd = {}
     for value in data:
         imei = None
         inn = None
         if type(value.get("IMEI")) == float:
             imei = int(value.get("IMEI"))
+            logger.debug('Если ИМЕЙ float, преобразуем в integer')
         else:
             imei = value.get("IMEI")
         if type(value.get("ИНН")) == float:
             inn = int(value.get("ИНН"))
+            logger.debug('Если ИНН float, преобразуем в integer')
         else:
             inn = value.get("ИНН")
         bd.update(
@@ -131,10 +163,14 @@ def update_bd(data: list[dict]) -> None:
                     "КПП": value.get('КПП')
                 }
             })
+        logger.debug('Снимок базы данных каркаде готов')
+        logger.debug('Записан в файл "data_carcade/last_db.json"')
     with open('data_carcade/last_db.json', 'w') as f:
         json.dump(bd, f, ensure_ascii=False)
 
 
+@fstart_stop
+@logger.catch
 def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
     """Comparing an input file with a snapshot.
 
@@ -148,6 +184,7 @@ def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
     Returns:
         to_update(list[dict]): data to be added or changed on wialon server
     """
+    logger.debug('На входе функции свежий словарь с объектам Каркаде')
     to_update = []
     last_db = read_json('data_carcade/last_db')
     for value in new_file:
@@ -174,4 +211,5 @@ def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
                 to_update.append(value)
         else:
             to_update.append(value)
+        logger.debug('Если данные между локальной базой и входящей хотя бы в одном поле отлиачются, данный объект записывается в новый список словарей, который и возращает функция т.о из более 15к строк, новый список объектов содержит только актуальные значения, в среднем от 200 до 600 объектов.')
     return to_update
