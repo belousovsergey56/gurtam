@@ -27,6 +27,7 @@ from models import User
 
 from tools import read_json, xls_to_json, send_mail, update_bd
 from tools import get_diff_in_upload_file
+from tools import is_xlsx
 
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -467,6 +468,16 @@ def export_fms4():
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
+        if not is_xlsx(filename):
+            flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
+            logger.info(
+                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
+            return render_template(
+                "export_fms4.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
+        logger.info(filename)
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         import_list = read_json(file_path)
@@ -474,7 +485,7 @@ def export_fms4():
         """ not in import_list[0] and """ДЛ
         """ not in import_list[0] and """Пин""" not in import_list[0]:
             flash(message="""Ошибка иморта. Необходимые данные не находятся на
-             первом листе, не соответвуют шаблону или не в формате .XLSX""")
+             первом листе или не соответвуют шаблону""")
             logger.info(
                 log_message('данные в загружаемом файле на соответсвуют необходимому формату. Загружаемый файл удалён.'))
             os.remove(f'upload/{filename}')
@@ -487,7 +498,7 @@ def export_fms4():
         sid = get_ssid()
         start = datetime.now()
         counter = 0
-        with open('logging/import_report.log', 'w') as log:
+        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'w') as log:
             log.write(f'Время начала: {start.ctime()}\n')
             log.write(f'Импорт по компании: {import_list[0].get("ЛИЗИНГ")}\n')
             log.write('Не был найден на виалон, возможно мастер не звонил:\n')
@@ -518,14 +529,14 @@ def export_fms4():
         endtime = datetime.now()
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
-        with open('logging/import_report.log', 'a') as log:
+        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'a') as log:
             log.write(f'Время окончания: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Обработано строк: {counter}\n')
             logger.info(log_message(f'обработано строк {counter}'))
         os.remove(f'upload/{filename}')
         os.remove(f'{file_path}.json')
-        with open('logging/import_report.log', 'r') as report:
+        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'r') as report:
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
             send_mail(user.email, 'Импорт на виалон', order)
@@ -554,6 +565,15 @@ def remove_group():
         log_message('удалить объекты из групп по маске'))
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
+        if not is_xlsx(filename):
+            flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
+            logger.info(
+                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
+            return render_template(
+                "remove_groups.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         imei_list = read_json(file_path)
@@ -630,6 +650,15 @@ def update_info():
     logger.info(log_message('обновление полей инфо Каркаде'))
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
+        if not is_xlsx(filename):
+            flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
+            logger.info(
+                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
+            return render_template(
+                "update_info.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         new_file = read_json(file_path)
@@ -722,6 +751,15 @@ def fill_inn():
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
+        if not is_xlsx(filename):
+            flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
+            logger.info(
+                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
+            return render_template(
+                "fill_inn.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         new_file = read_json(file_path)
