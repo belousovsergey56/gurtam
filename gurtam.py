@@ -631,8 +631,8 @@ def create_object(sid: str, unit_id: int, unit: dict) -> int:
     logger.debug(f'json с данными создаваемого объекта: {unit}')
     obj_id = create_object_with_all_params(sid, unit)
     create_custom_fields(sid, obj_id)
-    with open('logging/import_report.log', 'a') as log:
-        data_log = """Пин {0} - Имей {1}.\n"""
+    with open(f'logging/{unit.get("ЛИЗИНГ")}', 'a') as log:
+        data_log = """Пин {0} - Имей {1}\n"""
         logger.debug(f'объект создан: {data_log}')
         log.write(data_log.format(unit.get('Пин'), unit.get('geozone_imei')))
     logger.debug(f'результат id созданного объекта: {obj_id}')
