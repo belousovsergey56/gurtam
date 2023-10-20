@@ -26,6 +26,7 @@ load_dotenv()
 HOSTING_EMAIL = os.environ.get('hosting_email')
 HOSTING_LOIGN = os.environ.get('hosting_login')
 HOSTING_EMAIL_PASSWORD = os.environ.get('hosting_email_password')
+SMTP_HOST = os.environ.get('smtp_host')
 
 
 @fstart_stop
@@ -42,16 +43,15 @@ def send_mail(mail_address: str, subject: str, body: str) -> None:
         body(str): Email Body
     """
     time = datetime.now()
-    tmp_message = f"""Subject: {subject}\n\n{time.ctime()}\nОперация завершена:\n{body}""".encode('UTF-8')
-    context = ssl.create_default_context()
+    tmp_message = f"""Subject: {subject}\n\n{time.ctime()}\nОперация завершена:\n{body}""".encode(
+        'UTF-8')
     logger.debug('Отправка элетронного письма')
     logger.debug(f'Кому: {mail_address}')
     logger.debug(f'Тема: {subject}')
     logger.debug(f'Текст письма: {body}')
     try:
-        with smtplib.SMTP_SSL(
-            host='smtp.spb.csat.ru', context=context, port=465
-        ) as connection:
+        with smtplib.SMTP(host=SMTP_HOST, port=587) as connection:
+            connection.starttls()
             connection.login(
                 user=HOSTING_LOIGN,
                 password=HOSTING_EMAIL_PASSWORD
@@ -208,16 +208,16 @@ def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
         if imei in last_db:
             if value.get(
                 "РДДБ"
-                ) != last_db[imei].get(
+            ) != last_db[imei].get(
                     "РДДБ"
-                    ) or value.get(
-                        "Специалист"
-                        ) != last_db[imei].get(
-                            "Специалист"
-                            ) or inn != last_db[imei].get(
-                                "ИНН"
-                                ) or value.get(
-                                    "КПП") != last_db[imei].get("КПП"):
+                ) or value.get(
+                "Специалист"
+            ) != last_db[imei].get(
+                "Специалист"
+            ) or inn != last_db[imei].get(
+                "ИНН"
+            ) or value.get(
+                    "КПП") != last_db[imei].get("КПП"):
                 last_db[imei].update(value)
                 to_update.append(value)
         else:
