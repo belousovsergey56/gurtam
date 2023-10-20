@@ -9,20 +9,10 @@
         {% if user.access_create or user.access_remove or user.access_edit: %}
         <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('admin')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Управление пользователями</a></button>
         {% endif %}
-        {% if user.group == 'cesar' or user.group == 'admin': %}
-        <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('export_fms4')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Импорт на FMS4</a></button>
-        
+        <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('export_fms4')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Экспорт на FMS4</a></button>
         <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('remove_group')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Удаление объектов из групп</a></button>
-        {% endif %}
-        
-        {% if user.group == 'carcade' or user.group == 'admin': %}
         <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('update_info')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Каркаде. Заполнение полей ИНФО</a></button>
-        {% endif %}
-
-        {% if user.group == 'gpbal' or user.group == 'admin': %}
         <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('fill_inn')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">ГПБАЛ. Заполнение полей ИНН</a></button>
-        {% endif %}
-        
         </div>
     </div>
 {% endblock %}
