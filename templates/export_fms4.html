@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Цезарь Сателлит - Импорт на Виалон{% endblock %}
+{% block title %}Цезарь Сателлит - Экспорт на Виалон{% endblock %}
 
 {% block body %}
 <div>
-    <h1 class="text-center">Импорт данных на Виалон</h1>
+    <h1 class="text-center">Экспорт данных на Виалон</h1>
     <br>
     <form method="post" enctype="multipart/form-data">
         {% with messages = get_flashed_messages() %}
@@ -15,7 +15,7 @@
         {% endif %}
         {% endwith %}
         {{ form.csrf_token }}
-        <h3 class="text-center pb-3">Загрузить файл для импорта данных</h3>
+        <h3 class="text-center pb-3">Загрузить файл для экспорта данных</h3>
         <div class="row">
             <div class="col-sm-9 " style="padding: 0% 0% 0% 15.5%;">
                 <input class="form-control mb-3" type="file" name="export_file">
