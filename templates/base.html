@@ -1,17 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{% endblock %}</title>
  
 
-  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
-    crossorigin="anonymous"></script>
+  <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
 
   <script src="https://kit.fontawesome.com/0337b42812.js" crossorigin="anonymous"></script>
 
@@ -27,7 +23,7 @@
 <body class="text-center container">
   <div>
     <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
-      <a href="/home" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+      <a href="{{ url_for('home')}}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
         <img src="{{ url_for('static', filename='logovert.png') }}" class="img-thumbnail bi me-2" width="150" height="32" alt="">
         <span class="fs-4"></span>
       </a>
@@ -63,7 +59,6 @@
       });
     });
   </script>
-  <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='bootstrap.js') }}"></script>
 </body>
-
 </html>
