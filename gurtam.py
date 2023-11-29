@@ -1097,3 +1097,30 @@ def upd_inn_field(
     }
     logger.debug(f'параметры запроса: {inn}')
     requests.post(URL, data=inn)
+
+
+def get_group_to_list(data: dict) -> list:
+    set_groups = set()
+    for i in data:
+        tmp = i.get('Группы').split(',')
+        for j in tmp:
+            set_groups.add(j.strip())
+    return list(set_groups)
+
+
+def get_group_id(ssid: str, data: list) -> dict:
+    id_group = dict()
+    for group in data:
+        id_ = search_groups_by_name(ssid, group)
+        id_group.update({group: id_.get('items')[0].get('id')})
+    return id_group
+
+
+def add_obj_in_group_dict(ssid: str, data: dict, group_list: list) -> dict:
+    group_dict = defaultdict()
+    for dictionary in data:
+        for group in group_list:
+            if group in dictionary.get('Группы'):
+                obj_id = get_object_id(ssid, dictionary.get('ID'))
+                group_dict.setdefault(group, []).append(obj_id)
+    return group_dict
