@@ -5,6 +5,8 @@ import random
 
 from config import logger, fstart_stop
 
+from collections import defaultdict
+
 from dotenv import load_dotenv
 
 from hardware import create_object_with_all_params
@@ -1099,28 +1101,92 @@ def upd_inn_field(
     requests.post(URL, data=inn)
 
 
-def get_group_to_list(data: dict) -> list:
+@fstart_stop
+@logger.catch
+def get_group_to_list(data: list[dict]) -> list:
+    """Group items in a list.
+    
+    Collecting unique groups from the dictionary into a list
+
+    Args:
+        data (list): [{ID: 345646, 'Группы': 'group1, group2, group3'}]
+
+    Returns:
+        list: [group1, group2, group3]
+    """
+    logger.debug('параметры на вход: ')
+    logger.debug(f'Список словарей: {data}')
     set_groups = set()
+    logger.debug('старт цикла for')
     for i in data:
         tmp = i.get('Группы').split(',')
         for j in tmp:
             set_groups.add(j.strip())
+    logger.debug(f'результат: {set_groups}')
+    logger.debug('функция вернёт в формате списка list(set_groups)')
     return list(set_groups)
 
 
+@fstart_stop
+@logger.catch
 def get_group_id(ssid: str, data: list) -> dict:
+    """Search group id
+    
+    The function collects groups into a dictionary in the format
+    {group: id_group, group2: id_group}
+
+    Args:
+        ssid (str): session id
+        data (list): [group1, group2, group3]
+
+    Returns:
+        dict: {group1: id, group2: id, group3: id}
+    """
+    logger.debug('Параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'список групп: {data}')
     id_group = dict()
     for group in data:
-        id_ = search_groups_by_name(ssid, group)
-        id_group.update({group: id_.get('items')[0].get('id')})
+        try:
+            get_id_group = search_groups_by_name(ssid, group)
+            id_group.update({group: get_id_group.get('items')[0].get('id')})
+        except IndexError:
+            logger.debug(f'группа {group} не найдена')
+            id_group.update({group: -1})
+            continue
+    logger.debug(f'Результат: {id_group}')
     return id_group
 
 
-def add_obj_in_group_dict(ssid: str, data: dict, group_list: list) -> dict:
+@fstart_stop
+@logger.catch
+def add_obj_in_group_dict(
+    ssid: str,
+    group_list: list,
+    input_file: list
+    ) -> dict:
+    """Distribution of objects by groups
+    
+    The script runs a loop in a loop, if there is a group in a row, we find
+    the object ID of that row and add it to the list of the current group.
+
+    Args:
+        ssid (str): session id
+        group_list (list): [group1, group2, group3]
+        input_file (list): [{ID: 345646, 'Группы': 'group1, group2, group3'}]
+
+    Returns:
+        dict: {group1: [obj_id1, obj_id2, obj_id3 etc]}
+    """
+    logger.debug('Параметры на входе:')
+    logger.debug(f'id сессии: {ssid}')
+    logger.debug(f'Список из групп: {group_list}')
+    logger.debug(f'Входящий файл: {input_file}')
     group_dict = defaultdict()
-    for dictionary in data:
+    for dictionary in input_file:
         for group in group_list:
             if group in dictionary.get('Группы'):
                 obj_id = get_object_id(ssid, dictionary.get('ID'))
                 group_dict.setdefault(group, []).append(obj_id)
+    logger.debug(f'Результат: {group_dict}')
     return group_dict
