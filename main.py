@@ -18,10 +18,12 @@ from forms import SigninForm, UploadFile, UserForm
 from gurtam import create_object, get_ssid, group_update
 from gurtam import remove_groups, get_object_id
 from gurtam import check_admin_fields
-from gurtam import update_param
+from gurtam import update_param, add_groups
 from gurtam import fill_info, upd_inn_field
 from gurtam import get_admin_fields, get_custom_fields
 from gurtam import create_admin_field, create_custom_field
+from gurtam import get_group_to_list, get_group_id, add_obj_in_group_dict
+from gurtam import search_groups_by_name
 
 from models import User
 
@@ -464,7 +466,7 @@ def export_fms4():
     Returns:
         display page export_fms4.html
     """
-    logger.info(log_message('импорт на Виалон FMS4'))
+    logger.info(log_message('экспорт на Виалон FMS4'))
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
@@ -500,7 +502,7 @@ def export_fms4():
         counter = 0
         with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'w') as log:
             log.write(f'Время начала: {start.ctime()}\n')
-            log.write(f'Импорт по компании: {import_list[0].get("ЛИЗИНГ")}\n')
+            log.write(f'экспорт по компании: {import_list[0].get("ЛИЗИНГ")}\n')
             log.write('Не был найден на виалон, возможно мастер не звонил:\n')
         logger.info(
             log_message(f'начало загрузки на виалон {import_list[0].get("ЛИЗИНГ")}'))
@@ -539,11 +541,108 @@ def export_fms4():
         with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'r') as report:
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'Импорт на виалон', order)
+            send_mail(user.email, 'экспорт на виалон', order)
             logger.info(
                 log_message(f'отчёт отправлен на почту "{user.email}"'))
         return render_template('order.html', order=order.split('\n'))
     return render_template('export_fms4.html', form=form)
+
+
+@app.route('/update_groups', methods=['GET', 'POST'])
+@login_required
+@logger.catch
+def update_group_fms4():
+    """Group distribution
+    
+    The script accepts as input a file in the format 
+    {ID: 1234567, Группы: 1Эволюция, 1Эволюция Абхазия, 1Эволюция Азербайджан, 1Эволюция Армения}
+    three variables are created:
+    1. group_list = [1Эволюция, 1Эволюция Абхазия, 1Эволюция Азербайджан, 1Эволюция Армения]
+    2. group_id = {1Эволюция: id_group, 1Эволюция Абхазия: id_group}
+    3. id objects to be added = {1Эволюция: [obj_id, obj_id], 1Эволюция Абхазия: [obj_id, obj_id]}
+    Going in a loop through the list of groups, add objects
+    
+    Returns:
+        display page order.html
+    """    
+    form = UploadFile()
+    logger.info(
+        log_message('Распределение объектов по группам'))
+    if form.validate_on_submit():
+        filename = secure_filename(form.export_file.data.filename)
+        if not is_xlsx(filename):
+            flash(message="""Ошибка экспорта. Файл не в формате .XLSX""")
+            logger.info(
+                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
+            return render_template(
+                "update_groups.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
+        form.export_file.data.save('upload/{0}'.format(filename))
+        file_path = xls_to_json('upload/{0}'.format(filename))
+        input_file = read_json(file_path)
+        if 'ID' not in input_file[0] and 'Группы' not in input_file[0]:
+            flash(message="""Ошибка экспорта. Необходимые данные не находятся на первом листе или не соответвуют шаблону""")
+            os.remove(f'upload/{filename}')
+            os.remove(f'{file_path}.json')
+            logger.info(log_message('данные в файле не соответсвуют шаблону'))
+            return render_template(
+                "update_groups.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
+        sid = get_ssid()
+        start = datetime.now()
+        logger.info(log_message('старт обработки объектов'))
+        with open('logging/update_groups.txt', 'w') as log:
+            log.write(f'Время начала: {start.ctime()}\n')
+            log.write(f'Распределение объектов по группам.\n')
+        all_groups = get_group_to_list(input_file)
+        dict_group_id = get_group_id(sid, all_groups)
+        object_list_in_group = add_obj_in_group_dict(
+            sid,
+            all_groups,
+            input_file
+            )
+        count_ojects = len(input_file)
+        count_group = len(all_groups)
+        for group in all_groups:
+            if dict_group_id.get(group) == -1:
+                with open('logging/update_groups.txt', 'a') as log:
+                    log.write(f'{group} - группа в системе не найдена\n')
+                    logger.info(log_message(f'группа не найдена {group}'))
+            else:
+                actual_obj_in_group = search_groups_by_name(sid, group).get('items')[0].get('u')
+                add_groups(
+                    sid,
+                    dict_group_id.get(group),
+                    actual_obj_in_group,
+                    object_list_in_group.get(group)
+                    )
+        logger.info(log_message('Распределение объектов завершено'))
+        endtime = datetime.now()
+        delta_time = endtime - start
+        delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
+        
+        with open('logging/update_groups.txt', 'a') as log:
+            log.write(f'Время окончания: {endtime.ctime()}\n')
+            log.write(f'Время работы составило: {delta_time}\n')
+            log.write(f'Обработано строк: {count_ojects}\n')
+            log.write(f'Общее количество групп: {count_group}\n')
+            logger.info(log_message(f'Обработано строк: {count_ojects}'))
+            logger.info(log_message(f'Общее количество групп: {count_group}'))
+        os.remove(f'upload/{filename}')
+        os.remove(f'{file_path}.json')
+        
+        with open('logging/update_groups.txt', 'r') as report:
+            order = report.read()
+            user = User.query.filter_by(id=current_user.get_id()).first()
+            send_mail(user.email, 'Распределение объектов по группам', order)
+            logger.info(
+                log_message(f'отчёт отправлена на почту "{user.email}"'))
+        return render_template('order.html', order=order.split('\n'))
+    return render_template('update_groups.html', form=form)
 
 
 @app.route('/remove_groups', methods=['GET', 'POST'])
@@ -566,7 +665,7 @@ def remove_group():
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
         if not is_xlsx(filename):
-            flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
+            flash(message="""Ошибка экспорта. Файл не в формате .XLSX""")
             logger.info(
                 log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
             return render_template(
@@ -579,7 +678,7 @@ def remove_group():
         imei_list = read_json(file_path)
 
         if 'ГРУППА' not in imei_list[0] and 'ИМЕЙ' not in imei_list[0]:
-            flash(message="""Ошибка иморта. Необходимые данные не находятся на
+            flash(message="""Ошибка экспорта. Необходимые данные не находятся на
              первом листе, не соответвуют шаблону или не в формате .XLSX""")
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
@@ -714,7 +813,7 @@ def update_info():
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
         logger.info(log_message('обновление полей инфо завершено'))
         with open('logging/update_info.log', 'a') as log:
-            log.write(f'Окончание импорта данных: {endtime.ctime()}\n')
+            log.write(f'Окончание экспорта данных: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Всего строк обработано: {counter} из {length}\n')
             logger.info(log_message(f'обработано строк {counter} из {length}'))
@@ -811,7 +910,7 @@ def fill_inn():
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
         with open('logging/update_inn.log', 'a') as log:
-            log.write(f'Окончание импорта данных: {endtime.ctime()}\n')
+            log.write(f'Окончание экспорта данных: {endtime.ctime()}\n')
             log.write(f'Ушло времени на залив данных: {delta_time}\n')
             log.write(f'Всего строк обработано: {counter} из {length}\n')
             logger.info(log_message(f'обработано строк {counter} из {length}'))
