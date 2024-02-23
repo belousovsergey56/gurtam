@@ -1,0 +1,9 @@
+services:
+  gurtam:
+    image: belousov56/import_wialon:latest
+    restart: always
+    ports: 
+      - "5000:5000"
+    volumes:
+      - .:/app/instance
+
