@@ -1190,3 +1190,48 @@ def add_obj_in_group_dict(
                 group_dict.setdefault(group, []).append(obj_id)
     logger.debug(f'Результат: {group_dict}')
     return group_dict
+
+
+@fstart_stop
+@logger.catch
+def get_user_id() -> int:
+    """Get spb.csat id
+
+    Returns:
+        int: user wialon id for spb.csat 
+    """
+    param = {
+        'svc': 'token/login',
+        'params':json.dumps({"token":TOKEN})
+        }
+    response = requests.post(URL, data=param).json()
+    cesar_id = response['user']['id']
+    logger.debug(f'Результат: {cesar_id}')
+    return cesar_id
+
+
+@fstart_stop
+@logger.catch
+def get_new_token(app_name='export') -> str:
+    """Token creation
+
+    Args:
+        app_name (str, optional): Defaults to 'export'.
+
+    Returns:
+        str: token name - 72 symbols
+    """
+    param = {
+        'svc': 'token/update',
+        'params': json.dumps({
+            "callMode": "create",
+			 "app": app_name,
+			 "at": 0,
+			 "dur": 300,
+			 "fl": -1,
+			 "p": '{}',
+			 }),
+        'sid': sid}
+    new_token = requests.post(URL, data=param).json()
+    logger.debug(f'Результат: {new_token.get("h")}')
+    return new_token.get('h')
