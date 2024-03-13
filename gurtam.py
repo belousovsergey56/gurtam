@@ -23,7 +23,7 @@ AUTO = (40187, 41342, 40576)
 TRUCK = (40188, 41343, 40577)
 SPEC = (53014, 53012, 53013)
 RISK = (40166, 59726)
-REQUIRED_GROUPS = (78875)
+REQUIRED_GROUPS = (78875,)
 CUSTOM_FIELDS = ('Vin', 'Марка', 'Модель')
 
 
@@ -703,7 +703,7 @@ def group_update(data: dict) -> None:
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit)
     for id_group in REQUIRED_GROUPS:
-        leasing_unit_list = group.get('u')
+        leasing_unit_list = search_group_by_id(sid, id_group).get('item')['u']
         add_groups(sid, id_group, leasing_unit_list, all_unit)
     logger.debug('Объекты добавлены')
 
