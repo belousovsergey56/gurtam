@@ -1216,10 +1216,11 @@ def get_user_id() -> int:
 
 @fstart_stop
 @logger.catch
-def get_new_token(app_name='export') -> str:
+def get_new_token(sid: str, app_name='export') -> str:
     """Token creation
 
     Args:
+        sid (str): session id
         app_name (str, optional): Defaults to 'export'.
 
     Returns:
@@ -1229,12 +1230,12 @@ def get_new_token(app_name='export') -> str:
         'svc': 'token/update',
         'params': json.dumps({
             "callMode": "create",
-			 "app": app_name,
-			 "at": 0,
-			 "dur": 300,
-			 "fl": -1,
-			 "p": '{}',
-			 }),
+            "app": app_name,
+            "at": 0,
+            "dur": 300,
+            "fl": -1,
+            "p": '{}',
+            }),
         'sid': sid}
     new_token = requests.post(URL, data=param).json()
     logger.debug(f'Результат: {new_token.get("h")}')
