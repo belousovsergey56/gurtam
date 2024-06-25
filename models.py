@@ -1,7 +1,7 @@
 """Models data base leasing users."""
-from config import app, db
-
 from flask_login import UserMixin
+
+from config import app, db
 
 
 class User(UserMixin, db.Model):
