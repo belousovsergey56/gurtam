@@ -3,6 +3,7 @@
 This module have all settings for Flask, SQLAlchemy, Login manager.
 """
 
+import functools
 import os
 
 from dotenv import load_dotenv
@@ -39,6 +40,15 @@ logger.add(
 )
 
 
+def get_ip() -> str:
+    """Get remote ip.
+
+    Returns:
+        str: remote ip
+    """
+    return request.remote_addr
+
+
 def log_message(message: str) -> str:
     """Template log message
 
@@ -56,16 +66,8 @@ def log_message(message: str) -> str:
     return f"{get_ip()} - {login[0]} - {url[0]} - {message}"
 
 
-def get_ip() -> str:
-    """Get remote ip.
-
-    Returns:
-        str: remote ip
-    """
-    return request.remote_addr
-
-
-def fstart_stop(func, *args, **kwargs):
+def fstart_stop(func):
+    @functools.wraps(func)
     def wraper(*args, **kwargs):
         logger.debug(f'старт работы функции: "{func.__name__}"')
         a = func(*args, **kwargs)
