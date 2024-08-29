@@ -113,6 +113,37 @@ lgroup = {
     "evolution": ["evolution"],
 }
 
+GROUPS = {
+    1: {
+        "AUTO": [],
+        "TRUCK": [],
+        "SPEC": [],
+        "RISK": [],
+        "REQUIRED_GROUPS": [],
+    },
+    2: {
+        "AUTO": [],
+        "TRUCK": [],
+        "SPEC": [],
+        "RISK": [],
+        "REQUIRED_GROUPS": [],
+    },
+    3: {
+        "AUTO": [26338],
+        "TRUCK": [26337],
+        "SPEC": [26339],
+        "RISK": [],
+        "REQUIRED_GROUPS": [],
+    },
+    4: {
+        "AUTO": [40187, 41342, 40576],
+        "TRUCK": [40188, 41343, 40577],
+        "SPEC": [53014, 53012, 53013],
+        "RISK": [40166, 59726],
+        "REQUIRED_GROUPS": [78875],
+    },
+}
+
 AUTO = (40187, 41342, 40576, 26338)
 TRUCK = (40188, 41343, 40577, 26337)
 SPEC = (53014, 53012, 53013, 26339)
