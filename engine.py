@@ -499,57 +499,6 @@ def search_group_by_id(ssid: str, group_id: int, URL: str) -> dict:
     return response.json()
 
 
-# TODO возможно метод не используется, проверить удалить
-@fstart_stop
-@logger.catch
-def get_id_group(group: dict) -> int | str:
-    """Get ID group.
-
-    Args:
-        group (dict): json object with metadata about group
-
-    Returns:
-        int|str: if group finded, return group id as integer,
-        if not finded return traceback 'this is group is not finded'
-    """
-    logger.debug(f"параметр на входе: {group}")
-    try:
-        logger.debug(f'полученный id группы: {group["items"][0].get("id")}')
-        return group["items"][0].get("id")
-    except IndexError:
-        logger.debug("Группа не найдена")
-        return "Группа не найдена"
-
-
-@fstart_stop
-@logger.catch
-def get_group_unit_list(group: dict) -> list | str:
-    """Get group unit list.
-
-    Args:
-        group (dict): json object with metadata about group
-
-    Returns:
-        list|str: if group finded, return unit list id as [123, 456, ...etc],
-        if not finded return traceback 'this is list empty'
-    """
-    logger.debug(f"параметр на входе: {group}")
-    try:
-        if "items" in group:
-            logger.debug(
-                f'результат, список id объектов в группе: {group["items"][0].get("u")}'
-            )
-            return group["items"][0].get("u")
-        else:
-            logger.debug(
-                f'результат, список id объектов в группе: {group["item"].get("u")}'
-            )
-            return group["item"].get("u")
-    except IndexError as e:
-        logger.debug(f"{e}")
-        return "Список пуст"
-
-
 @fstart_stop
 @logger.catch
 def add_groups(
@@ -587,54 +536,12 @@ def add_groups(
 
 @fstart_stop
 @logger.catch
-def remove_groups(ssid: str, removed_unit_list: list[int], URL: str) -> None:
-    """Remove unit from a group.
-
-    Args:
-        ssid (str): session id
-        removed_unit_list (list[int]): list of id objects to remove
-        URL (str): server address
-    """
-    logger.debug("парметры на входе")
-    logger.debug(f"id сессии: {ssid}")
-    logger.debug(f"список IMEI объектов на удаление: {removed_unit_list}")
-    logger.debug(f"адрес сервера: {URL}")
-    group_name = search_groups_by_name(ssid, removed_unit_list[0].get("ГРУППА"))
-    group_id = [group.get("id") for group in group_name.get("items")]
-    remove_unit_id = [
-        get_object_id(ssid, unit.get("ИМЕЙ")) for unit in removed_unit_list
-    ]
-    logger.debug(f"получение json группы: {group_name}")
-    logger.debug(f"получение списка id групп по маске: {group_id}")
-    logger.debug(f"получение списка id объектов из списка: {remove_unit_id}")
-    for index_group, group in enumerate(group_id):
-        group_data = search_group_by_id(ssid, group)
-        group_list = get_group_unit_list(group_data)
-        for index_unit, unit in enumerate(remove_unit_id):
-            if unit in group_list:
-                group_list.remove(unit)
-                logger.debug("если объект есть в группе, удалить из списка объектов")
-            else:
-                with open("logging/unremoved.log", "a") as log:
-                    text = "not found {0} in {1}\n"
-                    imei = removed_unit_list[index_unit].get("ИМЕЙ")
-                    glog_name = group_name.get("items")[index_group].get("nm")
-                    log.write(text.format(imei, glog_name))
-                    logger.debug(f"объект по IMEI не найден: {imei}")
-                continue
-
-        param = {
-            "svc": "unit_group/update_units",
-            "params": json.dumps({"itemId": group, "units": group_list}),
-            "sid": ssid,
-        }
-        logger.debug(f"параметры запроса: {param}")
-        requests.post(URL, data=param)
-
-
-@fstart_stop
-@logger.catch
-def create_object(sid: str, unit_id: int, unit: dict, URL: str, fms: int) -> int:
+def create_object(
+    sid: str,
+    unit: dict,
+    URL: str,
+    fms: int
+) -> int:
     """Check the presence of an object on the vialon.
 
     Checking dictionary objects by IMEI for presence on the Vialon portal
@@ -646,7 +553,6 @@ def create_object(sid: str, unit_id: int, unit: dict, URL: str, fms: int) -> int
     Args:
         unit (dict): dictionary of objects
         sid (str): session id
-        unit_id (int): object id
         URL (str): server address
         fms (int): server number
 
@@ -654,11 +560,10 @@ def create_object(sid: str, unit_id: int, unit: dict, URL: str, fms: int) -> int
         obj_id: integer object id
     """
     logger.debug(f"id сесиии: {sid}")
-    logger.debug(f"id объекта: {unit_id}")
     logger.debug(f"json с данными создаваемого объекта: {unit}")
     logger.debug(f"адрес сервера: {URL}")
     logger.debug(f"номер сервера: {fms}")
-    obj_id = create_object_with_all_params(sid, unit, URL, fms)
+    obj_id = create_object_with_all_params(sid, URL, unit, fms)
     create_custom_fields(sid, obj_id, URL)
     with open(f'logging/{unit.get("ЛИЗИНГ")}', "a") as log:
         data_log = """Пин {0} - Имей {1}\n"""
@@ -1120,7 +1025,7 @@ def get_group_to_list(data: list[dict]) -> list:
     logger.debug("функция вернёт в формате списка list(set_groups)")
     return list(set_groups)
 
-
+#TODO рассмотреть удаление метода
 @fstart_stop
 @logger.catch
 def get_group_id(ssid: str, data: list, URL: str) -> dict:
