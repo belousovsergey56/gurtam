@@ -4,45 +4,48 @@ This module, have main method.
 Run browser and run all project for export data object to Gurtam.
 """
 import os
+from datetime import datetime
 from functools import wraps
+from time import gmtime, strftime
 
-from config import app, db, login_manager, logger, log_message
-
-from flask import flash, redirect, render_template, url_for
-from flask import jsonify
-
+from flask import flash, jsonify, redirect, render_template, url_for
 from flask_login import current_user, login_required, login_user, logout_user
-
-from forms import SigninForm, UploadFile, UserForm
-
-from gurtam import create_object, get_ssid, group_update
-from gurtam import remove_groups, get_object_id
-from gurtam import check_admin_fields
-from gurtam import update_param, add_groups
-from gurtam import fill_info, upd_inn_field
-from gurtam import get_admin_fields, get_custom_fields
-from gurtam import create_admin_field, create_custom_field
-from gurtam import get_group_to_list, get_group_id, add_obj_in_group_dict
-from gurtam import search_groups_by_name
-
-from models import User
-
-from tools import read_json, xls_to_json, send_mail, update_bd
-from tools import get_diff_in_upload_file
-from tools import is_xlsx
-
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-from datetime import datetime
-from time import strftime, gmtime
-
-lgroup = {
-    'admin': ['gpbal', 'carcade', 'evolution', 'admin', 'cesar'],
-    'cesar': ['cesar'],
-    'gpbal': ['gpbal'],
-    'carcade': ['carcade'],
-    'evolution': ['evolution']}
+from config import app, db, log_message, logger, login_manager
+from constant import TOKEN, URL, lgroup
+from forms import SigninForm, UploadFile, UserForm
+from engine import (
+    add_groups,
+    add_obj_in_group_dict,
+    check_admin_fields,
+    # create_admin_field,
+    # create_custom_field,
+    create_object,
+    fill_info,
+    # get_admin_fields,
+    # get_custom_fields,
+    get_group_id,
+    get_group_to_list,
+    get_object_id,
+    get_ssid,
+    group_update,
+    remove_groups,
+    search_groups_by_name,
+    upd_inn_field,
+    update_param,
+    id_fields
+)
+from models import User
+from tools import (
+    get_diff_in_upload_file,
+    is_xlsx,
+    read_json,
+    send_mail,
+    update_bd,
+    xls_to_json,
+)
 
 
 @login_manager.user_loader
@@ -360,71 +363,72 @@ def remove_user(user_id: int):
     return redirect(url_for('admin'))
 
 
-@logger.catch
-def id_fields(sid, new_id) -> dict:
-    """Get id fields.
+# @logger.catch
+# def id_fields(sid: str, new_id: int, url: str) -> dict:
+#     """Get id fields.
 
-    Helper function.
-    Create map id fields.
-    Search field id and add to dict.
-    Search custom and admin fields.
-    If id field not found, go to create field and add new id to dict.
-    Them return dict with field name and current id.
-    Current name and id:
-    geozone_sim, geozone_imei, Vin, Марка, Модель, Пин, Инфо4
+#     Helper function.
+#     Create map id fields.
+#     Search field id and add to dict.
+#     Search custom and admin fields.
+#     If id field not found, go to create field and add new id to dict.
+#     Them return dict with field name and current id.
+#     Current name and id:
+#     geozone_sim, geozone_imei, Vin, Марка, Модель, Пин, Инфо4
 
-    Args:
-        sid (str): current session id
-        new_id: integer unit/object id
+#     Args:
+#         sid (str): current session id
+#         new_id (int): unit/object id
+#         url (str): server address
 
-    Returns:
-        map_id (dict): dict with current field name and field id
-    """
-    logger.debug(
-        f'старт функции {id_fields.__name__}, получен айди объекта: {new_id}, айди сессии: {sid}')
-    admin_fields = get_admin_fields(sid, new_id)
-    custom_fields = get_custom_fields(sid, new_id)
-    map_id = {
-        'geozone_imei': None,
-        'geozone_sim': None,
-        'Vin': None,
-        'Марка': None,
-        'Модель': None,
-        'Пин': None,
-        'Инфо4': None
-    }
-    logger.debug(f'получен список админ полей: {admin_fields}')
-    logger.debug(f'получен список произвольных полей: {custom_fields}')
-    logger.debug('старт цикла for для поиска айди админ полей')
-    for field in admin_fields.items():
-        name_field = field[1].get('n')
-        id_field = field[1].get('id')
-        logger.debug(f'имя поля: {name_field}')
-        logger.debug(f'айди поля: {id_field}')
-        if name_field in map_id.keys():
-            map_id.update({name_field: id_field})
-    logger.debug('конец цикла for для поиска айди админ полей')
-    logger.debug('старт цикла for для поиска айди произвольных полей')
-    for field in custom_fields.items():
-        name_field = field[1].get('n')
-        id_field = field[1].get('id')
-        logger.debug(f'имя поля: {name_field}')
-        logger.debug(f'айди поля: {id_field}')
-        if name_field in map_id.keys():
-            map_id.update({name_field: id_field})
-    logger.debug('конец цикла for для поиска айди админ полей')
-    logger.debug('старт цикла for, проверка что все нужные айди собраны. Если значение поля None, тода поле создаётся и присваивается id')
-    for names, values in map_id.items():
-        if values is None:
-            if names == 'Vin' or names == 'Марка' or names == 'Модель':
-                field = create_custom_field(sid, new_id, names)
-                map_id.update({names: field[1].get('id')})
-            else:
-                field = create_admin_field(sid, new_id, names)
-                map_id.update({names: field[1].get('id')})
-    logger.debug('конец цикла for для проверки id')
-    logger.debug(f'Получен результат: {map_id}')
-    return map_id
+#     Returns:
+#         map_id (dict): dict with current field name and field id
+#     """
+#     logger.debug(
+#         f'старт функции {id_fields.__name__}, получен айди объекта: {new_id}, айди сессии: {sid}')
+#     admin_fields = get_admin_fields(sid, new_id, url)
+#     custom_fields = get_custom_fields(sid, new_id, url)
+#     map_id = {
+#         'geozone_imei': None,
+#         'geozone_sim': None,
+#         'Vin': None,
+#         'Марка': None,
+#         'Модель': None,
+#         'Пин': None,
+#         'Инфо4': None
+#     }
+#     logger.debug(f'получен список админ полей: {admin_fields}')
+#     logger.debug(f'получен список произвольных полей: {custom_fields}')
+#     logger.debug('старт цикла for для поиска айди админ полей')
+#     for field in admin_fields.items():
+#         name_field = field[1].get('n')
+#         id_field = field[1].get('id')
+#         logger.debug(f'имя поля: {name_field}')
+#         logger.debug(f'айди поля: {id_field}')
+#         if name_field in map_id.keys():
+#             map_id.update({name_field: id_field})
+#     logger.debug('конец цикла for для поиска айди админ полей')
+#     logger.debug('старт цикла for для поиска айди произвольных полей')
+#     for field in custom_fields.items():
+#         name_field = field[1].get('n')
+#         id_field = field[1].get('id')
+#         logger.debug(f'имя поля: {name_field}')
+#         logger.debug(f'айди поля: {id_field}')
+#         if name_field in map_id.keys():
+#             map_id.update({name_field: id_field})
+#     logger.debug('конец цикла for для поиска айди админ полей')
+#     logger.debug('старт цикла for, проверка что все нужные айди собраны. Если значение поля None, тода поле создаётся и присваивается id')
+#     for names, values in map_id.items():
+#         if values is None:
+#             if names == 'Vin' or names == 'Марка' or names == 'Модель':
+#                 field = create_custom_field(sid, new_id, names, url)
+#                 map_id.update({names: field[1].get('id')})
+#             else:
+#                 field = create_admin_field(sid, new_id, names, url)
+#                 map_id.update({names: field[1].get('id')})
+#     logger.debug('конец цикла for для проверки id')
+#     logger.debug(f'Получен результат: {map_id}')
+#     return map_id
 
 
 @app.route('/order')
@@ -466,12 +470,14 @@ def export_fms4():
     Returns:
         display page export_fms4.html
     """
-    logger.info(log_message('экспорт на Виалон FMS4'))
     form = UploadFile()
+    logger.info(
+        log_message(f'экспорт на Виалон FMS {form.fms.data}'))
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
+        logger.info(filename)
         if not is_xlsx(filename):
-            flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
+            flash(message="""Ошибка импорта. Файл не в формате .XLSX""")
             logger.info(
                 log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
             return render_template(
@@ -483,13 +489,11 @@ def export_fms4():
         form.export_file.data.save('upload/{0}'.format(filename))
         file_path = xls_to_json('upload/{0}'.format(filename))
         import_list = read_json(file_path)
-        if """Инфо4
-        """ not in import_list[0] and """ДЛ
-        """ not in import_list[0] and """Пин""" not in import_list[0]:
-            flash(message="""Ошибка иморта. Необходимые данные не находятся на
-             первом листе или не соответвуют шаблону""")
-            logger.info(
-                log_message('данные в загружаемом файле на соответсвуют необходимому формату. Загружаемый файл удалён.'))
+        headers = {'Инфо4', 'ДЛ', 'Пин'}
+        
+        if len(import_list) < 1:
+            flash(message="Файл пуст")
+            logger.info(log_message('Файл пустой'))
             os.remove(f'upload/{filename}')
             os.remove(f'{file_path}.json')
             return render_template(
@@ -497,7 +501,25 @@ def export_fms4():
                 form=form,
                 logged_in=current_user.is_authenticated
             )
-        sid = get_ssid()
+
+        for header in headers:
+            if header not in import_list[0]:
+                flash(message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе или не соответвуют шаблону""")
+                logger.info(
+                log_message('данные в загружаемом файле на соответсвуют необходимому формату. Загружаемый файл удалён.'))
+                os.remove(f'upload/{filename}')
+                os.remove(f'{file_path}.json')
+                return render_template(
+                "export_fms4.html",
+                form=form,
+                logged_in=current_user.is_authenticated
+            )
+        
+        fms = int(form.fms.data)
+        
+        url = URL[fms]
+        sid = get_ssid(url, TOKEN[fms])
         start = datetime.now()
         counter = 0
         with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'w') as log:
@@ -507,25 +529,37 @@ def export_fms4():
         logger.info(
             log_message(f'начало загрузки на виалон {import_list[0].get("ЛИЗИНГ")}'))
         for unit in import_list:
-            unit_id = get_object_id(sid, unit.get('geozone_imei'))
+            unit_id = get_object_id(sid, unit.get('geozone_imei'), url)
             unit.update({'uid': unit_id})
             logger.info(
                 log_message(
                     f'Обновление полей объекта по ПИН {unit.get("Пин")}:{unit}'))
             if unit_id == -1:
                 try:
-                    new_id = create_object(sid, unit_id, unit)
+                    new_id = create_object(sid, unit_id, unit, url, fms)
                     unit.update({'uid': new_id})
-                    update_param(sid, new_id, unit, id_fields(sid, new_id))
+                    update_param(
+                        sid,
+                        new_id,
+                        unit,
+                        id_fields(sid, new_id, url),
+                        url
+                        )
                     counter += 1
                 except AttributeError:
                     counter += 1
             else:
-                update_param(sid, unit_id, unit, id_fields(sid, unit_id))
+                update_param(
+                    sid,
+                    unit_id,
+                    unit,
+                    id_fields(sid, unit_id, url),
+                    url
+                    )
                 counter += 1
         logger.info(log_message('загрузка завершена'))
         logger.info(log_message('распределение объектов по группам'))
-        group_update(import_list)
+        group_update(sid, import_list, url)
         logger.info(log_message('объекты распределены'))
         logger.info(log_message('загрузка завершена'))
         endtime = datetime.now()
@@ -544,6 +578,7 @@ def export_fms4():
             send_mail(user.email, 'экспорт на виалон', order)
             logger.info(
                 log_message(f'отчёт отправлен на почту "{user.email}"'))
+            print(fms)
         return render_template('order.html', order=order.split('\n'))
     return render_template('export_fms4.html', form=form)
 
@@ -597,7 +632,7 @@ def update_group_fms4():
         logger.info(log_message('старт обработки объектов'))
         with open('logging/update_groups.txt', 'w') as log:
             log.write(f'Время начала: {start.ctime()}\n')
-            log.write(f'Распределение объектов по группам.\n')
+            log.write('Распределение объектов по группам.\n')
         all_groups = get_group_to_list(input_file)
         dict_group_id = get_group_id(sid, all_groups)
         object_list_in_group = add_obj_in_group_dict(
@@ -1012,7 +1047,6 @@ with app.app_context():
         add_admin()
         add_tech_crew()
         add_carcade()
-
 
 if __name__ == '__main__':
     logger.info(f'запуск сервера {app}')
