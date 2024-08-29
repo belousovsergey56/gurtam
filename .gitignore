@@ -198,3 +198,4 @@ instance/
 data_carcade/
 upload/
 .vscode/
+__*
