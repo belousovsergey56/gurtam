@@ -16,6 +16,11 @@
         {% endwith %}
         {{ form.csrf_token }}
         <h3 class="text-center pb-3">Загрузить файл для экспорта данных</h3>
+        
+        <div style="padding: 0 15% 1% 15%;">
+            {{form.fms}}
+        </div>
+
         <div class="row">
             <div class="col-sm-9 " style="padding: 0% 0% 0% 15.5%;">
                 <input class="form-control mb-3" type="file" name="export_file">
