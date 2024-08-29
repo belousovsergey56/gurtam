@@ -1,0 +1,652 @@
+{'dataFlags': 4611686018427387903,
+ 'indexFrom': 0,
+ 'indexTo': 0,
+ 'items': [
+        {'act': 1,
+            'aflds': {'1': {'id': 1,
+                            'n': 'geozone_imei',
+                            'v': '352016704187087'
+                },
+                      '10': {'id': 10, 'n': 'Пин', 'v': '2197784'
+                },
+                      '2': {'id': 2, 'n': 'geozone_sim', 'v': '+79856211249'
+                },
+                      '3': {'id': 3,
+                            'n': 'Инфо1',
+                            'v': 'Суфиянов Руслан Мирзанурович'
+                },
+                      '4': {'id': 4, 'n': 'Инфо2', 'v': ' '
+                },
+                      '5': {'id': 5, 'n': 'Инфо3', 'v': ' '
+                },
+                      '6': {'id': 6, 'n': 'Инфо4', 'v': 'Да'
+                },
+                      '7': {'id': 7,
+                            'n': 'Инфо5',
+                            'v': 'Пернакий Антон Сергеевич'
+                },
+                      '8': {'id': 8, 'n': 'Инфо6', 'v': '20'
+                },
+                      '9': {'id': 9, 'n': 'Инфо7', 'v': '20'
+                }
+            },
+            'afldsmax': 0,
+            'bact': 118,
+            'cfl': 784,
+            'cls': 2,
+            'cmds': [],
+            'cml': {},
+            'cml_max': -1,
+            'cneh': 2842.82,
+            'cnkb': 0,
+            'cnm': 73742,
+            'cnm_km': 73742,
+            'crt': 117,
+            'ct': 1697551704,
+            'dactt': 0,
+            'flds': {'1': {'id': 1, 'n': 'Vin', 'v': 'XTA219040R0945353'
+                },
+                     '2': {'id': 2, 'n': 'Марка', 'v': 'Lada'
+                },
+                     '3': {'id': 3, 'n': 'Модель', 'v': 'GRANTA'
+                }
+            },
+            'fldsmax': 0,
+            'ftp': {'ch': 0, 'fl': 0, 'tp': 0
+            },
+            'gd': '1a77575d6d17c025719525983fde322f',
+            'hw': 19510,
+            'id': 71016,
+            'lmsg': {'f': 1073741825,
+                     'lc': 27825625,
+                     'p': {'cell_id': 5275,
+                           'event_io_id': 0,
+                           'gsm': 3,
+                           'hdop': 0.6,
+                           'io_1': 0,
+                           'io_17': 65523,
+                           'io_179': 0,
+                           'io_18': 57,
+                           'io_182': 6,
+                           'io_19': 950,
+                           'io_200': 0,
+                           'io_205': 5275,
+                           'io_206': 19000,
+                           'io_21': 3,
+                           'io_239': 0,
+                           'io_240': 1,
+                           'io_241': 25001,
+                           'io_381': 1,
+                           'io_6': 131,
+                           'io_66': 13750,
+                           'io_67': 4071,
+                           'io_69': 1,
+                           'io_80': 1,
+                           'lac': 19000,
+                           'mcc': 250,
+                           'mnc': 1,
+                           'prior': 0,
+                           'pwr_ext': 13.75,
+                           'pwr_int': 4.071,
+                           'total_io': 19
+                },
+                     'pos': {'c': 140,
+                             's': 9,
+                             'sc': 19,
+                             'x': 45.7153599,
+                             'y': 43.3344833,
+                             'z': 100
+                },
+                     'rt': 1723491133,
+                     't': 1723491129,
+                     'tp': 'ud'
+            },
+            'mu': 0,
+            'netconn': 1,
+            'nm': '69661/2023',
+            'pflds': {'1': {'id': 1,
+                            'n': 'vehicle_class',
+                            'v': 'empty_vehicle'
+                }
+            },
+            'pfldsmax': 0,
+            'ph': '+79856211249',
+            'ph2': '',
+            'pos': {'c': 140,
+                    'f': 1073741825,
+                    'lc': 27825625,
+                    's': 9,
+                    'sc': 19,
+                    't': 1723491129,
+                    'x': 45.7153599,
+                    'y': 43.3344833,
+                    'z': 100
+            },
+            'prms': {'cell_id': {'at': 1723491129, 'ct': 1723491092, 'v': 5275
+                },
+                     'event_io_id': {'at': 1723491129,
+                                     'ct': 1723491112,
+                                     'v': 0
+                },
+                     'gsm': {'at': 1723491129, 'ct': 1723491103, 'v': 3
+                },
+                     'hdop': {'at': 1723491129, 'ct': 1723491125, 'v': 0.6
+                },
+                     'io_1': {'at': 1723491129, 'ct': 1723471862, 'v': 0
+                },
+                     'io_17': {'at': 1723491129, 'ct': 1723491129, 'v': 65523
+                },
+                     'io_179': {'at': 1723491129, 'ct': 1697611070, 'v': 0
+                },
+                     'io_18': {'at': 1723491129, 'ct': 1723491129, 'v': 57
+                },
+                     'io_182': {'at': 1723491129, 'ct': 1723491125, 'v': 6
+                },
+                     'io_19': {'at': 1723491129, 'ct': 1723491129, 'v': 950
+                },
+                     'io_200': {'at': 1723491129, 'ct': 1723471523, 'v': 0
+                },
+                     'io_205': {'at': 1723491129, 'ct': 1723491092, 'v': 5275
+                },
+                     'io_206': {'at': 1723491129, 'ct': 1723234407, 'v': 19000
+                },
+                     'io_21': {'at': 1723491129, 'ct': 1723491103, 'v': 3
+                },
+                     'io_239': {'at': 1723491129, 'ct': 1723471862, 'v': 0
+                },
+                     'io_240': {'at': 1723491129, 'ct': 1723491041, 'v': 1
+                },
+                     'io_241': {'at': 1723491129, 'ct': 1722958416, 'v': 25001
+                },
+                     'io_381': {'at': 1723491129, 'ct': 1697611045, 'v': 1
+                },
+                     'io_6': {'at': 1723491129, 'ct': 1697551732, 'v': 131
+                },
+                     'io_66': {'at': 1723491129, 'ct': 1723491129, 'v': 13750
+                },
+                     'io_67': {'at': 1723491129, 'ct': 1723491128, 'v': 4071
+                },
+                     'io_69': {'at': 1723491129, 'ct': 1723487231, 'v': 1
+                },
+                     'io_80': {'at': 1723491129, 'ct': 1723491038, 'v': 1
+                },
+                     'lac': {'at': 1723491129, 'ct': 1723234407, 'v': 19000
+                },
+                     'mcc': {'at': 1723491129, 'ct': 1696407072, 'v': 250
+                },
+                     'mnc': {'at': 1723491129, 'ct': 1696407072, 'v': 1
+                },
+                     'posinfo': {'at': 1723491129,
+                                 'ct': 1723491129,
+                                 'v': {'c': 140,
+                                       'sc': 19,
+                                       'x': 45.7153599,
+                                       'y': 43.3344833,
+                                       'z': 100
+                    }
+                },
+                     'prior': {'at': 1723491129, 'ct': 1723491112, 'v': 0
+                },
+                     'pwr_ext': {'at': 1723491129,
+                                 'ct': 1723491129,
+                                 'v': 13.75
+                },
+                     'pwr_int': {'at': 1723491129,
+                                 'ct': 1723491128,
+                                 'v': 4.071
+                },
+                     'speed': {'at': 1723491129, 'ct': 1723491129, 'v': 9
+                },
+                     'total_io': {'at': 1723491129, 'ct': 1696407074, 'v': 19
+                }
+            },
+            'prp': {'img_rot': '0',
+                    'label_color': '16711680',
+                    'monitoring_battery_id': '0',
+                    'monitoring_sensor': '0 ff0000;6 ffff00;11 197b30',
+                    'monitoring_sensor_id': '8',
+                    'motion_state_sensor_id': '0',
+                    'trip_colors': '1',
+                    'use_sensor_color': '1'
+            },
+            'psw': '',
+            'rfc': {'calcTypes': 0,
+                    'fuelConsImpulse': {'maxImpulses': 0, 'skipZero': 0
+                },
+                    'fuelConsMath': {'idling': 2, 'suburban': 7, 'urban': 10
+                },
+                    'fuelConsRates': {'consSummer': 0,
+                                      'consWinter': 0,
+                                      'winterDayFrom': 1,
+                                      'winterDayTo': 29,
+                                      'winterMonthFrom': 11,
+                                      'winterMonthTo': 1
+                },
+                    'fuelLevelParams': {'extraFillingTimeout': 0,
+                                        'fillingsJoinInterval': 300,
+                                        'filterQuality': 0,
+                                        'flags': 1,
+                                        'ignoreStayTimeout': 20,
+                                        'minFillingVolume': 20,
+                                        'minTheftTimeout': 0,
+                                        'minTheftVolume': 10,
+                                        'theftsJoinInterval': 300
+                }
+            },
+            'rtd': {'gpsCorrection': 1,
+                    'maxMessagesDistance': 10000,
+                    'minMovingSpeed': 1,
+                    'minSat': 2,
+                    'minStayTime': 300,
+                    'minTripDistance': 100,
+                    'minTripTime': 60,
+                    'type': 1
+            },
+            'sens': {'1': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": true,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 2,
+                        "show_time": false,
+                        "timeout": 0,
+                        "uct": 0,
+                        "unbound_code": "",
+                        "validate_driver_unbound": 0
+                    }',
+                           'd': '',
+                           'f': 0,
+                           'id': 1,
+                           'm': 'V',
+                           'n': 'АКБ автомобиля',
+                           'p': 'pwr_ext',
+                           't': 'voltage',
+                           'tbl': [],
+                           'vs': 0,
+                           'vt': 0
+                },
+                     '10': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": false,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 7,
+                        "show_time": false,
+                        "text_params": 0,
+                        "timeout": 0,
+                        "uct": 0
+                    }',
+                            'd': '',
+                            'f': 0,
+                            'id': 10,
+                            'm': '',
+                            'n': 'Дем x',
+                            'p': '[Ось x
+                    ]',
+                            't': 'custom',
+                            'tbl': [],
+                            'vs': 9,
+                            'vt': 11
+                },
+                     '11': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": false,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 8,
+                        "show_time": false,
+                        "text_params": 0,
+                        "timeout": 0,
+                        "uct": 0,
+                        "unbound_code": "",
+                        "validate_driver_unbound": 0
+                    }',
+                            'd': '',
+                            'f': 0,
+                            'id': 11,
+                            'm': '',
+                            'n': 'Дем y',
+                            'p': '[Ось y
+                    ]',
+                            't': 'custom',
+                            'tbl': [],
+                            'vs': 9,
+                            'vt': 11
+                },
+                     '12': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": false,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 9,
+                        "show_time": false,
+                        "text_params": 0,
+                        "timeout": 0,
+                        "uct": 0,
+                        "unbound_code": "",
+                        "validate_driver_unbound": 0
+                    }',
+                            'd': '',
+                            'f': 0,
+                            'id': 12,
+                            'm': '',
+                            'n': 'Дем z',
+                            'p': '[Ось z
+                    ]',
+                            't': 'custom',
+                            'tbl': [],
+                            'vs': 9,
+                            'vt': 11
+                },
+                     '13': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": false,
+                        "ci": {},
+                        "cm": 1,
+                        "lower_bound": 0.01,
+                        "mu": "0",
+                        "pos": 11,
+                        "show_time": false,
+                        "text_params": 0,
+                        "timeout": 0,
+                        "uct": 0
+                    }',
+                            'd': '',
+                            'f': 0,
+                            'id': 13,
+                            'm': 'в',
+                            'n': '1АКБ автомобиля',
+                            'p': '[АКБ автомобиля
+                    ]',
+                            't': 'custom',
+                            'tbl': [],
+                            'vs': 0,
+                            'vt': 0
+                },
+                     '14': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": true,
+                        "ci": {},
+                        "cm": 1,
+                        "pos": 4,
+                        "show_time": false,
+                        "timeout": 0
+                    }',
+                            'd': '',
+                            'f': 0,
+                            'id': 14,
+                            'm': 'Вкл/Выкл',
+                            'n': 'Отрыв',
+                            'p': 'io_381',
+                            't': 'digital',
+                            'tbl': [],
+                            'vs': 9,
+                            'vt': 11
+                },
+                     '15': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": false,
+                        "ci": {},
+                        "cm": 1,
+                        "pos": 5,
+                        "show_time": false,
+                        "timeout": 0
+                    }',
+                            'd': '',
+                            'f': 0,
+                            'id': 15,
+                            'm': 'Вкл/Выкл',
+                            'n': 'io_381',
+                            'p': 'io_381',
+                            't': 'digital',
+                            'tbl': [],
+                            'vs': 0,
+                            'vt': 1
+                },
+                     '2': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": true,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 3,
+                        "show_time": false,
+                        "timeout": 0,
+                        "uct": 0,
+                        "unbound_code": ""
+                    }',
+                           'd': '',
+                           'f': 0,
+                           'id': 2,
+                           'm': '',
+                           'n': 'Датчик1напряжения',
+                           'p': 'pwr_int',
+                           't': 'custom',
+                           'tbl': [],
+                           'vs': 0,
+                           'vt': 0
+                },
+                     '3': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": true,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 15,
+                        "show_time": false,
+                        "text_params": 0,
+                        "timeout": 0,
+                        "uct": 0
+                    }',
+                           'd': '',
+                           'f': 0,
+                           'id': 3,
+                           'm': '',
+                           'n': 'Ось z',
+                           'p': 'io_19',
+                           't': 'custom',
+                           'tbl': [
+                        {'a': 0.001, 'b': 0, 'x': 0
+                        },
+                        {'a': 0.001, 'b': -65.536, 'x': 32767
+                        }
+                    ],
+                           'vs': 0,
+                           'vt': 0
+                },
+                     '4': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": true,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 14,
+                        "show_time": false,
+                        "text_params": 0,
+                        "timeout": 0,
+                        "uct": 0
+                    }',
+                           'd': '',
+                           'f': 0,
+                           'id': 4,
+                           'm': '',
+                           'n': 'Ось y',
+                           'p': 'io_18',
+                           't': 'custom',
+                           'tbl': [
+                        {'a': 0.001, 'b': 0, 'x': 0
+                        },
+                        {'a': 0.001, 'b': -65.536, 'x': 32767
+                        }
+                    ],
+                           'vs': 0,
+                           'vt': 0
+                },
+                     '5': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": true,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 13,
+                        "show_time": false,
+                        "text_params": 0,
+                        "timeout": 0,
+                        "uct": 0
+                    }',
+                           'd': '',
+                           'f': 0,
+                           'id': 5,
+                           'm': '',
+                           'n': 'Ось x',
+                           'p': 'io_17',
+                           't': 'custom',
+                           'tbl': [
+                        {'a': 0.001, 'b': 0, 'x': 0
+                        },
+                        {'a': 0.001, 'b': -65.536, 'x': 32767
+                        }
+                    ],
+                           'vs': 0,
+                           'vt': 0
+                },
+                     '6': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": true,
+                        "ci": {},
+                        "cm": 1,
+                        "consumption": 0,
+                        "mu": "0",
+                        "pos": 1,
+                        "show_time": false,
+                        "timeout": 0,
+                        "uct": 0,
+                        "unbound_code": ""
+                    }',
+                           'd': '|0: 0: 13: 0: 13.1: 1: 19: 1',
+                           'f': 0,
+                           'id': 6,
+                           'm': 'Вкл/Выкл',
+                           'n': 'Зажигание',
+                           'p': '[АКБ автомобиля
+                    ]',
+                           't': 'engine operation',
+                           'tbl': [
+                        {'a': 0, 'b': 0, 'x': 0
+                        },
+                        {'a': 10, 'b': -130, 'x': 13
+                        },
+                        {'a': 0, 'b': 1, 'x': 13.1
+                        }
+                    ],
+                           'vs': 0,
+                           'vt': 0
+                },
+                     '7': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": true,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 10,
+                        "show_time": false,
+                        "timeout": 0,
+                        "uct": 0
+                    }',
+                           'd': '',
+                           'f': 0,
+                           'id': 7,
+                           'm': 'On/Off',
+                           'n': 'Блокировка',
+                           'p': 'io_179',
+                           't': 'digital',
+                           'tbl': [],
+                           'vs': 0,
+                           'vt': 0
+                },
+                     '8': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": false,
+                        "ci": {
+                            "0": {
+                                "c": 16711680
+                            },
+                            "11": {
+                                "c": 1669936
+                            },
+                            "6": {
+                                "c": 16776960
+                            }
+                        },
+                        "cm": 0,
+                        "mu": "0",
+                        "pos": 12,
+                        "show_time": false,
+                        "text_params": 0,
+                        "timeout": 0,
+                        "uct": 0
+                    }',
+                           'd': '',
+                           'f': 0,
+                           'id': 8,
+                           'm': 'в',
+                           'n': 'Индикация АКБ',
+                           'p': '[АКБ автомобиля
+                    ]',
+                           't': 'custom',
+                           'tbl': [],
+                           'vs': 0,
+                           'vt': 0
+                },
+                     '9': {'c': '{
+                        "act": 1,
+                        "appear_in_popup": false,
+                        "ci": {},
+                        "cm": 1,
+                        "mu": "0",
+                        "pos": 6,
+                        "show_time": false,
+                        "timeout": 0,
+                        "uct": 0,
+                        "unbound_code": "",
+                        "validate_driver_unbound": 0
+                    }',
+                           'd': '|0: 1: 1: 0',
+                           'f': 0,
+                           'id': 9,
+                           'm': 'On/Off',
+                           'n': 'Валидатор осей',
+                           'p': '[Зажигание
+                    ]',
+                           't': 'digital',
+                           'tbl': [
+                        {'a': -1, 'b': 1, 'x': 0
+                        }
+                    ],
+                           'vs': 0,
+                           'vt': 0
+                }
+            },
+            'sens_max': -1,
+            'si': {},
+            'simax': 0,
+            'uacl': 880333094911,
+            'ugi': 0,
+            'uid': '352016704187087',
+            'uid2': '',
+            'uri': '/avl_library_image/38807/0/library/unit/default.svg'
+        }
+    ],
+ 'searchSpec': {'itemsType': 'avl_unit',
+                'or_logic': '0',
+                'propName': 'sys_unique_id',
+                'propType': '',
+                'propValueMask': '*352016704187087*',
+                'sortType': 'sys_name'
+    },
+ 'totalItemsCount': 1
+}
