@@ -9,7 +9,7 @@
         {% if user.access_create or user.access_remove or user.access_edit: %}
         <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('admin')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Управление пользователями</a></button>
         {% endif %}
-        <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('export_fms4')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Экспорт на FMS4</a></button>
+        <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('export_fms4')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Экспорт на FMS</a></button>
         <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('update_group_fms4')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Распределение объектов по группам</a></button>
         <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('remove_group')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Удаление объектов из групп</a></button>
         <button type="button" class="btn btn-lg btn-primary btn-block"><a href="{{ url_for('update_info')}}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover fs-3" style="text-decoration: none;">Каркаде. Заполнение полей ИНФО</a></button>
