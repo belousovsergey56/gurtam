@@ -3,21 +3,25 @@ import sys
 
 sys.path.append(os.path.join(os.getcwd(), ""))
 
-from constant import TOKEN, URL
+from constant import GROUPS, TOKEN, URL
 from engine import (
+    add_groups,
+    create_admin_field,
+    create_custom_field,
     create_custom_fields,
     create_object,
     get_admin_fields,
+    get_custom_fields,
     get_header,
     get_object_id,
     get_object_info_by_imei,
     get_object_info_by_name,
     get_ssid,
+    group_update,
     id_fields,
     search_group_by_id,
     search_groups_by_name,
     update_param,
-    group_update
 )
 from hardware import create_object_with_all_params
 from tools import read_json
@@ -155,19 +159,111 @@ def test_create_object():
         assert export_object.get("ДЛ") == new_object.get('items')[0].get('nm')
 
 
-def test_group_update():
-    export_object = read_json("tests/fixtures/create_object")
+def test_add_groups():
+    export_object = read_json("tests/fixtures/one_object")
     for test_fms in range(*iteration[fms]):
         sid = get_ssid(URL[test_fms], TOKEN[test_fms])
+        group = search_groups_by_name(sid, 'belousov', URL[test_fms])
+        unit_list = group.get('items')[0].get('u')
+        id_group = group.get('items')[0].get('id')
+        obj_id = get_object_id(
+            sid,
+            export_object.get('geozone_imei'),
+            URL[test_fms]
+            )
+        new_group_list = add_groups(
+            sid,
+            id_group,
+            unit_list,
+            [obj_id],
+            URL[test_fms]
+            )
+        print(new_group_list)
+        assert obj_id in new_group_list.get('u')
+
+
+def test_group_update():
+    export_object = read_json("tests/fixtures/create_object")
+    for test_fms in range(3, 5):
+        auto = int()
+        truck = int()
+        spec = int()
+        sid = get_ssid(URL[test_fms], TOKEN[test_fms])
+        for obj in export_object:
+            uid = get_object_id(sid, obj.get('geozone_imei'), URL[test_fms])
+            obj.update({'uid': uid})
+            if obj.get('geozone_imei') == '150317175645805':
+                auto += obj.get('uid')
+            elif obj.get('geozone_imei') == '150457175415805':
+                truck += obj.get('uid')
+            elif obj.get('geozone_imei') == '150317175415899':
+                spec += obj.get('uid')
         group_update(sid, export_object, URL[test_fms])
+        if test_fms == 3:
+            AUTO = search_group_by_id(
+                sid,
+                GROUPS[test_fms]["AUTO"][0],
+                URL[test_fms]).get('item').get('u')
+            TRUCK = search_group_by_id(
+                sid,
+                GROUPS[test_fms]["TRUCK"][0],
+                URL[test_fms]).get('item').get('u')
+            SPEC = search_group_by_id(
+                sid,
+                GROUPS[test_fms]["SPEC"][0],
+                URL[test_fms]).get('item').get('u')
+            assert auto in AUTO
+            assert truck in TRUCK
+            assert spec in SPEC
+        else:
+            AUTO = search_group_by_id(
+                sid,
+                GROUPS[test_fms]["AUTO"][2],
+                URL[test_fms]).get('item').get('u')
+            TRUCK = search_group_by_id(
+                sid,
+                GROUPS[test_fms]["TRUCK"][2],
+                URL[test_fms]).get('item').get('u')
+            SPEC = search_group_by_id(
+                sid,
+                GROUPS[test_fms]["SPEC"][2],
+                URL[test_fms]).get('item').get('u')
+            assert auto in AUTO
+            assert truck in TRUCK
+            assert spec in SPEC
 
 
-if __name__ == '__main__':
-    sid = get_ssid(URL[1], TOKEN[1])
-    export_object = read_json("tests/fixtures/tst_engn_create_obj")
-    create_object(sid, export_object, URL[1], 1)
-    imei = export_object.get("geozone_imei")
-    a = get_object_info_by_imei(sid, imei, URL[1])
-    from pprint import pprint
-    pprint(a)
-    print(a.get('items')[0].get('nm'))
+def test_get_custom_fields():
+    for test_fms in range(*iteration[fms]):
+        sid = get_ssid(URL[test_fms], TOKEN[test_fms])
+        uid = get_object_id(sid, '220557175415805', URL[test_fms])
+        result = get_custom_fields(sid, uid, URL[test_fms])
+        assert len(result) > 0
+
+
+def test_create_custom_field():
+    imei = '440317175415805'
+    field = 'belousov_info'
+    for test_fms in range(*iteration[fms]):
+        sid = get_ssid(URL[test_fms], TOKEN[test_fms])
+        uid = get_object_id(sid, imei, URL[test_fms])
+        upd_fld = create_custom_field(sid, uid, field, URL[test_fms])
+        assert upd_fld[1].get('n') == field
+
+
+def test_get_admin_fields():
+    for test_fms in range(*iteration[fms]):
+        sid = get_ssid(URL[test_fms], TOKEN[test_fms])
+        uid = get_object_id(sid, '220557175415805', URL[test_fms])
+        result = get_admin_fields(sid, uid, URL[test_fms])
+        assert len(result) > 0
+
+
+def test_create_admin_field():
+    imei = '440317175415805'
+    field = 'belousov_admin'
+    for test_fms in range(*iteration[fms]):
+        sid = get_ssid(URL[test_fms], TOKEN[test_fms])
+        uid = get_object_id(sid, imei, URL[test_fms])
+        upd_fld = create_admin_field(sid, uid, field, URL[test_fms])
+        assert upd_fld[1].get('n') == field
