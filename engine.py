@@ -507,7 +507,7 @@ def add_groups(
     leasing_unit_list: list[int],
     added_unit: list[int],
     URL: str,
-):
+) -> dict:
     """Add objects to a group.
 
     Args:
@@ -516,6 +516,8 @@ def add_groups(
         leasing_unit_list (list[int]): list of current id group objects
         added_unit (int): list of id objects to add
         URL (str): server address
+    Returns:
+        { "u":[<long>]	/* массив ID объектов */}
     """
     logger.debug("параметры на входе:")
     logger.debug(f"id сессии: {ssid}")
@@ -531,7 +533,8 @@ def add_groups(
         "sid": ssid,
     }
     logger.debug(f"параметры запроса: {param}")
-    requests.post(URL, data=param)
+    result = requests.post(URL, data=param)
+    return result.json()
 
 
 @fstart_stop
@@ -618,7 +621,11 @@ def group_update(sid: str, data: dict, URL: str) -> None:
     logger.debug(f"колличество спецтехники: {len(special)}")
     logger.debug(f"колличество рисковых: {len(risk_auto)}")
 
-    finded_group = search_groups_by_name(sid, data[0].get("ЛИЗИНГ"), URL).get("items")
+    finded_group = search_groups_by_name(
+        sid,
+        data[0].get("ЛИЗИНГ"),
+        URL
+        ).get("items")
 
     logger.debug(f'Ищем группы по маске: {data[0].get("ЛИЗИНГ")}')
 
@@ -636,59 +643,13 @@ def group_update(sid: str, data: dict, URL: str) -> None:
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit, URL)
     for id_group in REQUIRED_GROUPS:
-        leasing_unit_list = search_group_by_id(sid, id_group, URL).get("item")["u"]
+        leasing_unit_list = search_group_by_id(
+            sid,
+            id_group,
+            URL
+            ).get("item")["u"]
         add_groups(sid, id_group, leasing_unit_list, all_unit, URL)
     logger.debug("Объекты добавлены")
-
-
-@fstart_stop
-@logger.catch
-def update_group_by_mask(ssid: str, list_imei: list[dict], URL: str) -> int:
-    """Update list objects in groups by mask.
-
-    The function takes a list of dictionaries, in the format
-    {'IMEI': 1234567890, 'Группа': 'Cardade'},
-    where key IMEI - contains the value of unique block code,
-    the Группа key - contains the name of the group in which you want
-    to update the list of objects.
-    To effectively update objects in a group, the list must contain the value
-    of the Group key with the same mask to update objects in only one group at
-    a time.
-    For acceleration, the script will take the group of the first dictionary
-    as the basis.
-
-    Args:
-        ssid (str): session id
-        list_imei (list[dict]): list of objects imei
-        URL (str): server address
-
-    Returns:
-        If the operation of updating the list of objects in the group
-        is completed successfully, the script returns 0,
-        if it fails, it returns -1
-    """
-    logger.debug("Аргументы на входе:")
-    logger.debug(f"id сессии: {ssid}")
-    logger.debug(f"список json объектов ИМЕЙ, Группа: {list_imei}")
-    logger.debug(f"адрес сервера, Группа: {URL}")
-    upload_obj_id_list = []
-    group_by_mask = search_groups_by_name(ssid, list_imei[0].get("Группа"), URL)
-
-    id_group = group_by_mask.get("items")[0].get("id")
-    actual_object_id_list = group_by_mask.get("items")[0].get("u")
-    for object_id in list_imei:
-        object_id = get_object_id(ssid, object_id.get("IMEI"), URL)
-        if object_id > 0:
-            upload_obj_id_list.append(object_id)
-        else:
-            continue
-    try:
-        logger.debug("добавление объектов")
-        add_groups(ssid, id_group, actual_object_id_list, upload_obj_id_list, URL)
-    except Exception as e:
-        logger.debug(e)
-        return -1
-    return 0
 
 
 @fstart_stop
@@ -721,7 +682,12 @@ def get_custom_fields(ssid: str, unit_id: int, URL: str) -> dict:
 
 @fstart_stop
 @logger.catch
-def create_custom_field(ssid: str, unit_id: int, info_name: str, URL: str) -> dict:
+def create_custom_field(
+    ssid: str,
+    unit_id: int,
+    info_name: str,
+    URL: str
+) -> list:
     """Create custom field.
 
     Args:
@@ -732,12 +698,15 @@ def create_custom_field(ssid: str, unit_id: int, info_name: str, URL: str) -> di
 
     Returns:
         fields info: When creating or updating custom fields,
-        response format will be ditionary
+        response format will be
+        [1,
         {
             "id":<long>, custom field ID
             "n":<text>, name
             "v":<text> value
         }
+        ]
+        where 1 it is number field
     """
     info = {
         "svc": "item/update_custom_field",
@@ -787,7 +756,7 @@ def get_admin_fields(ssid: str, unit_id: int, URL: str) -> dict:
 
 @fstart_stop
 @logger.catch
-def create_admin_field(ssid: str, unit_id: int, info_name: str, URL: str) -> dict:
+def create_admin_field(ssid: str, unit_id: int, info_name: str, URL: str) -> list:
     """Create admin field.
 
     Args:
@@ -798,12 +767,15 @@ def create_admin_field(ssid: str, unit_id: int, info_name: str, URL: str) -> dic
 
     Returns:
         fields info: When creating or updating admin fields,
-        response format will be ditionary
+        response format will be
+        [1,
         {
             "id":<long>, admin field ID
             "n":<text>, name
             "v":<text>, value
         }
+        ]
+        where 1 it is number field
     """
     info = {
         "svc": "item/update_admin_field",
