@@ -144,12 +144,12 @@ def update_bd(data: list[dict]) -> None:
     for value in data:
         imei = None
         inn = None
-        if type(value.get("IMEI")) == float:
+        if type(value.get("IMEI")) is float:
             imei = int(value.get("IMEI"))
             logger.debug("Если ИМЕЙ float, преобразуем в integer")
         else:
             imei = value.get("IMEI")
-        if type(value.get("ИНН")) == float:
+        if type(value.get("ИНН")) is float:
             inn = int(value.get("ИНН"))
             logger.debug("Если ИНН float, преобразуем в integer")
         else:
@@ -192,7 +192,7 @@ def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
     for value in new_file:
         imei = str(value.get("IMEI"))
         inn = None
-        if type(value.get("ИНН")) == float:
+        if type(value.get("ИНН")) is float:
             inn = int(value.get("ИНН"))
         else:
             inn = value.get("ИНН")
