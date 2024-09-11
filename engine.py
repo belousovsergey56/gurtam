@@ -2,7 +2,6 @@
 
 import json
 import random
-from collections import defaultdict
 
 import requests
 
@@ -157,7 +156,8 @@ def get_object_id(ssid: str, imei: str, URL: str) -> int:
     logger.debug(f'получение id объекта: "{imei}"')
     logger.debug('imei отдаётся в обработку функции "get_object_info_by_imei"')
     if response.get("items"):
-        logger.debug(f'результат id обекта: {response.get("items")[0].get("id")}')
+        logger.debug(
+            f'результат id обекта: {response.get("items")[0].get("id")}')
         return response.get("items")[0].get("id")
     logger.debug('объект не существует, результат: "-1"')
     return -1
@@ -211,7 +211,7 @@ def create_custom_fields(ssid: str, unit_id: int, URL: str) -> None:
         }
         response = requests.post(URL, data=param)
         logger.debug(
-            f"получение дынных об админ полях: {response.url}, параметры: {param}"
+            f"получение админ полей: {response.url}, параметры: {param}"
         )
         logger.debug(f"результат: {response.json()}")
         if field not in response.text:
@@ -244,7 +244,7 @@ def create_custom_fields(ssid: str, unit_id: int, URL: str) -> None:
         }
         response = requests.post(URL, data=param)
         logger.debug(
-            f"получение данных о произвольных полях: {response.url}, параметры: {param}"
+            f"получение произвольных полей: {response.url}, параметры: {param}"
         )
         logger.debug(f"результат: {response.json()}")
         if field not in response.text:
@@ -343,7 +343,8 @@ def update_param(
             "id": id_field.get("Инфо4"),
             "callMode": "update",
             "n": "Инфо4",
-            "v": new_value.get("Инфо4") if new_value.get("Инфо4") is not None else "",
+            "v": new_value.get(
+                "Инфо4") if new_value.get("Инфо4") is not None else "",
         },
         "sid": session_id,
     }
@@ -539,12 +540,7 @@ def add_groups(
 
 @fstart_stop
 @logger.catch
-def create_object(
-    sid: str,
-    unit: dict,
-    URL: str,
-    fms: int
-) -> int:
+def create_object(sid: str, unit: dict, URL: str, fms: int) -> int:
     """Check the presence of an object on the vialon.
 
     Checking dictionary objects by IMEI for presence on the Vialon portal
@@ -622,10 +618,7 @@ def group_update(sid: str, data: dict, URL: str) -> None:
     logger.debug(f"колличество рисковых: {len(risk_auto)}")
 
     finded_group = search_groups_by_name(
-        sid,
-        data[0].get("ЛИЗИНГ"),
-        URL
-        ).get("items")
+        sid, data[0].get("ЛИЗИНГ"), URL).get("items")
 
     logger.debug(f'Ищем группы по маске: {data[0].get("ЛИЗИНГ")}')
 
@@ -644,10 +637,7 @@ def group_update(sid: str, data: dict, URL: str) -> None:
             add_groups(sid, id_group, leasing_unit_list, all_unit, URL)
     for id_group in REQUIRED_GROUPS:
         leasing_unit_list = search_group_by_id(
-            sid,
-            id_group,
-            URL
-            ).get("item")["u"]
+            sid, id_group, URL).get("item")["u"]
         add_groups(sid, id_group, leasing_unit_list, all_unit, URL)
     logger.debug("Объекты добавлены")
 
@@ -683,10 +673,7 @@ def get_custom_fields(ssid: str, unit_id: int, URL: str) -> dict:
 @fstart_stop
 @logger.catch
 def create_custom_field(
-    ssid: str,
-    unit_id: int,
-    info_name: str,
-    URL: str
+    ssid: str, unit_id: int, info_name: str, URL: str
 ) -> list:
     """Create custom field.
 
@@ -711,7 +698,13 @@ def create_custom_field(
     info = {
         "svc": "item/update_custom_field",
         "params": json.dumps(
-            {"itemId": unit_id, "id": 0, "callMode": "create", "n": info_name, "v": ""}
+            {
+                "itemId": unit_id,
+                "id": 0,
+                "callMode": "create",
+                "n": info_name,
+                "v": ""
+                }
         ),
         "sid": ssid,
     }
@@ -756,7 +749,9 @@ def get_admin_fields(ssid: str, unit_id: int, URL: str) -> dict:
 
 @fstart_stop
 @logger.catch
-def create_admin_field(ssid: str, unit_id: int, info_name: str, URL: str) -> list:
+def create_admin_field(
+    ssid: str, unit_id: int, info_name: str, URL: str
+) -> list:
     """Create admin field.
 
     Args:
@@ -780,7 +775,13 @@ def create_admin_field(ssid: str, unit_id: int, info_name: str, URL: str) -> lis
     info = {
         "svc": "item/update_admin_field",
         "params": json.dumps(
-            {"itemId": unit_id, "id": 0, "callMode": "create", "n": info_name, "v": ""}
+            {
+                "itemId": unit_id,
+                "id": 0,
+                "callMode": "create",
+                "n": info_name,
+                "v": ""
+                }
         ),
         "sid": ssid,
     }
@@ -797,7 +798,9 @@ def create_admin_field(ssid: str, unit_id: int, info_name: str, URL: str) -> lis
 
 @fstart_stop
 @logger.catch
-def check_admin_fields(ssid: str, unit_id: int, info_name: str, URL: str) -> tuple:
+def check_admin_fields(
+    ssid: str, unit_id: int, info_name: str, URL: str
+) -> tuple:
     """Check admin field.
 
         The function looks for the field id.
@@ -863,7 +866,8 @@ def fill_info(
     logger.debug(f"id сессии: {ssid}")
     logger.debug(f"адрес сервера: {URL}")
     logger.debug(f"id объекта: {unit_id}")
-    logger.debug(f"кортеж (id поля, значение поля к заполнению): {field_id_value}")
+    logger.debug(
+        f"кортеж (id поля, значение поля к заполнению): {field_id_value}")
     logger.debug(f"json с текущими значениями полей объекта: {data}")
     info1 = {
         "svc": "item/update_admin_field",
@@ -923,7 +927,8 @@ def fill_info(
 
     param = {
         "svc": "core/batch",
-        "params": json.dumps({"params": [info1, info5, info6, info7], "flags": 0}),
+        "params": json.dumps(
+            {"params": [info1, info5, info6, info7], "flags": 0}),
         "sid": ssid,
     }
     logger.debug(f"параметры запроса: {param}")
@@ -974,99 +979,6 @@ def upd_inn_field(
 
 @fstart_stop
 @logger.catch
-def get_group_to_list(data: list[dict]) -> list:
-    """Group items in a list.
-
-    Collecting unique groups from the dictionary into a list
-
-    Args:
-        data (list): [{ID: 345646, 'Группы': 'group1, group2, group3'}]
-
-    Returns:
-        list: [group1, group2, group3]
-    """
-    logger.debug("параметры на вход: ")
-    logger.debug(f"Список словарей: {data}")
-    set_groups = set()
-    logger.debug("старт цикла for")
-    for i in data:
-        tmp = i.get("Группы").split(",")
-        for j in tmp:
-            set_groups.add(j.strip())
-    logger.debug(f"результат: {set_groups}")
-    logger.debug("функция вернёт в формате списка list(set_groups)")
-    return list(set_groups)
-
-#TODO рассмотреть удаление метода
-@fstart_stop
-@logger.catch
-def get_group_id(ssid: str, data: list, URL: str) -> dict:
-    """Search group id
-
-    The function collects groups into a dictionary in the format
-    {group: id_group, group2: id_group}
-
-    Args:
-        ssid (str): session id
-        data (list): [group1, group2, group3]
-        URL (str): server address
-
-    Returns:
-        dict: {group1: id, group2: id, group3: id}
-    """
-    logger.debug("Параметры на входе:")
-    logger.debug(f"id сессии: {ssid}")
-    logger.debug(f"адрес сервера: {URL}")
-    logger.debug(f"список групп: {data}")
-    id_group = dict()
-    for group in data:
-        try:
-            get_id_group = search_groups_by_name(ssid, group, URL)
-            id_group.update({group: get_id_group.get("items")[0].get("id")})
-        except IndexError:
-            logger.debug(f"группа {group} не найдена")
-            id_group.update({group: -1})
-            continue
-    logger.debug(f"Результат: {id_group}")
-    return id_group
-
-
-@fstart_stop
-@logger.catch
-def add_obj_in_group_dict(
-    ssid: str, group_list: list, input_file: list, URL: str
-) -> dict:
-    """Distribution of objects by groups
-
-    The script runs a loop in a loop, if there is a group in a row, we find
-    the object ID of that row and add it to the list of the current group.
-
-    Args:
-        ssid (str): session id
-        group_list (list): [group1, group2, group3]
-        input_file (list): [{ID: 345646, 'Группы': 'group1, group2, group3'}]
-        URL (str): server address
-
-    Returns:
-        dict: {group1: [obj_id1, obj_id2, obj_id3 etc]}
-    """
-    logger.debug("Параметры на входе:")
-    logger.debug(f"id сессии: {ssid}")
-    logger.debug(f"адрес сервера: {URL}")
-    logger.debug(f"Список из групп: {group_list}")
-    logger.debug(f"Входящий файл: {input_file}")
-    group_dict = defaultdict()
-    for dictionary in input_file:
-        for group in group_list:
-            if group in dictionary.get("Группы"):
-                obj_id = get_object_id(ssid, dictionary.get("ID"), URL)
-                group_dict.setdefault(group, []).append(obj_id)
-    logger.debug(f"Результат: {group_dict}")
-    return group_dict
-
-
-@fstart_stop
-@logger.catch
 def get_user_id(URL: str, TOKEN: str) -> int:
     """Get this user id
 
@@ -1086,7 +998,7 @@ def get_user_id(URL: str, TOKEN: str) -> int:
 
 @fstart_stop
 @logger.catch
-def get_new_token(sid: str, URL: str, app_name="export") -> str:
+def __get_new_token(sid: str, URL: str, app_name="export") -> str:
     """Token creation
 
     Args:
@@ -1118,7 +1030,7 @@ def get_new_token(sid: str, URL: str, app_name="export") -> str:
 
 @fstart_stop
 @logger.catch
-def update_name(sid: str, URL: str, unit_id: int, name: str, fms: int) -> json:
+def update_name(sid: str, URL: str, unit_id: int, name: str) -> json:
     """Update contract name
 
     The function updates the name of the object.
@@ -1128,7 +1040,6 @@ def update_name(sid: str, URL: str, unit_id: int, name: str, fms: int) -> json:
         URL (str): server address
         unit_id (int): object id on wialon
         name (str): new name
-        fms (int): server number
 
     Returns:
         json: {"nm": new_name}
@@ -1138,7 +1049,6 @@ def update_name(sid: str, URL: str, unit_id: int, name: str, fms: int) -> json:
     logger.debug(f"адрес сервера: {URL}")
     logger.debug(f"id объекта: {unit_id}")
     logger.debug(f"новое имя объекта: {name}")
-    logger.debug(f"номер сервера: {fms}")
     param = {
         "svc": "item/update_name",
         "params": json.dumps({"itemId": unit_id, "name": name.strip()}),
@@ -1150,8 +1060,9 @@ def update_name(sid: str, URL: str, unit_id: int, name: str, fms: int) -> json:
     return result.json()
 
 
+@fstart_stop
 @logger.catch
-def id_fields(sid: str, new_id: int, url: str) -> dict:
+def id_fields(sid: str, uid: int, url: str) -> dict:
     """Get id fields.
 
     Helper function.
@@ -1165,64 +1076,83 @@ def id_fields(sid: str, new_id: int, url: str) -> dict:
 
     Args:
         sid (str): current session id
-        new_id (int): unit/object id
+        uid (int): unit/object id
         url (str): server address
 
     Returns:
         map_id (dict): dict with current field name and field id
     """
-    logger.debug(
-        f'старт функции {id_fields.__name__}, получен айди объекта: {new_id}, айди сессии: {sid}')
-    admin_fields = get_admin_fields(sid, new_id, url)
-    custom_fields = get_custom_fields(sid, new_id, url)
+    admin_fields = get_admin_fields(sid, uid, url)
+    custom_fields = get_custom_fields(sid, uid, url)
     map_id = {
-        'geozone_imei': None,
-        'geozone_sim': None,
-        'Vin': None,
-        'Марка': None,
-        'Модель': None,
-        'Пин': None,
-        'Инфо4': None
+        "geozone_imei": None,
+        "geozone_sim": None,
+        "Vin": None,
+        "Марка": None,
+        "Модель": None,
+        "Пин": None,
+        "Инфо4": None,
     }
-    logger.debug(f'получен список админ полей: {admin_fields}')
-    logger.debug(f'получен список произвольных полей: {custom_fields}')
-    logger.debug('старт цикла for для поиска айди админ полей')
+    logger.debug(f"получен список админ полей: {admin_fields}")
+    logger.debug(f"получен список произвольных полей: {custom_fields}")
+    logger.debug("старт цикла for для поиска айди админ полей")
     for field in admin_fields.items():
-        name_field = field[1].get('n')
-        id_field = field[1].get('id')
-        logger.debug(f'имя поля: {name_field}')
-        logger.debug(f'айди поля: {id_field}')
+        name_field = field[1].get("n")
+        id_field = field[1].get("id")
+        logger.debug(f"имя поля: {name_field}")
+        logger.debug(f"айди поля: {id_field}")
         if name_field in map_id.keys():
             map_id.update({name_field: id_field})
-    logger.debug('конец цикла for для поиска айди админ полей')
-    logger.debug('старт цикла for для поиска айди произвольных полей')
+    logger.debug("конец цикла for для поиска айди админ полей")
+    logger.debug("старт цикла for для поиска айди произвольных полей")
     for field in custom_fields.items():
-        name_field = field[1].get('n')
-        id_field = field[1].get('id')
-        logger.debug(f'имя поля: {name_field}')
-        logger.debug(f'айди поля: {id_field}')
+        name_field = field[1].get("n")
+        id_field = field[1].get("id")
+        logger.debug(f"имя поля: {name_field}")
+        logger.debug(f"айди поля: {id_field}")
         if name_field in map_id.keys():
             map_id.update({name_field: id_field})
-    logger.debug('конец цикла for для поиска айди админ полей')
-    logger.debug('старт цикла for, проверка что все нужные айди собраны. Если значение поля None, тода поле создаётся и присваивается id')
+    logger.debug("конец цикла for для поиска айди админ полей")
+    logger.debug(
+        "старт цикла for, проверка что все нужные айди собраны. Если значение поля None, тода поле создаётся и присваивается id"
+    )
     for names, values in map_id.items():
         if values is None:
-            if names == 'Vin' or names == 'Марка' or names == 'Модель':
-                field = create_custom_field(sid, new_id, names, url)
-                map_id.update({names: field[1].get('id')})
+            if names == "Vin" or names == "Марка" or names == "Модель":
+                field = create_custom_field(sid, uid, names, url)
+                map_id.update({names: field[1].get("id")})
             else:
-                field = create_admin_field(sid, new_id, names, url)
-                map_id.update({names: field[1].get('id')})
-    logger.debug('конец цикла for для проверки id')
-    logger.debug(f'Получен результат: {map_id}')
+                field = create_admin_field(sid, uid, names, url)
+                map_id.update({names: field[1].get("id")})
+    logger.debug("конец цикла for для проверки id")
+    logger.debug(f"Получен результат: {map_id}")
     return map_id
 
 
-def delete_object(sid, URL, obj_id, fms) -> dict:
+@fstart_stop
+@logger.catch
+def delete_object(sid: str, URL: str, obj_id: int) -> dict:
+    """Delete one object.
+
+    The function takes the id of an object, finds it and deletes it.
+
+    Args:
+        sid (str): current session id
+        URL (str): server address
+        obj_id (int): unit/object id
+
+    Returns:
+        dict: if object is deleted func returnet empty dict
+    """
+    logger.debug("Параметры на входе:")
+    logger.debug(f"id сессии: {sid}")
+    logger.debug(f"адрес сервера: {URL}")
+    logger.debug(f"id объекта: {obj_id}")
     param = {
         "svc": "item/delete_item",
         "params": json.dumps({"itemId": obj_id}),
-        "sid": sid
+        "sid": sid,
     }
     result = requests.post(URL, data=param)
+    logger.debug(f"результат работы функции: {result}")
     return result.json()
