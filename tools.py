@@ -38,9 +38,7 @@ def send_mail(mail_address: str, subject: str, body: str) -> None:
     """
     time = datetime.now()
     tmp_message = (
-        f"""Subject: {subject}\n\n{time.ctime()}\nОперация завершена:\n{body}""".encode(
-            "UTF-8"
-        )
+        f"Subject: {subject}\n\n{time.ctime()}\nОперация завершена:\n{body}".encode("UTF-8")
     )
     logger.debug("Отправка элетронного письма")
     logger.debug(f"Кому: {mail_address}")
@@ -49,7 +47,8 @@ def send_mail(mail_address: str, subject: str, body: str) -> None:
     try:
         with smtplib.SMTP(host=SMTP_HOST, port=587) as connection:
             connection.starttls()
-            connection.login(user=HOSTING_LOIGN, password=HOSTING_EMAIL_PASSWORD)
+            connection.login(
+                user=HOSTING_LOIGN, password=HOSTING_EMAIL_PASSWORD)
             connection.sendmail(
                 from_addr=HOSTING_EMAIL, to_addrs=mail_address, msg=tmp_message
             )
