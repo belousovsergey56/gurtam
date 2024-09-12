@@ -3,6 +3,7 @@
 This module, have main method.
 Run browser and run all project for export data object to Gurtam.
 """
+
 import os
 from datetime import datetime
 from functools import wraps
@@ -15,28 +16,18 @@ from werkzeug.utils import secure_filename
 
 from config import app, db, log_message, logger, login_manager
 from constant import TOKEN, URL, lgroup
-from forms import SigninForm, UploadFile, UserForm
 from engine import (
-    add_groups,
-    add_obj_in_group_dict,
     check_admin_fields,
-    # create_admin_field,
-    # create_custom_field,
     create_object,
     fill_info,
-    # get_admin_fields,
-    # get_custom_fields,
-    get_group_id,
-    get_group_to_list,
     get_object_id,
     get_ssid,
     group_update,
-    remove_groups,
-    search_groups_by_name,
+    id_fields,
     upd_inn_field,
     update_param,
-    id_fields
 )
+from forms import SigninForm, UploadFile, UserForm
 from models import User
 from tools import (
     get_diff_in_upload_file,
@@ -75,12 +66,14 @@ def admin_only(f) -> str:
     Returns:
         page 403: 403.html
     """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.get_id() != str(1):
-            logger.info(log_message('не хватает прав для входа'))
-            return render_template('403.html')
+            logger.info(log_message("не хватает прав для входа"))
+            return render_template("403.html")
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -97,8 +90,8 @@ def page_unauthorized(e):
     Returns:
         open page 401.html
     """
-    logger.info(log_message('пользователь не авторизован, редирект на 401'))
-    return render_template('401.html'), 401
+    logger.info(log_message("пользователь не авторизован, редирект на 401"))
+    return render_template("401.html"), 401
 
 
 @app.errorhandler(404)
@@ -114,11 +107,11 @@ def page_not_found(e):
     Returns:
         open page 404.html
     """
-    logger.info(log_message('страница не найдена, редирект на 404'))
-    return render_template('404.html'), 404
+    logger.info(log_message("страница не найдена, редирект на 404"))
+    return render_template("404.html"), 404
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route("/", methods=["GET", "POST"])
 @logger.catch
 def sign_in() -> str:
     """Sign in page.
@@ -131,36 +124,30 @@ def sign_in() -> str:
     Returns:
         redirect to /home page
     """
-    logger.info(log_message('вход на страницу авторизации'))
+    logger.info(log_message("вход на страницу авторизации"))
     year = datetime.now().year
     form = SigninForm()
     if form.validate_on_submit():
         user = User.query.filter_by(login=form.login.data).first()
         if not user:
-            logger.info(
-                log_message(f'введён не верный логин {form.login.data}')
-                )
-            flash(message="Не верный логин,\
-                попробуйте снова или обратитесть к своему администратору")
-            return render_template('signin.html', form=form, year=year)
+            logger.info(log_message(f"введён не верный логин {form.login.data}"))
+            flash(
+                message="Не верный логин,\
+                попробуйте снова или обратитесть к своему администратору"
+            )
+            return render_template("signin.html", form=form, year=year)
         if check_password_hash(user.password, form.password.data):
             login_user(user)
-            logger.info(log_message('успешная авторизация'))
-            return redirect(url_for('home'))
+            logger.info(log_message("успешная авторизация"))
+            return redirect(url_for("home"))
         else:
             flash(message="Не верный пароль, попробуйте снова")
-            logger.info(
-                log_message(f'не верный пароль к логину {form.login.data}')
-                )
-            return render_template(
-                "signin.html",
-                form=form,
-                year=year
-            )
-    return render_template('signin.html', form=form, year=year)
+            logger.info(log_message(f"не верный пароль к логину {form.login.data}"))
+            return render_template("signin.html", form=form, year=year)
+    return render_template("signin.html", form=form, year=year)
 
 
-@app.route('/home')
+@app.route("/home")
 @login_required
 @logger.catch
 def home() -> str:
@@ -172,11 +159,11 @@ def home() -> str:
         displays the home page of the application
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
-    logger.info(log_message('основная страница'))
-    return render_template('index.html', user=user)
+    logger.info(log_message("основная страница"))
+    return render_template("index.html", user=user)
 
 
-@app.route('/owners', methods=['GET', 'POST'])
+@app.route("/owners", methods=["GET", "POST"])
 @login_required
 @admin_only
 @logger.catch
@@ -190,13 +177,13 @@ def admin():
         render admin.html
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
-    logger.info(log_message('админ панель'))
+    logger.info(log_message("админ панель"))
     database = User.query.all()
     form = UserForm()
-    return render_template('admin.html', form=form, user=user, db=database)
+    return render_template("admin.html", form=form, user=user, db=database)
 
 
-@app.route('/create_user', methods=['POST', 'GET'])
+@app.route("/create_user", methods=["POST", "GET"])
 @login_required
 @logger.catch
 def create_user():
@@ -210,35 +197,43 @@ def create_user():
     """
     form = UserForm()
     leasing = User.query.filter_by(id=current_user.get_id()).first()
-    logger.info(log_message('создание пользователя'))
+    logger.info(log_message("создание пользователя"))
     form.group.choices = lgroup.get(leasing.group)
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data).first():
-            logger.info(log_message('пользователь уже существует!!!'))
-            logger.info(log_message(f'введены данные: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data}, права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}'))
+            logger.info(log_message("пользователь уже существует!!!"))
+            logger.info(
+                log_message(
+                    f"введены данные: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data}, права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}"
+                )
+            )
             flash(
                 message="""Пользователь с такой почтой уже существует,
-                 попробуйте ввести новую почту""")
-            return redirect(url_for('create_user'))
+                 попробуйте ввести новую почту"""
+            )
+            return redirect(url_for("create_user"))
         new_user = User(
             login=form.login.data,
             email=form.email.data,
-            password=generate_password_hash(
-                form.password.data, salt_length=13),
+            password=generate_password_hash(form.password.data, salt_length=13),
             group=form.group.data,
             access_create=form.access_create.data,
             access_remove=form.access_remove.data,
-            access_edit=form.access_edit.data
+            access_edit=form.access_edit.data,
         )
-        logger.info(log_message('пользователь успешно создан'))
-        logger.info(log_message(f'введены данные: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data},права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}'))
+        logger.info(log_message("пользователь успешно создан"))
+        logger.info(
+            log_message(
+                f"введены данные: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data},права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}"
+            )
+        )
         db.session.add(new_user)
         db.session.commit()
-        return redirect(url_for('admin'))
-    return render_template('create_user.html', form=form, user=leasing)
+        return redirect(url_for("admin"))
+    return render_template("create_user.html", form=form, user=leasing)
 
 
-@app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@app.route("/edit_user/<int:user_id>", methods=["GET", "POST"])
 @login_required
 @logger.catch
 def edit_user(user_id: int):
@@ -255,8 +250,7 @@ def edit_user(user_id: int):
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     edit_user = User.query.filter_by(id=user_id).first()
-    logger.info(
-        log_message(f'изменение данных пользователя {edit_user.login}'))
+    logger.info(log_message(f"изменение данных пользователя {edit_user.login}"))
     form = UserForm(
         login=edit_user.login,
         email=edit_user.email,
@@ -264,7 +258,7 @@ def edit_user(user_id: int):
         password=edit_user.password,
         access_create=edit_user.access_create,
         access_remove=edit_user.access_remove,
-        access_edit=edit_user.access_edit
+        access_edit=edit_user.access_edit,
     )
     form.group.choices = lgroup.get(user.group)
     if form.validate_on_submit():
@@ -276,26 +270,30 @@ def edit_user(user_id: int):
             edit_user.access_remove = edit_user.access_remove
             edit_user.access_edit = edit_user.access_edit
             logger.info(
-                log_message(f'данные изменены: права на создание: {edit_user.access_create}, права на удаление:{edit_user.access_remove}, права на изменение: {edit_user.access_edit}')
+                log_message(
+                    f"данные изменены: права на создание: {edit_user.access_create}, права на удаление:{edit_user.access_remove}, права на изменение: {edit_user.access_edit}"
                 )
+            )
         else:
             edit_user.access_create = form.access_create.data
             edit_user.access_remove = form.access_remove.data
             edit_user.access_edit = form.access_edit.data
             logger.info(
-                log_message(f'данные изменены: права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}'))
-        logger.info(log_message(f'данные изменены: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data}'))
+                log_message(
+                    f"данные изменены: права на создание: {form.access_create.data}, права на удаление: {form.access_remove.data}, права на изменение: {form.access_edit.data}"
+                )
+            )
+        logger.info(
+            log_message(
+                f"данные изменены: логин: {form.login.data}, почта: {form.email.data}, группа: {form.group.data}"
+            )
+        )
         db.session.commit()
-        return redirect(url_for('admin'))
-    return render_template(
-        'edit_user.html',
-        form=form,
-        user_id=edit_user.id,
-        user=user
-    )
+        return redirect(url_for("admin"))
+    return render_template("edit_user.html", form=form, user_id=edit_user.id, user=user)
 
 
-@app.route('/edit_password/<int:user_id>', methods=['GET', 'POST'])
+@app.route("/edit_password/<int:user_id>", methods=["GET", "POST"])
 @login_required
 @logger.catch
 def edit_password(user_id: int):
@@ -311,8 +309,7 @@ def edit_password(user_id: int):
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     edit_password = User.query.filter_by(id=user_id).first()
-    logger.info(
-        log_message(f'изменение пароля пользователя: {edit_password.login}'))
+    logger.info(log_message(f"изменение пароля пользователя: {edit_password.login}"))
     form = UserForm(
         login=edit_password.login,
         email=edit_password.email,
@@ -320,24 +317,22 @@ def edit_password(user_id: int):
         password=edit_password.password,
         access_create=edit_password.access_create,
         access_remove=edit_password.access_remove,
-        access_edit=edit_password.access_edit
+        access_edit=edit_password.access_edit,
     )
     form.group.choices = lgroup.get(user.group)
     if form.validate_on_submit():
         edit_password.password = generate_password_hash(
-            form.password.data, salt_length=13)
+            form.password.data, salt_length=13
+        )
         db.session.commit()
-        logger.info(log_message('пароль успешно изменён'))
-        return redirect(url_for('admin'))
+        logger.info(log_message("пароль успешно изменён"))
+        return redirect(url_for("admin"))
     return render_template(
-        'edit_password.html',
-        form=form,
-        user_id=edit_password.id,
-        user=user
+        "edit_password.html", form=form, user_id=edit_password.id, user=user
     )
 
 
-@app.route('/remove_user/<int:user_id>')
+@app.route("/remove_user/<int:user_id>")
 @login_required
 @logger.catch
 def remove_user(user_id: int):
@@ -354,84 +349,13 @@ def remove_user(user_id: int):
     teacher_to_delete = User.query.get(user_id)
     login = teacher_to_delete.login
     email = teacher_to_delete.email
-    logger.info(
-        log_message(
-            f'пользователь "{login}" - "{email}" удалён'
-            ))
+    logger.info(log_message(f'пользователь "{login}" - "{email}" удалён'))
     db.session.delete(teacher_to_delete)
     db.session.commit()
-    return redirect(url_for('admin'))
+    return redirect(url_for("admin"))
 
 
-# @logger.catch
-# def id_fields(sid: str, new_id: int, url: str) -> dict:
-#     """Get id fields.
-
-#     Helper function.
-#     Create map id fields.
-#     Search field id and add to dict.
-#     Search custom and admin fields.
-#     If id field not found, go to create field and add new id to dict.
-#     Them return dict with field name and current id.
-#     Current name and id:
-#     geozone_sim, geozone_imei, Vin, Марка, Модель, Пин, Инфо4
-
-#     Args:
-#         sid (str): current session id
-#         new_id (int): unit/object id
-#         url (str): server address
-
-#     Returns:
-#         map_id (dict): dict with current field name and field id
-#     """
-#     logger.debug(
-#         f'старт функции {id_fields.__name__}, получен айди объекта: {new_id}, айди сессии: {sid}')
-#     admin_fields = get_admin_fields(sid, new_id, url)
-#     custom_fields = get_custom_fields(sid, new_id, url)
-#     map_id = {
-#         'geozone_imei': None,
-#         'geozone_sim': None,
-#         'Vin': None,
-#         'Марка': None,
-#         'Модель': None,
-#         'Пин': None,
-#         'Инфо4': None
-#     }
-#     logger.debug(f'получен список админ полей: {admin_fields}')
-#     logger.debug(f'получен список произвольных полей: {custom_fields}')
-#     logger.debug('старт цикла for для поиска айди админ полей')
-#     for field in admin_fields.items():
-#         name_field = field[1].get('n')
-#         id_field = field[1].get('id')
-#         logger.debug(f'имя поля: {name_field}')
-#         logger.debug(f'айди поля: {id_field}')
-#         if name_field in map_id.keys():
-#             map_id.update({name_field: id_field})
-#     logger.debug('конец цикла for для поиска айди админ полей')
-#     logger.debug('старт цикла for для поиска айди произвольных полей')
-#     for field in custom_fields.items():
-#         name_field = field[1].get('n')
-#         id_field = field[1].get('id')
-#         logger.debug(f'имя поля: {name_field}')
-#         logger.debug(f'айди поля: {id_field}')
-#         if name_field in map_id.keys():
-#             map_id.update({name_field: id_field})
-#     logger.debug('конец цикла for для поиска айди админ полей')
-#     logger.debug('старт цикла for, проверка что все нужные айди собраны. Если значение поля None, тода поле создаётся и присваивается id')
-#     for names, values in map_id.items():
-#         if values is None:
-#             if names == 'Vin' or names == 'Марка' or names == 'Модель':
-#                 field = create_custom_field(sid, new_id, names, url)
-#                 map_id.update({names: field[1].get('id')})
-#             else:
-#                 field = create_admin_field(sid, new_id, names, url)
-#                 map_id.update({names: field[1].get('id')})
-#     logger.debug('конец цикла for для проверки id')
-#     logger.debug(f'Получен результат: {map_id}')
-#     return map_id
-
-
-@app.route('/order')
+@app.route("/order")
 @login_required
 @logger.catch
 def order():
@@ -442,14 +366,12 @@ def order():
     Returns:
         display order.html
     """
-    logger.info(
-        log_message('процесс завершён, редирект на страницу с отчётом'))
-    logger.debug(
-        log_message('процесс завершён, редирект на страницу с отчётом'))
-    return render_template('order.html')
+    logger.info(log_message("процесс завершён, редирект на страницу с отчётом"))
+    logger.debug(log_message("процесс завершён, редирект на страницу с отчётом"))
+    return render_template("order.html")
 
 
-@app.route('/export', methods=['GET', 'POST'])
+@app.route("/export", methods=["GET", "POST"])
 @login_required
 @logger.catch
 def export_fms4():
@@ -471,296 +393,108 @@ def export_fms4():
         display page export_fms4.html
     """
     form = UploadFile()
-    logger.info(
-        log_message(f'экспорт на Виалон FMS {form.fms.data}'))
+    logger.info(log_message(f"экспорт на Виалон FMS {form.fms.data}"))
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
         logger.info(filename)
         if not is_xlsx(filename):
             flash(message="""Ошибка импорта. Файл не в формате .XLSX""")
             logger.info(
-                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
+                log_message("данные в загружаемом файле на соответсвуют формату xlsx.")
+            )
             return render_template(
-                "export_fms4.html",
-                form=form,
-                logged_in=current_user.is_authenticated
+                "export_fms4.html", form=form, logged_in=current_user.is_authenticated
             )
         logger.info(filename)
-        form.export_file.data.save('upload/{0}'.format(filename))
-        file_path = xls_to_json('upload/{0}'.format(filename))
+        form.export_file.data.save("upload/{0}".format(filename))
+        file_path = xls_to_json("upload/{0}".format(filename))
         import_list = read_json(file_path)
-        headers = {'Инфо4', 'ДЛ', 'Пин'}
-        
+        headers = {"Инфо4", "ДЛ", "Пин"}
+
         if len(import_list) < 1:
             flash(message="Файл пуст")
-            logger.info(log_message('Файл пустой'))
-            os.remove(f'upload/{filename}')
-            os.remove(f'{file_path}.json')
+            logger.info(log_message("Файл пустой"))
+            os.remove(f"upload/{filename}")
+            os.remove(f"{file_path}.json")
             return render_template(
-                "export_fms4.html",
-                form=form,
-                logged_in=current_user.is_authenticated
+                "export_fms4.html", form=form, logged_in=current_user.is_authenticated
             )
 
         for header in headers:
             if header not in import_list[0]:
-                flash(message="""Ошибка иморта. Необходимые данные не находятся на
-             первом листе или не соответвуют шаблону""")
+                flash(
+                    message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе или не соответвуют шаблону"""
+                )
                 logger.info(
-                log_message('данные в загружаемом файле на соответсвуют необходимому формату. Загружаемый файл удалён.'))
-                os.remove(f'upload/{filename}')
-                os.remove(f'{file_path}.json')
+                    log_message(
+                        "данные в загружаемом файле на соответсвуют необходимому формату. Загружаемый файл удалён."
+                    )
+                )
+                os.remove(f"upload/{filename}")
+                os.remove(f"{file_path}.json")
                 return render_template(
-                "export_fms4.html",
-                form=form,
-                logged_in=current_user.is_authenticated
-            )
-        
+                    "export_fms4.html",
+                    form=form,
+                    logged_in=current_user.is_authenticated,
+                )
+
         fms = int(form.fms.data)
-        
+
         url = URL[fms]
         sid = get_ssid(url, TOKEN[fms])
         start = datetime.now()
         counter = 0
-        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'w') as log:
-            log.write(f'Время начала: {start.ctime()}\n')
+        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', "w") as log:
+            log.write(f"Время начала: {start.ctime()}\n")
             log.write(f'экспорт по компании: {import_list[0].get("ЛИЗИНГ")}\n')
-            log.write('Не был найден на виалон, возможно мастер не звонил:\n')
+            log.write("Не был найден на виалон, возможно мастер не звонил:\n")
         logger.info(
-            log_message(f'начало загрузки на виалон {import_list[0].get("ЛИЗИНГ")}'))
+            log_message(f'начало загрузки на виалон {import_list[0].get("ЛИЗИНГ")}')
+        )
         for unit in import_list:
-            unit_id = get_object_id(sid, unit.get('geozone_imei'), url)
-            unit.update({'uid': unit_id})
+            unit_id = get_object_id(sid, unit.get("geozone_imei"), url)
+            unit.update({"uid": unit_id})
             logger.info(
-                log_message(
-                    f'Обновление полей объекта по ПИН {unit.get("Пин")}:{unit}'))
+                log_message(f'Обновление полей объекта по ПИН {unit.get("Пин")}:{unit}')
+            )
             if unit_id == -1:
                 try:
-                    new_id = create_object(sid, unit_id, unit, url, fms)
-                    unit.update({'uid': new_id})
-                    update_param(
-                        sid,
-                        new_id,
-                        unit,
-                        id_fields(sid, new_id, url),
-                        url
-                        )
+                    new_id = create_object(sid, unit, url, fms)
+                    unit.update({"uid": new_id})
+                    update_param(sid, new_id, unit, id_fields(sid, new_id, url), url)
                     counter += 1
                 except AttributeError:
                     counter += 1
             else:
-                update_param(
-                    sid,
-                    unit_id,
-                    unit,
-                    id_fields(sid, unit_id, url),
-                    url
-                    )
+                update_param(sid, unit_id, unit, id_fields(sid, unit_id, url), url)
                 counter += 1
-        logger.info(log_message('загрузка завершена'))
-        logger.info(log_message('распределение объектов по группам'))
+        logger.info(log_message("загрузка завершена"))
+        logger.info(log_message("распределение объектов по группам"))
         group_update(sid, import_list, url)
-        logger.info(log_message('объекты распределены'))
-        logger.info(log_message('загрузка завершена'))
+        logger.info(log_message("объекты распределены"))
+        logger.info(log_message("загрузка завершена"))
         endtime = datetime.now()
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
-        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'a') as log:
-            log.write(f'Время окончания: {endtime.ctime()}\n')
-            log.write(f'Ушло времени на залив данных: {delta_time}\n')
-            log.write(f'Обработано строк: {counter}\n')
-            logger.info(log_message(f'обработано строк {counter}'))
-        os.remove(f'upload/{filename}')
-        os.remove(f'{file_path}.json')
-        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', 'r') as report:
+        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', "a") as log:
+            log.write(f"Время окончания: {endtime.ctime()}\n")
+            log.write(f"Ушло времени на залив данных: {delta_time}\n")
+            log.write(f"Обработано строк: {counter}\n")
+            logger.info(log_message(f"обработано строк {counter}"))
+        os.remove(f"upload/{filename}")
+        os.remove(f"{file_path}.json")
+        with open(f'logging/{import_list[0].get("ЛИЗИНГ")}', "r") as report:
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'экспорт на виалон', order)
-            logger.info(
-                log_message(f'отчёт отправлен на почту "{user.email}"'))
+            send_mail(user.email, "экспорт на виалон", order)
+            logger.info(log_message(f'отчёт отправлен на почту "{user.email}"'))
             print(fms)
-        return render_template('order.html', order=order.split('\n'))
-    return render_template('export_fms4.html', form=form)
+        return render_template("order.html", order=order.split("\n"))
+    return render_template("export_fms4.html", form=form)
 
 
-@app.route('/update_groups', methods=['GET', 'POST'])
-@login_required
-@logger.catch
-def update_group_fms4():
-    """Group distribution
-    
-    The script accepts as input a file in the format 
-    {ID: 1234567, Группы: 1Эволюция, 1Эволюция Абхазия, 1Эволюция Азербайджан, 1Эволюция Армения}
-    three variables are created:
-    1. group_list = [1Эволюция, 1Эволюция Абхазия, 1Эволюция Азербайджан, 1Эволюция Армения]
-    2. group_id = {1Эволюция: id_group, 1Эволюция Абхазия: id_group}
-    3. id objects to be added = {1Эволюция: [obj_id, obj_id], 1Эволюция Абхазия: [obj_id, obj_id]}
-    Going in a loop through the list of groups, add objects
-    
-    Returns:
-        display page order.html
-    """    
-    form = UploadFile()
-    logger.info(
-        log_message('Распределение объектов по группам'))
-    if form.validate_on_submit():
-        filename = secure_filename(form.export_file.data.filename)
-        if not is_xlsx(filename):
-            flash(message="""Ошибка экспорта. Файл не в формате .XLSX""")
-            logger.info(
-                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
-            return render_template(
-                "update_groups.html",
-                form=form,
-                logged_in=current_user.is_authenticated
-            )
-        form.export_file.data.save('upload/{0}'.format(filename))
-        file_path = xls_to_json('upload/{0}'.format(filename))
-        input_file = read_json(file_path)
-        if 'ID' not in input_file[0] and 'Группы' not in input_file[0]:
-            flash(message="""Ошибка экспорта. Необходимые данные не находятся на первом листе или не соответвуют шаблону""")
-            os.remove(f'upload/{filename}')
-            os.remove(f'{file_path}.json')
-            logger.info(log_message('данные в файле не соответсвуют шаблону'))
-            return render_template(
-                "update_groups.html",
-                form=form,
-                logged_in=current_user.is_authenticated
-            )
-        sid = get_ssid()
-        start = datetime.now()
-        logger.info(log_message('старт обработки объектов'))
-        with open('logging/update_groups.txt', 'w') as log:
-            log.write(f'Время начала: {start.ctime()}\n')
-            log.write('Распределение объектов по группам.\n')
-        all_groups = get_group_to_list(input_file)
-        dict_group_id = get_group_id(sid, all_groups)
-        object_list_in_group = add_obj_in_group_dict(
-            sid,
-            all_groups,
-            input_file
-            )
-        count_ojects = len(input_file)
-        count_group = len(all_groups)
-        for group in all_groups:
-            if dict_group_id.get(group) == -1:
-                with open('logging/update_groups.txt', 'a') as log:
-                    log.write(f'{group} - группа в системе не найдена\n')
-                    logger.info(log_message(f'группа не найдена {group}'))
-            else:
-                actual_obj_in_group = search_groups_by_name(sid, group).get('items')[0].get('u')
-                add_groups(
-                    sid,
-                    dict_group_id.get(group),
-                    actual_obj_in_group,
-                    object_list_in_group.get(group)
-                    )
-        logger.info(log_message('Распределение объектов завершено'))
-        endtime = datetime.now()
-        delta_time = endtime - start
-        delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
-        
-        with open('logging/update_groups.txt', 'a') as log:
-            log.write(f'Время окончания: {endtime.ctime()}\n')
-            log.write(f'Время работы составило: {delta_time}\n')
-            log.write(f'Обработано строк: {count_ojects}\n')
-            log.write(f'Общее количество групп: {count_group}\n')
-            logger.info(log_message(f'Обработано строк: {count_ojects}'))
-            logger.info(log_message(f'Общее количество групп: {count_group}'))
-        os.remove(f'upload/{filename}')
-        os.remove(f'{file_path}.json')
-        
-        with open('logging/update_groups.txt', 'r') as report:
-            order = report.read()
-            user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'Распределение объектов по группам', order)
-            logger.info(
-                log_message(f'отчёт отправлена на почту "{user.email}"'))
-        return render_template('order.html', order=order.split('\n'))
-    return render_template('update_groups.html', form=form)
-
-
-@app.route('/remove_groups', methods=['GET', 'POST'])
-@login_required
-@logger.catch
-def remove_group():
-    """Remove object from group.
-
-    Access to the page to remove objects from groups.
-    The user uploads an excel file with two columns IMEI and GROUP,
-    the function reads it, finds objects by IMEI id and removes these
-    objects from groups.
-
-    Returns:
-        display page remove_groups.html
-    """
-    form = UploadFile()
-    logger.info(
-        log_message('удалить объекты из групп по маске'))
-    if form.validate_on_submit():
-        filename = secure_filename(form.export_file.data.filename)
-        if not is_xlsx(filename):
-            flash(message="""Ошибка экспорта. Файл не в формате .XLSX""")
-            logger.info(
-                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
-            return render_template(
-                "remove_groups.html",
-                form=form,
-                logged_in=current_user.is_authenticated
-            )
-        form.export_file.data.save('upload/{0}'.format(filename))
-        file_path = xls_to_json('upload/{0}'.format(filename))
-        imei_list = read_json(file_path)
-
-        if 'ГРУППА' not in imei_list[0] and 'ИМЕЙ' not in imei_list[0]:
-            flash(message="""Ошибка экспорта. Необходимые данные не находятся на
-             первом листе, не соответвуют шаблону или не в формате .XLSX""")
-            os.remove(f'upload/{filename}')
-            os.remove(f'{file_path}.json')
-            logger.info(log_message('данные в файле не соответсвуют шаблону'))
-            return render_template(
-                "remove_groups.html",
-                form=form,
-                logged_in=current_user.is_authenticated
-            )
-
-        sid = get_ssid()
-        start = datetime.now()
-        count_lines = len(imei_list)
-        logger.info(log_message('старт обработки списка объектов'))
-        with open('logging/remove_group_report.log', 'w') as log:
-            log.write(f'Время начала: {start.ctime()}\n')
-            log.write(f"""\nУдаление объектов из группы по маске
-             - {imei_list[0].get("ГРУППА")}\n""")
-            log.write('Не были найдены на виалон:\n')
-        remove_groups(sid, imei_list)
-
-        logger.info(
-            log_message(f'объекты удалены из групп по маске {imei_list[0].get("ГРУППА")}'))
-        endtime = datetime.now()
-        delta_time = endtime - start
-        delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
-
-        with open('logging/remove_group_report.log', 'a') as log:
-            log.write(f'\nВремя окончания: {endtime.ctime()}\n')
-            log.write(
-                f'Ушло времени на удаление объектов из групп: {delta_time}\n')
-            log.write(f'Колличество загруженных строк : {count_lines}\n')
-            logger.info(log_message(f'обработано строк {count_lines}'))
-        os.remove(f'upload/{filename}')
-        os.remove(f'{file_path}.json')
-
-        with open('logging/remove_group_report.log', 'r') as report:
-            order = report.read()
-            user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'Удаление объектов из групп', order)
-            logger.info(
-                log_message(f'отчёт отправлена на почту "{user.email}"'))
-        return render_template('order.html', order=order.split('\n'))
-    return render_template('remove_groups.html', form=form)
-
-
-@app.route('/update_info', methods=['GET', 'POST'])
+@app.route("/update_info", methods=["GET", "POST"])
 @login_required
 @logger.catch
 def update_info():
@@ -781,91 +515,90 @@ def update_info():
         display update_info.html then the report page order.html
     """
     form = UploadFile()
-    logger.info(log_message('обновление полей инфо Каркаде'))
+    logger.info(log_message("обновление полей инфо Каркаде"))
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
         if not is_xlsx(filename):
             flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
             logger.info(
-                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
-            return render_template(
-                "update_info.html",
-                form=form,
-                logged_in=current_user.is_authenticated
+                log_message("данные в загружаемом файле на соответсвуют формату xlsx.")
             )
-        form.export_file.data.save('upload/{0}'.format(filename))
-        file_path = xls_to_json('upload/{0}'.format(filename))
+            return render_template(
+                "update_info.html", form=form, logged_in=current_user.is_authenticated
+            )
+        form.export_file.data.save("upload/{0}".format(filename))
+        file_path = xls_to_json("upload/{0}".format(filename))
         new_file = read_json(file_path)
         file_with_data = get_diff_in_upload_file(new_file)
-        if "РДДБ" not in file_with_data[0] and "ИНН" not in file_with_data[0] and "Специалист" not in file_with_data[0]:
-            flash(message="""Ошибка иморта. Необходимые данные не находятся на
-             первом листе, не соответвуют шаблону или не в формате .XLSX""")
-            os.remove(f'upload/{filename}')
-            os.remove(f'{file_path}.json')
-            logger.info(log_message('данные в файле не соответсвуют формату'))
-            return render_template(
-                "update_info.html",
-                form=form,
-                logged_in=current_user.is_authenticated
+        if (
+            "РДДБ" not in file_with_data[0]
+            and "ИНН" not in file_with_data[0]
+            and "Специалист" not in file_with_data[0]
+        ):
+            flash(
+                message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе, не соответвуют шаблону или не в формате .XLSX"""
             )
-        sid = get_ssid()
+            os.remove(f"upload/{filename}")
+            os.remove(f"{file_path}.json")
+            logger.info(log_message("данные в файле не соответсвуют формату"))
+            return render_template(
+                "update_info.html", form=form, logged_in=current_user.is_authenticated
+            )
+
+        fms = int(form.fms.data)
+
+        url = URL[fms]
+        sid = get_ssid(url, TOKEN[fms])
         counter = 0
         length = len(file_with_data)
         start = datetime.now()
-        logger.info(log_message('старт обработки списка'))
-        with open('logging/update_info.log', 'w') as log:
-            log.write(f'Начало загрузки: {start.ctime()}\n')
+        logger.info(log_message("старт обработки списка"))
+        with open("logging/update_info.log", "w") as log:
+            log.write(f"Начало загрузки: {start.ctime()}\n")
         for unit in file_with_data:
             try:
-                unit_id = get_object_id(sid, unit.get('IMEI'))
+                unit_id = get_object_id(sid, unit.get("IMEI"), url)
             except TypeError:
-                with open('logging/update_info.log', 'a') as log:
-                    log.write(
-                        f'{unit.get("IMEI")} не верный формат или не найден')
+                with open("logging/update_info.log", "a") as log:
+                    log.write(f'{unit.get("IMEI")} не верный формат или не найден')
                 continue
             if unit_id == -1:
-                with open('logging/update_info.log', 'a') as log:
-                    log.write('{0} - не найден\n'.format(unit.get('IMEI')))
+                with open("logging/update_info.log", "a") as log:
+                    log.write("{0} - не найден\n".format(unit.get("IMEI")))
                     counter += 1
             else:
-                id_info1 = check_admin_fields(sid, unit_id, 'Инфо1')
-                id_info5 = check_admin_fields(sid, unit_id, 'Инфо5')
-                id_info6 = check_admin_fields(sid, unit_id, 'Инфо6')
-                id_info7 = check_admin_fields(sid, unit_id, 'Инфо7')
-                id_value_list = [
-                    id_info1,
-                    id_info5,
-                    id_info6,
-                    id_info7
-                ]
-                fill_info(sid, unit_id, id_value_list, unit)
-                logger.info(
-                    log_message(f'{unit.get("IMEI")} - {id_value_list}'))
-                logger.debug(f'Готово {round(counter / length*100, 2)} %')
+                id_info1 = check_admin_fields(sid, unit_id, "Инфо1", url)
+                id_info5 = check_admin_fields(sid, unit_id, "Инфо5", url)
+                id_info6 = check_admin_fields(sid, unit_id, "Инфо6", url)
+                id_info7 = check_admin_fields(sid, unit_id, "Инфо7", url)
+                id_value_list = [id_info1, id_info5, id_info6, id_info7]
+                fill_info(sid, unit_id, id_value_list, unit, url)
+                logger.info(log_message(f'{unit.get("IMEI")} - {id_value_list}'))
+                logger.debug(f"Готово {round(counter / length*100, 2)} %")
                 counter += 1
         endtime = datetime.now()
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
-        logger.info(log_message('обновление полей инфо завершено'))
-        with open('logging/update_info.log', 'a') as log:
-            log.write(f'Окончание экспорта данных: {endtime.ctime()}\n')
-            log.write(f'Ушло времени на залив данных: {delta_time}\n')
-            log.write(f'Всего строк обработано: {counter} из {length}\n')
-            logger.info(log_message(f'обработано строк {counter} из {length}'))
+        logger.info(log_message("обновление полей инфо завершено"))
+        with open("logging/update_info.log", "a") as log:
+            log.write(f"Окончание экспорта данных: {endtime.ctime()}\n")
+            log.write(f"Ушло времени на залив данных: {delta_time}\n")
+            log.write(f"Всего строк обработано: {counter} из {length}\n")
+            logger.info(log_message(f"обработано строк {counter} из {length}"))
         update_bd(new_file)
-        os.remove(f'upload/{filename}')
-        os.remove(f'{file_path}.json')
-        with open('logging/update_info.log', 'r') as report:
+        os.remove(f"upload/{filename}")
+        os.remove(f"{file_path}.json")
+        with open("logging/update_info.log", "r") as report:
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'РДДБ обновление полей ИНФО', order)
-            logger.info(
-                log_message(f'отчёт отправлен на почту "{user.email}"'))
-        return render_template('order.html', order=order.split('\n'))
-    return render_template('update_info.html', form=form)
+            send_mail(user.email, "РДДБ обновление полей ИНФО", order)
+            logger.info(log_message(f'отчёт отправлен на почту "{user.email}"'))
+        return render_template("order.html", order=order.split("\n"))
+    return render_template("update_info.html", form=form)
 
 
-@app.route('/fill_inn', methods=['GET', 'POST'])
+@app.route("/fill_inn", methods=["GET", "POST"])
 @login_required
 @logger.catch
 def fill_inn():
@@ -881,87 +614,81 @@ def fill_inn():
     Returns:
         display fill_inn.html then the report page order.html
     """
-    logger.info(log_message('обновить поле ИНН ГПБАЛ'))
+    logger.info(log_message("обновить поле ИНН ГПБАЛ"))
     form = UploadFile()
     if form.validate_on_submit():
         filename = secure_filename(form.export_file.data.filename)
         if not is_xlsx(filename):
             flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
             logger.info(
-                log_message('данные в загружаемом файле на соответсвуют формату xlsx.'))
-            return render_template(
-                "fill_inn.html",
-                form=form,
-                logged_in=current_user.is_authenticated
+                log_message("данные в загружаемом файле на соответсвуют формату xlsx.")
             )
-        form.export_file.data.save('upload/{0}'.format(filename))
-        file_path = xls_to_json('upload/{0}'.format(filename))
+            return render_template(
+                "fill_inn.html", form=form, logged_in=current_user.is_authenticated
+            )
+        form.export_file.data.save("upload/{0}".format(filename))
+        file_path = xls_to_json("upload/{0}".format(filename))
         new_file = read_json(file_path)
-        if 'ИНН' not in new_file[0] and 'IMEI' not in new_file[0]:
-            flash(message="""Ошибка иморта. Необходимые данные не находятся на
-             первом листе, не соответвуют шаблону или не в формате .XLSX""")
-            os.remove(f'upload/{filename}')
-            os.remove(f'{file_path}.json')
-            logger.info(log_message('данные в файле не соответвуют формату'))
-            return render_template(
-                "fill_inn.html",
-                form=form,
-                logged_in=current_user.is_authenticated
+        if "ИНН" not in new_file[0] and "IMEI" not in new_file[0]:
+            flash(
+                message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе, не соответвуют шаблону или не в формате .XLSX"""
             )
-        sid = get_ssid()
+            os.remove(f"upload/{filename}")
+            os.remove(f"{file_path}.json")
+            logger.info(log_message("данные в файле не соответвуют формату"))
+            return render_template(
+                "fill_inn.html", form=form, logged_in=current_user.is_authenticated
+            )
+        fms = int(form.fms.data)
+
+        url = URL[fms]
+        sid = get_ssid(url, TOKEN[fms])
         counter = 0
         length = len(new_file)
         start = datetime.now()
-        logger.info(log_message('старт обновления полей ИНН'))
-        with open('logging/update_inn.log', 'w') as log:
-            log.write(f'Начало загрузки: {start.ctime()}\n')
+        logger.info(log_message("старт обновления полей ИНН"))
+        with open("logging/update_inn.log", "w") as log:
+            log.write(f"Начало загрузки: {start.ctime()}\n")
         for unit in new_file:
             print(unit)
             try:
-                unit_id = get_object_id(sid, int(unit.get('IMEI')))
+                unit_id = get_object_id(sid, int(unit.get("IMEI")), url)
             except TypeError:
-                with open('logging/update_inn.log', 'a') as log:
-                    print('except but have ifelse bloco..')
-                    log.write(
-                        f'{unit.get("IMEI")} не верный формат или не найден')
+                with open("logging/update_inn.log", "a") as log:
+                    print("except but have ifelse bloco..")
+                    log.write(f'{unit.get("IMEI")} не верный формат или не найден')
                 continue
             if unit_id == -1:
-                with open('logging/update_inn.log', 'a') as log:
-                    log.write('{0} - не найден\n'.format(unit.get('ИМЕЙ')))
+                with open("logging/update_inn.log", "a") as log:
+                    log.write("{0} - не найден\n".format(unit.get("ИМЕЙ")))
                     counter += 1
             else:
-                id_inn_field = check_admin_fields(sid, unit_id, 'ИНН')
-                upd_inn_field(
-                    sid,
-                    unit_id,
-                    id_inn_field[0],
-                    unit.get('ИНН')
-                )
+                id_inn_field = check_admin_fields(sid, unit_id, "ИНН", url)
+                upd_inn_field(sid, unit_id, id_inn_field[0], unit.get("ИНН"), url)
                 counter += 1
-                logger.info(
-                    log_message(f'{unit.get("IMEI")} - {unit.get("ИНН")}'))
+                logger.info(log_message(f'{unit.get("IMEI")} - {unit.get("ИНН")}'))
         endtime = datetime.now()
-        logger.info(log_message('обновление ИНН завершено'))
+        logger.info(log_message("обновление ИНН завершено"))
         delta_time = endtime - start
         delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
-        with open('logging/update_inn.log', 'a') as log:
-            log.write(f'Окончание экспорта данных: {endtime.ctime()}\n')
-            log.write(f'Ушло времени на залив данных: {delta_time}\n')
-            log.write(f'Всего строк обработано: {counter} из {length}\n')
-            logger.info(log_message(f'обработано строк {counter} из {length}'))
-        os.remove(f'upload/{filename}')
-        os.remove(f'{file_path}.json')
-        with open('logging/update_inn.log', 'r') as report:
+        with open("logging/update_inn.log", "a") as log:
+            log.write(f"Окончание экспорта данных: {endtime.ctime()}\n")
+            log.write(f"Ушло времени на залив данных: {delta_time}\n")
+            log.write(f"Всего строк обработано: {counter} из {length}\n")
+            logger.info(log_message(f"обработано строк {counter} из {length}"))
+        os.remove(f"upload/{filename}")
+        os.remove(f"{file_path}.json")
+        with open("logging/update_inn.log", "r") as report:
             order = report.read()
             user = User.query.filter_by(id=current_user.get_id()).first()
-            send_mail(user.email, 'ГПБАЛ обновление полей ИНН', order)
-            logger.info(
-                log_message(f'отчёт отправлен на почту "{user.email}"'))
-        return render_template('order.html', order=order.split('\n'))
-    return render_template('fill_inn.html', form=form)
+            send_mail(user.email, "ГПБАЛ обновление полей ИНН", order)
+            logger.info(log_message(f'отчёт отправлен на почту "{user.email}"'))
+        return render_template("order.html", order=order.split("\n"))
+    return render_template("fill_inn.html", form=form)
 
 
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     """User logout.
@@ -975,67 +702,73 @@ def logout():
     """
     logger.info(log_message(f'пользователь "{current_user.login}" вышел'))
     logout_user()
-    return redirect(url_for('sign_in'))
+    return redirect(url_for("sign_in"))
 
 
-@app.route('/spinner', methods=['POST'])
+@app.route("/spinner", methods=["POST"])
 def spinner():
     """Spinner.
 
     A pop-up window with a spinner to let the user understand that the process
     is running and the data is being updated on the wialon server.
     """
-    logger.debug('старт спиннера')
-    return jsonify({'data': render_template('spinner.html')})
+    logger.debug("старт спиннера")
+    return jsonify({"data": render_template("spinner.html")})
 
 
 def add_admin() -> None:
     """Add user admin in data base."""
-    password = os.getenv('admin_password')
+    password = os.getenv("admin_password")
     admin = User(
-        login='admin',
+        login="admin",
         password=generate_password_hash(password),
-        email=os.getenv('admin_email'),
-        group='admin',
+        email=os.getenv("admin_email"),
+        group="admin",
         access_create=True,
         access_remove=True,
-        access_edit=True
+        access_edit=True,
     )
-    logger.debug(f'создание учётки админа - login: {admin.login}, email: {admin.email}, группа: {admin.group}, полный доступ на чтение, создание, удаление')
+    logger.debug(
+        f"создание учётки админа - login: {admin.login}, email: {admin.email}, группа: {admin.group}, полный доступ на чтение, создание, удаление"
+    )
     db.session.add(admin)
     db.session.commit()
 
 
 def add_tech_crew() -> None:
     """Add user tech team in data base."""
-    password = os.getenv('crew_password')
+    password = os.getenv("crew_password")
     crew = User(
-        login='cesar',
+        login="cesar",
         password=generate_password_hash(password),
-        email=os.getenv('crew_email'),
-        group='cesar',
+        email=os.getenv("crew_email"),
+        group="cesar",
         access_create=False,
         access_remove=False,
-        access_edit=False
+        access_edit=False,
     )
-    logger.debug(f'создание учётки отдела - login: {crew.login}, email: {crew.email}, группа: {crew.group}, доступ к адмике отсутвует')
+    logger.debug(
+        f"создание учётки отдела - login: {crew.login}, email: {crew.email}, группа: {crew.group}, доступ к адмике отсутвует"
+    )
     db.session.add(crew)
     db.session.commit()
 
 
 def add_carcade():
     """Add user carcade in data base."""
-    password = os.getenv('carcade_password')
+    password = os.getenv("carcade_password")
     carcade = User(
-        login='carcade',
+        login="carcade",
         password=generate_password_hash(password),
-        email=os.getenv('carcade_email'),
-        group='carcade',
+        email=os.getenv("carcade_email"),
+        group="carcade",
         access_create=True,
         access_remove=True,
-        access_edit=True
+        access_edit=True,
     )
-    logger.debug(f'создание учётки Каркаде - login: {carcade.login}, email: {carcade.email}, группа: {carcade.group}, полный доступ на чтение, создание, удаление')
+    logger.debug(
+        f"создание учётки Каркаде - login: {carcade.login}, email: {carcade.email}, группа: {carcade.group}, полный доступ на чтение, создание, удаление"
+    )
     db.session.add(carcade)
     db.session.commit()
 
@@ -1048,7 +781,7 @@ with app.app_context():
         add_tech_crew()
         add_carcade()
 
-if __name__ == '__main__':
-    logger.info(f'запуск сервера {app}')
-    app.run(host='0.0.0.0', port=5000)
-    logger.info('сервер остановлен')
+if __name__ == "__main__":
+    logger.info(f"запуск сервера {app}")
+    app.run(host="0.0.0.0", port=5000)
+    logger.info("сервер остановлен")
