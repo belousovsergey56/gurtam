@@ -11,7 +11,11 @@ from constant import HW_ID, HW_TMP, USER_ID
 @fstart_stop
 @logger.catch
 def create_object(
-    sid: str, URL: str, hardware_id: int, object_name: str, fms: int
+    sid: str,
+    URL: str,
+    hardware_id: int,
+    object_name: str,
+    fms: int,
 ) -> dict:
     """Create new object.
 
@@ -52,7 +56,13 @@ def create_object(
 @fstart_stop
 @logger.catch
 def create_sensors(
-    sid: str, URL: str, hardware_id: int, object_id: int, fms: int
+    sid: str,
+    URL: str,
+    hardware_id: int,
+    object_id: int,
+    tmp_name: str,
+    hware_name: str,
+    fms: int,
 ) -> int:
     """Creation of sensors.
 
@@ -65,6 +75,7 @@ def create_sensors(
         URL (str): server address
         hardware_id (int): hardware id
         object_id (int): unit/object id
+        tmp_name (str): configuration template
         fms (int): server number
 
     Returns:
@@ -75,8 +86,20 @@ def create_sensors(
     logger.debug(f"адрес сервера: {URL}")
     logger.debug(f"id оборуддования: {hardware_id}")
     logger.debug(f"id объекта: {object_id}")
+    logger.debug(f"Шаблон конфигурации: {tmp_name}")
     logger.debug(f"номер сервера: {fms}")
-    sensor_template = HW_TMP[fms].get(hardware_id)
+    if hware_name == "Cesar 25":
+        sensor_template = HW_TMP[fms].get(hardware_id)[-1]
+    else:
+        sensor_template = HW_TMP[fms].get(hardware_id)[
+            0
+            if "отрыв" in tmp_name
+            else 1
+            if "фото" in tmp_name
+            else 2
+            if "1wire" in tmp_name
+            else 0
+        ]
     with open(f"data_tmp/{sensor_template}.json", "r") as f:
         tmp = json.loads(f.read())
         for sensor in tmp.get("sensors"):
@@ -213,7 +236,13 @@ def add_param_engin_axel(sid: str, URL: str, obj_id: int) -> int:
 @fstart_stop
 @logger.catch
 def update_advance_setting(
-    sid: str, URL: str, obj_id: int, hardware_id: int, fms: int
+    sid: str,
+    URL: str,
+    obj_id: int,
+    hardware_id: int,
+    tmp_name: str,
+    hware_name: str,
+    fms: int,
 ) -> dict:
     """Update the settings Advanced driving.
 
@@ -226,6 +255,7 @@ def update_advance_setting(
         URL (str): server address
         obj_id (int): unit/ogject id
         hardware_id (int): hargware id
+        tmp_name (str): configuration template
         fms (int): server number
     Returns:
         data (json): {}	/* пустой объект при удачном выполнении, при неудачном - код ошибки */
@@ -235,8 +265,21 @@ def update_advance_setting(
     logger.debug(f"адрес сервера: {URL}")
     logger.debug(f"id объекта: {obj_id}")
     logger.debug(f"id железки (тип устройства): {hardware_id}")
+    logger.debug(f"Шеблон конфигурации: {tmp_name}")
     logger.debug(f"номер сервера: {fms}")
-    with open(f"data_tmp/{HW_TMP[fms].get(hardware_id)}.json", "r") as f:
+    if hware_name == "Cesar 25":
+        sensor_template = HW_TMP[fms].get(hardware_id)[-1]
+    else:
+        sensor_template = HW_TMP[fms].get(hardware_id)[
+            0
+            if "отрыв" in tmp_name
+            else 1
+            if "фото" in tmp_name
+            else 2
+            if "1wire" in tmp_name
+            else 0
+        ]
+    with open(f"data_tmp/{sensor_template}.json", "r") as f:
         tmp = json.loads(f.read()).get("reportProps")
         param = {
             "svc": "unit/update_report_settings",
@@ -267,7 +310,13 @@ def update_advance_setting(
 @fstart_stop
 @logger.catch
 def update_advance_validity_filter(
-    sid: str, URL: str, obj_id: int, hardware_id: int, fms: int
+    sid: str,
+    URL: str,
+    obj_id: int,
+    hardware_id: int,
+    tmp_name: str,
+    hware_name: str,
+    fms: int,
 ) -> dict:
     """Update the settings used in reports.
 
@@ -280,6 +329,7 @@ def update_advance_validity_filter(
         URL (str): server address
         obj_id (int): unit/ogject id
         hardware_id (int): hargware id
+        tmp_name (str): configuration template
         fms (int): server number
     Returns:
         data (json): {}	/* пустой объект при удачном выполнении, при неудачном - код ошибки */
@@ -289,8 +339,21 @@ def update_advance_validity_filter(
     logger.debug(f"адрес сервера: {URL}")
     logger.debug(f"id объекта: {obj_id}")
     logger.debug(f"id железки (тип устройства): {hardware_id}")
+    logger.debug(f"Шеблон конфигурации: {tmp_name}")
     logger.debug(f"номер сервера: {fms}")
-    with open(f"data_tmp/{HW_TMP[fms].get(hardware_id)}.json", "r") as f:
+    if hware_name == "Cesar 25":
+        sensor_template = HW_TMP[fms].get(hardware_id)[-1]
+    else:
+        sensor_template = HW_TMP[fms].get(hardware_id)[
+            0
+            if "отрыв" in tmp_name
+            else 1
+            if "фото" in tmp_name
+            else 2
+            if "1wire" in tmp_name
+            else 0
+        ]
+    with open(f"data_tmp/{sensor_template}.json", "r") as f:
         tmp = json.loads(f.read()).get("advProps").get("msgFilter")
         param = {
             "svc": "unit/update_messages_filter",
@@ -434,7 +497,10 @@ def create_driving_param(ssid: str, URL: str, obj_id: int) -> int:
 @fstart_stop
 @logger.catch
 def create_object_with_all_params(
-    sid: str, URL: str, object_param: dict, fms: int
+    sid: str,
+    URL: str,
+    object_param: dict,
+    fms: int,
 ) -> int:
     """Create an object with sensors.
 
@@ -469,14 +535,23 @@ def create_object_with_all_params(
     new_object = create_object(sid, URL, hard_id, object_param.get("ДЛ"), fms)
     obj_id = new_object.get("item").get("id")
 
-    create_sensors(sid, URL, hard_id, obj_id, fms)
+    tmp_name = object_param.get("ШАБЛОН КОНФИГУРАЦИИ")
+    create_sensors(sid, URL, hard_id, obj_id, tmp_name, hware, fms)
 
     add_obj_uid(sid, URL, obj_id, hard_id, object_param.get("geozone_imei"))
     add_phone(sid, URL, obj_id, object_param.get("geozone_sim"))
     add_param_engin_axel(sid, URL, obj_id)
 
-    update_advance_setting(sid, URL, obj_id, hard_id, fms)
-    update_advance_validity_filter(sid, URL, obj_id, hard_id, fms)
+    update_advance_setting(sid, URL, obj_id, hard_id, tmp_name, hware, fms)
+    update_advance_validity_filter(
+        sid,
+        URL,
+        obj_id,
+        hard_id,
+        tmp_name,
+        hware,
+        fms,
+    )
     create_driving_param(sid, URL, obj_id)
     logger.debug("Объект со всеми параметрами, создан")
     return obj_id
