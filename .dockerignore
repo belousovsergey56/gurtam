@@ -2,3 +2,10 @@
 .idea
 .vscode
 .pytest_cache
+tests/
+__pycache__
+.pytest_cache
+.ruff_cache
+compose.yaml
+Dockerfile
+pyrightconfig.json
