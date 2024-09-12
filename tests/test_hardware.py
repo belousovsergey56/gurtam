@@ -66,9 +66,18 @@ def test_create_sensors(count: int = 0):
         for list_id, dict_value in enumerate(export_object):
             hardware = dict_value.get("Оборудование").replace("Teltonika ", "")
             name = f'{dict_value.get("ДЛ")}{test_fms}'
+            tmp_name = dict_value.get("ШАБЛОН КОНФИГУРАЦИИ")
             hw_id = HW_ID[test_fms][hardware]
             obj_id = get_object_info_by_name(sid, name, url).get("items")[0].get("id")
-            sens = create_sensors(sid, url, hw_id, obj_id, test_fms)
+            sens = create_sensors(
+                sid,
+                url,
+                hw_id,
+                obj_id,
+                tmp_name,
+                hardware,
+                test_fms,
+            )
             assert sens == 0
 
 
@@ -150,7 +159,16 @@ def test_update_advance_setting(count: int = 0):
             obj_id = get_object_info_by_name(sid, name, url).get("items")[0].get("id")
             hardware = dict_value.get("Оборудование").replace("Teltonika ", "")
             hw_id = HW_ID[test_fms][hardware]
-            result = update_advance_setting(sid, url, obj_id, hw_id, test_fms)
+            tmp_name = dict_value.get("ШАБЛОН КОНФИГУРАЦИИ")
+            result = update_advance_setting(
+                sid,
+                url,
+                obj_id,
+                hw_id,
+                tmp_name,
+                hardware,
+                test_fms,
+            )
             assert len(result.items()) == 0
 
 
@@ -171,7 +189,16 @@ def test_update_advance_validity_filter(count: int = 0):
             obj_id = get_object_info_by_name(sid, name, url).get("items")[0].get("id")
             hardware = dict_value.get("Оборудование").replace("Teltonika ", "")
             hw_id = HW_ID[test_fms][hardware]
-            result = update_advance_validity_filter(sid, url, obj_id, hw_id, test_fms)
+            tmp_name = dict_value.get("ШАБЛОН КОНФИГУРАЦИИ")
+            result = update_advance_validity_filter(
+                sid,
+                url,
+                obj_id,
+                hw_id,
+                tmp_name,
+                hardware,
+                test_fms,
+            )
             assert len(result.items()) == 0
 
 
@@ -207,5 +234,10 @@ def test_create_object_with_all_params(count: int = 0):
         url = URL[test_fms]
         sid = get_ssid(url, TOKEN[test_fms])
         for list_id, dict_value in enumerate(export_object):
-            result = create_object_with_all_params(sid, url, dict_value, test_fms)
+            result = create_object_with_all_params(
+                sid,
+                url,
+                dict_value,
+                test_fms,
+            )
             assert result > 1

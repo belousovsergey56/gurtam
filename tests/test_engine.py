@@ -197,7 +197,7 @@ def test_group_update():
                 truck += obj.get("uid")
             elif obj.get("geozone_imei") == "150317175415899":
                 spec += obj.get("uid")
-        group_update(sid, export_object, URL[test_fms])
+        group_update(sid, export_object, URL[test_fms], test_fms)
         if test_fms == 3:
             AUTO = (
                 search_group_by_id(
