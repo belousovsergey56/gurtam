@@ -6,7 +6,7 @@ import random
 import requests
 
 from config import fstart_stop, logger
-from constant import AUTO, CUSTOM_FIELDS, TRUCK, SPEC, RISK, REQUIRED_GROUPS
+from constant import CUSTOM_FIELDS, GROUPS
 from hardware import create_object_with_all_params
 
 
@@ -574,7 +574,7 @@ def create_object(sid: str, unit: dict, URL: str, fms: int) -> int:
 
 @fstart_stop
 @logger.catch
-def group_update(sid: str, data: dict, URL: str) -> None:
+def group_update(sid: str, data: dict, URL: str, fms: int) -> None:
     """Update list of objects in groups.
 
     The function loops through the list of objects and sorts them into lists
@@ -590,6 +590,7 @@ def group_update(sid: str, data: dict, URL: str) -> None:
         data (dict): dictionary with data on objects
         URL (str): server address
         sid (str): session id
+        fms (int): server number
     """
     logger.debug(f"аргумент на входе json: {data}")
     logger.debug(f"id сессии: {sid}")
@@ -625,17 +626,17 @@ def group_update(sid: str, data: dict, URL: str) -> None:
     for group in finded_group:
         id_group = group.get("id")
         leasing_unit_list = group.get("u")
-        if id_group in AUTO:
+        if id_group in GROUPS.get(fms).get("AUTO"):
             add_groups(sid, id_group, leasing_unit_list, auto, URL)
-        elif group.get("id") in TRUCK:
+        elif group.get("id") in GROUPS.get(fms).get("TRUCK"):
             add_groups(sid, id_group, leasing_unit_list, truck, URL)
-        elif group.get("id") in SPEC:
+        elif group.get("id") in GROUPS.get(fms).get("SPEC"):
             add_groups(sid, id_group, leasing_unit_list, special, URL)
-        elif group.get("id") in RISK:
+        elif group.get("id") in GROUPS.get(fms).get("RISK"):
             add_groups(sid, id_group, leasing_unit_list, risk_auto, URL)
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit, URL)
-    for id_group in REQUIRED_GROUPS:
+    for id_group in GROUPS.get(fms).get("REQUIRED_GROUPS"):
         leasing_unit_list = search_group_by_id(
             sid, id_group, URL).get("item")["u"]
         add_groups(sid, id_group, leasing_unit_list, all_unit, URL)
