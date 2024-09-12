@@ -468,11 +468,12 @@ def export_fms4():
                 except AttributeError:
                     counter += 1
             else:
-                update_param(sid, unit_id, unit, id_fields(sid, unit_id, url), url)
+                update_param(
+                    sid, unit_id, unit, id_fields(sid, unit_id, url), url)
                 counter += 1
         logger.info(log_message("загрузка завершена"))
         logger.info(log_message("распределение объектов по группам"))
-        group_update(sid, import_list, url)
+        group_update(sid, import_list, url, fms)
         logger.info(log_message("объекты распределены"))
         logger.info(log_message("загрузка завершена"))
         endtime = datetime.now()
