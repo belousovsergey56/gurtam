@@ -25,6 +25,7 @@ from engine import (
     group_update,
     id_fields,
     upd_inn_field,
+    update_object_name,
     update_param,
 )
 from forms import SigninForm, UploadFile, UserForm
@@ -651,7 +652,6 @@ def fill_inn():
         with open("logging/update_inn.log", "w") as log:
             log.write(f"Начало загрузки: {start.ctime()}\n")
         for unit in new_file:
-            print(unit)
             try:
                 unit_id = get_object_id(sid, int(unit.get("IMEI")), url)
             except TypeError:
@@ -686,6 +686,87 @@ def fill_inn():
             logger.info(log_message(f'отчёт отправлен на почту "{user.email}"'))
         return render_template("order.html", order=order.split("\n"))
     return render_template("fill_inn.html", form=form)
+
+
+@app.route("/rename_object", methods=["GET", "POST"])
+@login_required
+@logger.catch
+def update_name():
+    """Rename a list of objects
+    
+    """
+    logger.info(log_message("Массовое переименовывание объектов"))
+    form = UploadFile()
+    if form.validate_on_submit():
+        filename = secure_filename(form.export_file.data.filename)
+        if not is_xlsx(filename):
+            flash(message="""Ошибка иморта. Файл не в формате .XLSX""")
+            logger.info(
+                log_message("данные в загружаемом файле на соответсвуют формату xlsx.")
+            )
+            return render_template(
+                "rename_objects.html", form=form, logged_in=current_user.is_authenticated
+            )
+        form.export_file.data.save("upload/{0}".format(filename))
+        file_path = xls_to_json("upload/{0}".format(filename))
+        new_file = read_json(file_path)
+        if "ДЛ" not in new_file[0] and "IMEI" not in new_file[0]:
+            flash(
+                message="""Ошибка иморта. Необходимые данные не находятся на
+             первом листе, не соответвуют шаблону или не в формате .XLSX"""
+            )
+            os.remove(f"upload/{filename}")
+            os.remove(f"{file_path}.json")
+            logger.info(log_message("данные в файле не соответвуют формату"))
+            return render_template(
+                "rename_objects.html", form=form, logged_in=current_user.is_authenticated
+            )
+        fms = int(form.fms.data)
+
+        url = URL[fms]
+        sid = get_ssid(url, TOKEN[fms])
+        counter = 0
+        length = len(new_file)
+        start = datetime.now()
+        logger.info(log_message("старт обновления полей ДЛ"))
+        with open("logging/rename_objects.log", "w") as log:
+            log.write(f"Начало загрузки: {start.ctime()}\n")
+        for unit in new_file:
+            try:
+                unit_id = get_object_id(sid, int(unit.get("IMEI")), url)
+            except TypeError:
+                with open("logging/rename_objects.log", "a") as log:
+                    log.write(f'{unit.get("IMEI")} не верный формат или не найден')
+                continue
+            if unit_id == -1:
+                with open("logging/rename_objects.log", "a") as log:
+                    log.write("{0} - не найден\n".format(unit.get("IMEI")))
+                    counter += 1
+            else:
+                update_object_name(sid, url, unit_id, unit.get("ДЛ"))
+                counter += 1
+                logger.info(
+                    log_message(
+                        f'Новое имя для {unit.get("IMEI")} - {unit.get("ДЛ")}'))
+        endtime = datetime.now()
+        logger.info(log_message("обновление ДЛ завершено"))
+        delta_time = endtime - start
+        delta_time = strftime("%H:%M:%S", gmtime(delta_time.total_seconds()))
+        with open("logging/rename_objects.log", "a") as log:
+            log.write(f"Окончание экспорта данных: {endtime.ctime()}\n")
+            log.write(f"Ушло времени на залив данных: {delta_time}\n")
+            log.write(f"Всего строк обработано: {counter} из {length}\n")
+            logger.info(log_message(f"обработано строк {counter} из {length}"))
+        os.remove(f"upload/{filename}")
+        os.remove(f"{file_path}.json")
+        with open("logging/rename_objects.log", "r") as report:
+            order = report.read()
+            user = User.query.filter_by(id=current_user.get_id()).first()
+            send_mail(user.email, "Массовое переименование объектов", order)
+            logger.info(
+                log_message(f'отчёт отправлен на почту "{user.email}"'))
+        return render_template("order.html", order=order.split("\n"))
+    return render_template("rename_objects.html", form=form)
 
 
 @app.route("/logout")
