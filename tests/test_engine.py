@@ -27,7 +27,7 @@ from engine import (
     search_group_by_id,
     search_groups_by_name,
     upd_inn_field,
-    update_name,
+    update_object_name,
     update_param,
 )
 from hardware import create_object_with_all_params
@@ -355,14 +355,14 @@ def test_get_new_token():
         assert len(new_token) == 72
 
 
-def test_update_name():
+def test_update_object_name():
     old_name = read_json("tests/fixtures/one_object")
     imei = old_name.get("geozone_imei")
     nname = "belousov_new"
     for test_fms in range(*iteration[fms]):
         sid = get_ssid(URL[test_fms], TOKEN[test_fms])
         uid = get_object_id(sid, imei, URL[test_fms])
-        new_name = update_name(sid, URL[test_fms], uid, nname)
+        new_name = update_object_name(sid, URL[test_fms], uid, nname)
         check_name = (
             get_object_info_by_imei(
                 sid, imei, URL[test_fms]).get("items")[0].get("nm")
