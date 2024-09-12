@@ -1030,7 +1030,7 @@ def __get_new_token(sid: str, URL: str, app_name="export") -> str:
 
 @fstart_stop
 @logger.catch
-def update_name(sid: str, URL: str, unit_id: int, name: str) -> json:
+def update_object_name(sid: str, URL: str, unit_id: int, name: str) -> json:
     """Update contract name
 
     The function updates the name of the object.
