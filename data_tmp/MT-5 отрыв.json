@@ -1,0 +1,470 @@
+{
+    "advProps": {
+        "label_color": "16711680",
+        "monitoring_battery_id": "",
+        "monitoring_sensor": "",
+        "monitoring_sensor_id": "8",
+        "motion_state_sensor_id": "",
+        "msgFilter": {
+            "enabled": 1,
+            "lbsCorrection": 1,
+            "maxHdop": 2,
+            "maxSpeed": 0,
+            "maxWifiPoints": 0,
+            "minSats": 5,
+            "minWifiPoints": 0,
+            "skipInvalid": 1,
+            "wifiAccuracy": 0,
+            "wifiCorrection": 0
+        },
+        "sensors_colors": "",
+        "sensors_colors_id": "",
+        "solid_colors": "",
+        "speed_colors": "",
+        "track_sensor": "",
+        "track_solid": "",
+        "track_speed": "",
+        "trip_colors": "1",
+        "use_sensor_color": "1"
+    },
+    "afields": [
+        {
+            "id": 1,
+            "n": "geozone_imei",
+            "v": ""
+        },
+        {
+            "id": 2,
+            "n": "geozone_sim",
+            "v": ""
+        },
+        {
+            "id": 3,
+            "n": "Инфо1",
+            "v": " "
+        },
+        {
+            "id": 4,
+            "n": "Инфо2",
+            "v": " "
+        },
+        {
+            "id": 5,
+            "n": "Инфо3",
+            "v": " "
+        },
+        {
+            "id": 6,
+            "n": "Инфо4",
+            "v": ""
+        },
+        {
+            "id": 7,
+            "n": "Пин",
+            "v": ""
+        }
+    ],
+    "aliases": [],
+    "counters": {
+        "cfl": 784,
+        "cneh": 0,
+        "cnkb": 0,
+        "cnm": 0
+    },
+    "driving": {
+        "acceleration": [
+            {
+                "flags": 2,
+                "min_value": 0.4,
+                "name": "Ускорение: опасное",
+                "penalties": 2000
+            },
+            {
+                "flags": 2,
+                "max_value": 0.4,
+                "min_value": 0.31,
+                "name": "Ускорение: резкое",
+                "penalties": 1000
+            }
+        ],
+        "brake": [
+            {
+                "flags": 2,
+                "min_value": 0.35,
+                "name": "Торможение: опасное",
+                "penalties": 2000
+            },
+            {
+                "flags": 2,
+                "max_value": 0.35,
+                "min_value": 0.31,
+                "name": "Торможение: резкое",
+                "penalties": 1000
+            }
+        ],
+        "global": {
+            "accel_mode": "0"
+        },
+        "harsh": [
+            {
+                "flags": 2,
+                "min_value": 0.3,
+                "name": "Резкое вождение",
+                "penalties": 300
+            }
+        ],
+        "speeding": [
+            {
+                "flags": 2,
+                "max_duration": 30,
+                "min_duration": 10,
+                "min_value": 41,
+                "name": "Превышение: опасное",
+                "penalties": 5000
+            },
+            {
+                "flags": 2,
+                "max_value": 41,
+                "min_duration": 10,
+                "min_value": 21,
+                "name": "Превышение: сильное",
+                "penalties": 2000
+            },
+            {
+                "flags": 2,
+                "max_value": 21,
+                "min_duration": 10,
+                "min_value": 10,
+                "name": "Превышение: среднее",
+                "penalties": 100
+            }
+        ],
+        "turn": [
+            {
+                "flags": 2,
+                "min_value": 0.4,
+                "name": "Поворот: опасный",
+                "penalties": 1000
+            },
+            {
+                "flags": 2,
+                "max_value": 0.4,
+                "min_value": 0.31,
+                "name": "Поворот: резкий",
+                "penalties": 500
+            }
+        ]
+    },
+    "fields": [
+        {
+            "id": 1,
+            "n": "Vin",
+            "v": ""
+        },
+        {
+            "id": 2,
+            "n": "Марка",
+            "v": ""
+        },
+        {
+            "id": 3,
+            "n": "Модель",
+            "v": ""
+        }
+    ],
+    "general": {
+        "hw": "Wialon Combine",
+        "n": "Шаблон лизинг МТ5 отрыв",
+        "ph": "",
+        "ph2": "",
+        "psw": "",
+        "uid": "",
+        "uid2": ""
+    },
+    "hwConfig": {
+        "fullData": 1,
+        "hw": "Wialon Combine",
+        "params": [
+            {
+                "default": "",
+                "description": "Custom string encode format. Usage Example: cp1251",
+                "label": "Custom string encode",
+                "maxval": 0,
+                "minval": 0,
+                "name": "string_encode",
+                "readonly": 0,
+                "type": "text",
+                "value": ""
+            }
+        ]
+    },
+    "icon": {
+        "lib": "38807",
+        "url": "default.svg"
+    },
+    "imgRot": "0",
+    "intervals": [],
+    "mu": 0,
+    "profile": [],
+    "reportProps": {
+        "dailyEngineHoursRate": 0,
+        "driver_activity": {
+            "type": 0
+        },
+        "fuelRateCoefficient": 0,
+        "maxMessagesInterval": 43200,
+        "mileageCoefficient": 1,
+        "speedLimit": 0,
+        "speedingMinDuration": 1,
+        "speedingMode": 0,
+        "speedingTolerance": 10,
+        "urbanMaxSpeed": 60
+    },
+    "sensors": [
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":1,\"consumption\":0,\"mu\":\"0\",\"pos\":1,\"show_time\":false,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 1,
+            "m": "On/Off",
+            "n": "Зажигание",
+            "p": "param1241|ign",
+            "t": "engine operation",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":3,\"show_time\":false,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 2,
+            "m": "V",
+            "n": "Датчик напряжения",
+            "p": "param1253|acc_voltage",
+            "t": "voltage",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":0,\"mu\":\"0\",\"pos\":2,\"show_time\":false,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 3,
+            "m": "V",
+            "n": "АКБ автомобиля",
+            "p": "param1252|ext_voltage",
+            "t": "voltage",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":0,\"mu\":\"0\",\"pos\":15,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 4,
+            "m": "",
+            "n": "Ось z",
+            "p": "param1245|gsensor_axis_z",
+            "t": "custom",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":0,\"mu\":\"0\",\"pos\":14,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 5,
+            "m": "",
+            "n": "Ось y",
+            "p": "param1244|gsensor_axis_y",
+            "t": "custom",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":0,\"mu\":\"0\",\"pos\":13,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 6,
+            "m": "",
+            "n": "Ось x",
+            "p": "param1243|gsensor_axis_x",
+            "t": "custom",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":8,\"show_time\":false,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 7,
+            "m": "On/Off",
+            "n": "Блокировка",
+            "p": "param1061|digital_out_1",
+            "t": "digital",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{\"0\":{\"c\":16711680},\"11\":{\"c\":1669936},\"6\":{\"c\":16776960}},\"cm\":0,\"mu\":\"0\",\"pos\":5,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 8,
+            "m": "в",
+            "n": "Индикация АКБ",
+            "p": "[АКБ автомобиля]",
+            "t": "custom",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":12,\"show_time\":false,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "d": "|0:1:1:0",
+            "f": 0,
+            "id": 9,
+            "m": "On/Off",
+            "n": "Валидатор осей",
+            "p": "[Зажигание]",
+            "t": "digital",
+            "tbl": [
+                {
+                    "a": -1,
+                    "b": 1,
+                    "x": 0
+                }
+            ],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":9,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 10,
+            "m": "",
+            "n": "Дем x",
+            "p": "[Ось x]",
+            "t": "custom",
+            "tbl": [],
+            "vs": 9,
+            "vt": 11
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":10,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "d": "",
+            "f": 0,
+            "id": 11,
+            "m": "",
+            "n": "Дем y",
+            "p": "[Ось y]",
+            "t": "custom",
+            "tbl": [],
+            "vs": 9,
+            "vt": 11
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"mu\":\"0\",\"pos\":11,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0,\"unbound_code\":\"\",\"validate_driver_unbound\":0}",
+            "d": "",
+            "f": 0,
+            "id": 12,
+            "m": "",
+            "n": "Дем z",
+            "p": "[Ось z]",
+            "t": "custom",
+            "tbl": [],
+            "vs": 9,
+            "vt": 11
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"lower_bound\":0.01,\"mu\":\"0\",\"pos\":4,\"show_time\":false,\"text_params\":0,\"timeout\":0,\"uct\":0}",
+            "d": "",
+            "f": 0,
+            "id": 13,
+            "m": "в",
+            "n": "1АКБ автомобиля",
+            "p": "[АКБ автомобиля]",
+            "t": "custom",
+            "tbl": [],
+            "vs": 0,
+            "vt": 0
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":true,\"ci\":{},\"cm\":1,\"pos\":6,\"show_time\":false,\"timeout\":0}",
+            "d": "|0:1:2:1:2.000000001:0:100:0",
+            "f": 0,
+            "id": 14,
+            "m": "Вкл/Выкл",
+            "n": "Отрыв",
+            "p": "param1001",
+            "t": "digital",
+            "tbl": [
+                {
+                    "a": 0,
+                    "b": 1,
+                    "x": 0
+                },
+                {
+                    "a": -999999917.26,
+                    "b": 1999999835.52,
+                    "x": 2
+                },
+                {
+                    "a": 0,
+                    "b": 0,
+                    "x": 2.000000001
+                }
+            ],
+            "vs": 9,
+            "vt": 11
+        },
+        {
+            "c": "{\"act\":1,\"appear_in_popup\":false,\"ci\":{},\"cm\":1,\"pos\":7,\"show_time\":false,\"timeout\":0}",
+            "d": "|0:1:2:1:2.000000001:0:100:0",
+            "f": 0,
+            "id": 15,
+            "m": "Вкл/Выкл",
+            "n": "param1001",
+            "p": "param1001",
+            "t": "digital",
+            "tbl": [
+                {
+                    "a": 0,
+                    "b": 1,
+                    "x": 0
+                },
+                {
+                    "a": -999999917.26,
+                    "b": 1999999835.52,
+                    "x": 2
+                },
+                {
+                    "a": 0,
+                    "b": 0,
+                    "x": 2.000000001
+                }
+            ],
+            "vs": 0,
+            "vt": 0
+        }
+    ],
+    "trip": {
+        "gpsCorrection": 1,
+        "maxMessagesDistance": 10000,
+        "minMovingSpeed": 1,
+        "minSat": 2,
+        "minStayTime": 300,
+        "minTripDistance": 100,
+        "minTripTime": 60,
+        "type": 1
+    },
+    "type": "avl_unit",
+    "version": "b4"
+}
