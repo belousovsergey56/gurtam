@@ -211,3 +211,14 @@ def get_diff_in_upload_file(new_file: list[dict]) -> list[dict]:
         "Если данные между локальной базой и входящей хотя бы в одном поле отлиачются, данный объект записывается в новый список словарей, который и возращает функция т.о из более 15к строк, новый список объектов содержит только актуальные значения, в среднем от 200 до 600 объектов."
     )
     return to_update
+
+
+def __json_to_xlsx(path: str) -> None:
+    """Convert json to xls
+
+    Args:
+        path (str): path to file
+    """
+    name = path.split('.')[0]
+    data = pd.read_json(path)
+    data.to_excel(f'{name}.xlsx', index=False)
