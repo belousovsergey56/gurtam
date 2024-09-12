@@ -693,7 +693,16 @@ def fill_inn():
 @logger.catch
 def update_name():
     """Rename a list of objects
-    
+    The page displays information explaining what extension is required for
+    the file, what headers and data the file should contain.
+    Contains a form for uploading a file and an 'Export' button.
+    The server receives the file and processes it, as a result of which the
+    object name on the vialon is changed to the corresponding one from the
+    file.
+    After processing, a report on the number of rows processed will be
+    displayed on the page.
+    If there are errors, objects not found, for example,
+    then the report will contain a list of not found objects.
     """
     logger.info(log_message("Массовое переименовывание объектов"))
     form = UploadFile()
