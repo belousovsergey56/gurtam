@@ -34,6 +34,22 @@ def get_header() -> dict:
 
 
 @fstart_stop
+def check_server_access(URL: str, TOKEN: str):
+    """Check server accessibility
+
+    Args:
+        URL (str): server address
+        TOKEN (str): server token
+
+    Returns:
+        int: status code
+    """
+    param = {"svc": "token/login", "params": json.dumps({"token": TOKEN})}
+    response = requests.post(URL, data=param)
+    return response
+
+
+@fstart_stop
 @logger.catch
 def get_ssid(URL: str, TOKEN: str) -> str:
     """Authorize by token and getting the session number.
@@ -1156,4 +1172,35 @@ def delete_object(sid: str, URL: str, obj_id: int) -> dict:
     }
     result = requests.post(URL, data=param)
     logger.debug(f"результат работы функции: {result}")
+    return result.json()
+
+
+@fstart_stop
+@logger.catch
+def __change_calc_flag(sid: str, url: str, obj_id: int, flag: int) -> dict:
+    """Change counter calculation parameters
+
+     See https://sdk.wialon-online.ru/wiki/en/pro/remoteapi/apiref/unit/update_calc_flags for flag parameters
+
+    Args:
+        sid (str): current session id
+        url (str): server address
+        obj_id (int): object id on wialon
+        flag (int): cfl: 784 - gps, cfl: 785 - одометр
+
+    Returns:
+        dict: {"cfl": flag}	/* flags applied */
+    """
+    logger.debug("Параметры на входе:")
+    logger.debug(f"id сессии: {sid}")
+    logger.debug(f"адрес сервера: {url}")
+    logger.debug(f"id объекта: {obj_id}")
+    logger.debug(f"Новый параметр: {flag}")
+    param = {
+        "svc": "unit/update_calc_flags",
+        "params": json.dumps({"itemId": obj_id, "newValue": flag}),
+        "sid": sid
+    }
+    result = requests.post(url, data=param)
+    logger.debug(f"Результат: {result.json()}")
     return result.json()
