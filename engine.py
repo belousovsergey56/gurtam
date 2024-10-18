@@ -316,6 +316,15 @@ def update_param(
         "sid": session_id,
     }
 
+    phone = {
+        "svc": "unit/update_phone",
+        "params": {
+            "itemId": unit_id,
+            "phoneNumber": new_value.get("geozone_sim")
+            },
+        "sid": session_id,
+    }
+
     imei = {
         "svc": "item/update_admin_field",
         "params": {
@@ -419,6 +428,7 @@ def update_param(
             {
                 "params": [
                     contract_name,
+                    phone,
                     imei,
                     sim,
                     vin,
