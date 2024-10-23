@@ -626,9 +626,11 @@ def group_update(sid: str, data: dict, URL: str, fms: int) -> None:
     special = []
     all_unit = []
     risk_auto = []
+    block_with_photo = []
 
     logger.debug("распределение объектов в списки по группам")
     for unit in data:
+        tmp = unit.get("ШАБЛОН КОНФИГУРАЦИИ")
         all_unit.append(unit.get("uid"))
         if unit.get("ТИП") == str(0):
             auto.append(unit.get("uid"))
@@ -638,6 +640,8 @@ def group_update(sid: str, data: dict, URL: str, fms: int) -> None:
             special.append(unit.get("uid"))
         if unit.get("РИСК") == str(9):
             risk_auto.append(unit.get("uid"))
+        if "фото" in tmp or "Фото" in tmp or "ФОТО" in tmp:
+            block_with_photo.append(unit.get("uid"))
 
     logger.debug(f"колличество грузовых: {len(truck)}")
     logger.debug(f"колличество легковых: {len(auto)}")
@@ -646,6 +650,8 @@ def group_update(sid: str, data: dict, URL: str, fms: int) -> None:
 
     finded_group = search_groups_by_name(
         sid, data[0].get("ЛИЗИНГ"), URL).get("items")
+    finded_group_photo = search_groups_by_name(
+        sid, data[0].get("ЛИЗИНГ").replace('1', '2'), URL).get("items")
 
     logger.debug(f'Ищем группы по маске: {data[0].get("ЛИЗИНГ")}')
 
@@ -654,14 +660,21 @@ def group_update(sid: str, data: dict, URL: str, fms: int) -> None:
         leasing_unit_list = group.get("u")
         if id_group in GROUPS.get(fms).get("AUTO"):
             add_groups(sid, id_group, leasing_unit_list, auto, URL)
-        elif group.get("id") in GROUPS.get(fms).get("TRUCK"):
+        elif id_group in GROUPS.get(fms).get("TRUCK"):
             add_groups(sid, id_group, leasing_unit_list, truck, URL)
-        elif group.get("id") in GROUPS.get(fms).get("SPEC"):
+        elif id_group in GROUPS.get(fms).get("SPEC"):
             add_groups(sid, id_group, leasing_unit_list, special, URL)
-        elif group.get("id") in GROUPS.get(fms).get("RISK"):
+        elif id_group in GROUPS.get(fms).get("RISK"):
             add_groups(sid, id_group, leasing_unit_list, risk_auto, URL)
         else:
             add_groups(sid, id_group, leasing_unit_list, all_unit, URL)
+
+    for photo_group in finded_group_photo:
+        id_group = photo_group.get("id")
+        leasing_unit_list = photo_group.get("u")
+        if id_group in GROUPS.get(fms).get("PHOTO"):
+            add_groups(sid, id_group, leasing_unit_list, block_with_photo, URL)
+
     for id_group in GROUPS.get(fms).get("REQUIRED_GROUPS"):
         leasing_unit_list = search_group_by_id(
             sid, id_group, URL).get("item")["u"]
@@ -1214,3 +1227,20 @@ def __change_calc_flag(sid: str, url: str, obj_id: int, flag: int) -> dict:
     result = requests.post(url, data=param)
     logger.debug(f"Результат: {result.json()}")
     return result.json()
+
+
+if __name__ == '__main__':
+    from constant import URL, TOKEN
+    sid = get_ssid(URL[4], TOKEN[4])
+    gr_n = "1Эволюция"
+    name = gr_n.replace('1', "2")
+    group = search_groups_by_name(sid, name, URL[4])
+    # print(group.get('ite'))
+    for i in group.get('items'):
+        print(i.get('id'))
+    
+    """
+    2ГПБЛ фото, id 88604
+    2Каркаде фото, id 88602
+    2Эволюция фото, id 88603
+    """
